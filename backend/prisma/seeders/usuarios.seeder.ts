@@ -5,76 +5,34 @@ export async function seedUsuarios(prisma: PrismaClient) {
   const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
   const passwordHash = await bcrypt.hash('admin123', saltRounds);
 
-  await prisma.usuario.upsert({
-    where: { correo: 'admin@coil.com' },
-    update: {},
-    create: {
-      nombres: 'Super',
-      apellidos: 'Admin',
-      correo: 'admin@coil.com',
-      claveHash: passwordHash,
-      idRol: 1, // ADMINISTRADOR
-      estado: true,
-    },
-  });
+  const usuarios = [
+    { nombres: 'Super', apellidos: 'Admin', correo: 'admin@coil.com', idRol: 1 },
+    { nombres: 'Juan', apellidos: 'Pérez', correo: 'productor@coil.com', idRol: 2 },
+    { nombres: 'Luis', apellidos: 'Ramírez', correo: 'tecnico@coil.com', idRol: 3 },
+    { nombres: 'María', apellidos: 'Gómez', correo: 'inspector@coil.com', idRol: 4 },
+    { nombres: 'Carlos', apellidos: 'López', correo: 'empacador@coil.com', idRol: 5 },
+    { nombres: 'Pedro', apellidos: 'Suárez', correo: 'transportista@coil.com', idRol: 6 },
+    { nombres: 'Rosa', apellidos: 'Villacís', correo: 'exportador@coil.com', idRol: 7 },
+    { nombres: 'Ana', apellidos: 'Martínez', correo: 'logistica@coil.com', idRol: 8 },
+    { nombres: 'Diego', apellidos: 'Cevallos', correo: 'consultor@coil.com', idRol: 9 },
+  ];
 
-  await prisma.usuario.upsert({
-    where: { correo: 'productor@coil.com' },
-    update: {},
-    create: {
-      nombres: 'Juan',
-      apellidos: 'Pérez',
-      correo: 'productor@coil.com',
-      claveHash: passwordHash,
-      idRol: 2, // PRODUCTOR
-      estado: true,
-    },
-  });
-
-  await prisma.usuario.upsert({
-    where: { correo: 'inspector@coil.com' },
-    update: {},
-    create: {
-      nombres: 'María',
-      apellidos: 'Gómez',
-      correo: 'inspector@coil.com',
-      claveHash: passwordHash,
-      idRol: 3, // INSPECTOR_CALIDAD
-      estado: true,
-    },
-  });
-
-  await prisma.usuario.upsert({
-    where: { correo: 'empacador@coil.com' },
-    update: {},
-    create: {
-      nombres: 'Carlos',
-      apellidos: 'López',
-      correo: 'empacador@coil.com',
-      claveHash: passwordHash,
-      idRol: 4, // EMPACADOR
-      estado: true,
-    },
-  });
-
-  await prisma.usuario.upsert({
-    where: { correo: 'logistica@coil.com' },
-    update: {},
-    create: {
-      nombres: 'Ana',
-      apellidos: 'Martínez',
-      correo: 'logistica@coil.com',
-      claveHash: passwordHash,
-      idRol: 5, // LOGISTICA
-      estado: true,
-    },
-  });
+  for (const u of usuarios) {
+    await prisma.usuario.upsert({
+      where: { correo: u.correo },
+      update: {},
+      create: {
+        nombres: u.nombres,
+        apellidos: u.apellidos,
+        correo: u.correo,
+        claveHash: passwordHash,
+        idRol: u.idRol,
+        estado: true,
+      },
+    });
+  }
 
   console.log('✅ Usuarios iniciales creados.');
-  console.log('--- Credenciales de prueba ---');
-  console.log('Admin: admin@coil.com / admin123');
-  console.log('Productor: productor@coil.com / admin123');
-  console.log('Inspector: inspector@coil.com / admin123');
-  console.log('Empacador: empacador@coil.com / admin123');
-  console.log('Logística: logistica@coil.com / admin123');
+  console.log('--- Credenciales de prueba (contraseña: admin123) ---');
+  usuarios.forEach((u) => console.log(`   ${u.correo} → Rol ID ${u.idRol}`));
 }

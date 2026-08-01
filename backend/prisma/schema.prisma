@@ -58,19 +58,64 @@ model Rol {
   nombre      String    @unique @db.VarChar(40)
   descripcion String?   @db.VarChar(150)
   usuarios    Usuario[]
+  menus       RolMenu[]
 
   @@map("roles")
 }
 
+model Pantalla {
+  idPantalla  Int     @id @default(autoincrement()) @map("id_pantalla") @db.SmallInt
+  nombre      String  @db.VarChar(60)
+  ruta        String  @unique @db.VarChar(120)
+  icono       String? @db.VarChar(50)
+  descripcion String? @db.VarChar(200)
+  estado      Boolean @default(true)
+
+  menus Menu[]
+
+  @@map("pantallas")
+}
+
+model Menu {
+  idMenu      Int     @id @default(autoincrement()) @map("id_menu") @db.SmallInt
+  idPantalla  Int?    @map("id_pantalla") @db.SmallInt
+  idMenuPadre Int?    @map("id_menu_padre") @db.SmallInt
+  etiqueta    String  @db.VarChar(60)
+  icono       String? @db.VarChar(50)
+  orden       Int     @default(0) @db.SmallInt
+  estado      Boolean @default(true)
+
+  pantalla Pantalla? @relation(fields: [idPantalla], references: [idPantalla], onDelete: SetNull, onUpdate: Cascade)
+  padre    Menu?     @relation("MenuJerarquia", fields: [idMenuPadre], references: [idMenu], onDelete: SetNull, onUpdate: Cascade)
+  hijos    Menu[]    @relation("MenuJerarquia")
+  roles    RolMenu[]
+
+  @@index([idPantalla])
+  @@index([idMenuPadre])
+  @@map("menus")
+}
+
+model RolMenu {
+  idRol  Int @map("id_rol") @db.SmallInt
+  idMenu Int @map("id_menu") @db.SmallInt
+
+  rol  Rol  @relation(fields: [idRol], references: [idRol], onDelete: Cascade, onUpdate: Cascade)
+  menu Menu @relation(fields: [idMenu], references: [idMenu], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([idRol, idMenu])
+  @@map("rol_menu")
+}
+
 model Usuario {
-  idUsuario     BigInt   @id @default(autoincrement()) @map("id_usuario")
-  idRol         Int      @map("id_rol") @db.SmallInt
-  nombres       String   @db.VarChar(80)
-  apellidos     String   @db.VarChar(80)
-  correo        String   @unique @db.VarChar(120)
-  claveHash     String   @map("clave_hash") @db.VarChar(255)
-  estado        Boolean  @default(true)
-  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  idUsuario        BigInt   @id @default(autoincrement()) @map("id_usuario")
+  idRol            Int      @map("id_rol") @db.SmallInt
+  nombres          String   @db.VarChar(80)
+  apellidos        String   @db.VarChar(80)
+  correo           String   @unique @db.VarChar(120)
+  claveHash        String   @map("clave_hash") @db.VarChar(255)
+  estado           Boolean  @default(true)
+  fechaCreacion    DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  fechaActualizacion DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
   rol              Rol                  @relation(fields: [idRol], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
   eventos          EventoTrazabilidad[]
@@ -81,12 +126,13 @@ model Usuario {
 }
 
 model Productor {
-  idProductor       BigInt  @id @default(autoincrement()) @map("id_productor")
-  identificacion    String  @unique @db.VarChar(20)
-  nombreRazonSocial String  @map("nombre_razon_social") @db.VarChar(150)
-  telefono          String? @db.VarChar(20)
-  correo            String? @db.VarChar(120)
-  direccion         String? @db.Text
+  idProductor        BigInt    @id @default(autoincrement()) @map("id_productor")
+  identificacion     String    @unique @db.VarChar(20)
+  nombreRazonSocial  String    @map("nombre_razon_social") @db.VarChar(150)
+  telefono           String?   @db.VarChar(20)
+  correo             String?   @db.VarChar(120)
+  direccion          String?   @db.Text
+  fechaActualizacion DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
   fincas Finca[]
 
@@ -94,17 +140,18 @@ model Productor {
 }
 
 model Finca {
-  idFinca       BigInt   @id @default(autoincrement()) @map("id_finca")
-  idProductor   BigInt   @map("id_productor")
-  codigoFinca   String   @unique @map("codigo_finca") @db.VarChar(30)
-  nombre        String   @db.VarChar(100)
-  provincia     String   @db.VarChar(60)
-  canton        String   @db.VarChar(60)
-  parroquia     String?  @db.VarChar(60)
-  latitud       Decimal? @db.Decimal(9, 6)
-  longitud      Decimal? @db.Decimal(9, 6)
-  areaHectareas Decimal? @map("area_hectareas") @db.Decimal(10, 2)
-  estado        Boolean  @default(true)
+  idFinca            BigInt    @id @default(autoincrement()) @map("id_finca")
+  idProductor        BigInt    @map("id_productor")
+  codigoFinca        String    @unique @map("codigo_finca") @db.VarChar(30)
+  nombre             String    @db.VarChar(100)
+  provincia          String    @db.VarChar(60)
+  canton             String    @db.VarChar(60)
+  parroquia          String?   @db.VarChar(60)
+  latitud            Decimal?  @db.Decimal(9, 6)
+  longitud           Decimal?  @db.Decimal(9, 6)
+  areaHectareas      Decimal?  @map("area_hectareas") @db.Decimal(10, 2)
+  estado             Boolean   @default(true)
+  fechaActualizacion DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
   productor       Productor        @relation(fields: [idProductor], references: [idProductor], onDelete: Restrict, onUpdate: Cascade)
   lotes           LoteProduccion[]
@@ -124,8 +171,9 @@ model LoteProduccion {
   fechaCosecha         DateTime?  @map("fecha_cosecha") @db.Date
   cantidadPlantas      Int?       @map("cantidad_plantas")
   pesoCosechadoKg      Decimal?   @map("peso_cosechado_kg") @db.Decimal(12, 2)
-  estado               EstadoLote @default(EN_PRODUCCION)
+  estado               EstadoLote @default(PLANIFICADO)
   fechaRegistro        DateTime   @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+  fechaActualizacion   DateTime?  @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
   finca            Finca                @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
   eventos          EventoTrazabilidad[]
@@ -158,10 +206,11 @@ model EventoTrazabilidad {
   datosAdicionales Json     @default("{}") @map("datos_adicionales") @db.JsonB
   fechaRegistro    DateTime @default(now()) @map("fecha_registro") @db.Timestamptz(6)
 
-  lote               LoteProduccion      @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
-  tipoEvento         TipoEvento          @relation(fields: [idTipoEvento], references: [idTipoEvento], onDelete: Restrict, onUpdate: Cascade)
-  usuario            Usuario             @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  lote               LoteProduccion       @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  tipoEvento         TipoEvento           @relation(fields: [idTipoEvento], references: [idTipoEvento], onDelete: Restrict, onUpdate: Cascade)
+  usuario            Usuario              @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
   registroBlockchain RegistroBlockchain?
+  documentos         DocumentoReferencia[]
 
   @@index([idLote, fechaEvento])
   @@index([idTipoEvento])
@@ -257,6 +306,7 @@ model EnvioEmpaque {
 model RegistroBlockchain {
   idRegistroBlockchain     BigInt                       @id @default(autoincrement()) @map("id_registro_blockchain")
   idEvento                 BigInt                       @unique @map("id_evento")
+  indice                   Int                          @map("indice")
   hashDatos                String                       @unique @map("hash_datos") @db.Char(64)
   hashAnterior             String?                      @map("hash_anterior") @db.Char(64)
   identificadorTransaccion String?                      @map("identificador_transaccion") @db.VarChar(150)
@@ -267,4 +317,18 @@ model RegistroBlockchain {
   evento EventoTrazabilidad @relation(fields: [idEvento], references: [idEvento], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("registros_blockchain")
+}
+
+model DocumentoReferencia {
+  idDocumento BigInt   @id @default(autoincrement()) @map("id_documento")
+  idEvento    BigInt   @map("id_evento")
+  nombre      String   @db.VarChar(120)
+  tipo        String   @db.VarChar(40)
+  url         String   @db.VarChar(500)
+  fechaCarga  DateTime @default(now()) @map("fecha_carga") @db.Timestamptz(6)
+
+  evento EventoTrazabilidad @relation(fields: [idEvento], references: [idEvento], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([idEvento])
+  @@map("documentos_referencia")
 }
