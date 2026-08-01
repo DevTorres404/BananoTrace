@@ -1,0 +1,48 @@
+/* Global Styles & Design System */
+
+:root {
+  /* =========================================
+     PALETA DE COLORES - BANANO TRACE
+     ========================================= */
+  
+  /* Colores Primarios (Basados en el logo) */
+  --color-primary: #0C9340;       /* Verde Hoja */
+  --color-primary-dark: #096b2e;
+  
+  --color-secondary: #FFC500;     /* Amarillo Banano */
+  --color-secondary-dark: #e6b200;
+  
+  --color-tertiary: #0B2052;      /* Azul Navy / Tech */
+  --color-tertiary-dark: #050a15; /* Fondo Ultra Oscuro */
+
+  /* Neutrales & Superficies */
+  --color-bg-main: var(--color-tertiary-dark);
+  --color-surface: rgba(11, 32, 82, 0.4);
+  --color-surface-hover: rgba(11, 32, 82, 0.8);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-glass: rgba(255, 255, 255, 0.03);
+  
+  /* Textos */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cbd5e1;
+  
+  /* Feedback (Alertas, Errores, Éxitos) */
+  --color-error: #ef4444;
+  --color-error-text: #fca5a5;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+  
+  --color-success: #4ade80;
+  --color-success-bg: rgba(12, 147, 64, 0.1);
+  
+  /* Tipografía */
+  --font-family-base: 'Inter', 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-base);
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+}

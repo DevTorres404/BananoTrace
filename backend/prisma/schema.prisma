@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EstadoLote {
+  PLANIFICADO
+  EN_PRODUCCION
+  COSECHADO
+  EMPACADO
+  EXPORTADO
+  CERRADO
+
+  @@map("estado_lote")
+}
+
+enum ResultadoControl {
+  APROBADO
+  OBSERVADO
+  RECHAZADO
+
+  @@map("resultado_control")
+}
+
+enum EstadoEmpaque {
+  DISPONIBLE
+  ASIGNADO
+  EN_TRANSITO
+  ENTREGADO
+  RECHAZADO
+
+  @@map("estado_empaque")
+}
+
+enum EstadoEnvio {
+  PLANIFICADO
+  CARGADO
+  EN_TRANSITO
+  ENTREGADO
+  CANCELADO
+
+  @@map("estado_envio")
+}
+
+enum EstadoConfirmacionBlockchain {
+  PENDIENTE
+  CONFIRMADO
+  ERROR
+
+  @@map("estado_confirmacion_blockchain")
+}
+
+model Rol {
+  idRol       Int       @id @default(autoincrement()) @map("id_rol") @db.SmallInt
+  nombre      String    @unique @db.VarChar(40)
+  descripcion String?   @db.VarChar(150)
+  usuarios    Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  idUsuario     BigInt   @id @default(autoincrement()) @map("id_usuario")
+  idRol         Int      @map("id_rol") @db.SmallInt
+  nombres       String   @db.VarChar(80)
+  apellidos     String   @db.VarChar(80)
+  correo        String   @unique @db.VarChar(120)
+  claveHash     String   @map("clave_hash") @db.VarChar(255)
+  estado        Boolean  @default(true)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+
+  rol              Rol                  @relation(fields: [idRol], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
+  eventos          EventoTrazabilidad[]
+  controlesCalidad ControlCalidad[]
+
+  @@index([idRol])
+  @@map("usuarios")
+}
+
+model Productor {
+  idProductor       BigInt  @id @default(autoincrement()) @map("id_productor")
+  identificacion    String  @unique @db.VarChar(20)
+  nombreRazonSocial String  @map("nombre_razon_social") @db.VarChar(150)
+  telefono          String? @db.VarChar(20)
+  correo            String? @db.VarChar(120)
+  direccion         String? @db.Text
+
+  fincas Finca[]
+
+  @@map("productores")
+}
+
+model Finca {
+  idFinca       BigInt   @id @default(autoincrement()) @map("id_finca")
+  idProductor   BigInt   @map("id_productor")
+  codigoFinca   String   @unique @map("codigo_finca") @db.VarChar(30)
+  nombre        String   @db.VarChar(100)
+  provincia     String   @db.VarChar(60)
+  canton        String   @db.VarChar(60)
+  parroquia     String?  @db.VarChar(60)
+  latitud       Decimal? @db.Decimal(9, 6)
+  longitud      Decimal? @db.Decimal(9, 6)
+  areaHectareas Decimal? @map("area_hectareas") @db.Decimal(10, 2)
+  estado        Boolean  @default(true)
+
+  productor       Productor        @relation(fields: [idProductor], references: [idProductor], onDelete: Restrict, onUpdate: Cascade)
+  lotes           LoteProduccion[]
+  certificaciones Certificacion[]
+
+  @@index([idProductor])
+  @@map("fincas")
+}
+
+model LoteProduccion {
+  idLote               BigInt     @id @default(autoincrement()) @map("id_lote")
+  idFinca              BigInt     @map("id_finca")
+  codigoLote           String     @unique @map("codigo_lote") @db.VarChar(40)
+  variedad             String     @default("Cavendish") @db.VarChar(60)
+  fechaSiembra         DateTime?  @map("fecha_siembra") @db.Date
+  fechaEstimadaCosecha DateTime?  @map("fecha_estimada_cosecha") @db.Date
+  fechaCosecha         DateTime?  @map("fecha_cosecha") @db.Date
+  cantidadPlantas      Int?       @map("cantidad_plantas")
+  pesoCosechadoKg      Decimal?   @map("peso_cosechado_kg") @db.Decimal(12, 2)
+  estado               EstadoLote @default(EN_PRODUCCION)
+  fechaRegistro        DateTime   @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+
+  finca            Finca                @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
+  eventos          EventoTrazabilidad[]
+  controlesCalidad ControlCalidad[]
+  empaques         Empaque[]
+
+  @@index([idFinca])
+  @@index([estado])
+  @@map("lotes_produccion")
+}
+
+model TipoEvento {
+  idTipoEvento Int     @id @default(autoincrement()) @map("id_tipo_evento") @db.SmallInt
+  nombre       String  @unique @db.VarChar(50)
+  descripcion  String? @db.VarChar(200)
+
+  eventos EventoTrazabilidad[]
+
+  @@map("tipos_evento")
+}
+
+model EventoTrazabilidad {
+  idEvento         BigInt   @id @default(autoincrement()) @map("id_evento")
+  idLote           BigInt   @map("id_lote")
+  idTipoEvento     Int      @map("id_tipo_evento") @db.SmallInt
+  idUsuario        BigInt   @map("id_usuario")
+  fechaEvento      DateTime @map("fecha_evento") @db.Timestamptz(6)
+  ubicacion        String?  @db.VarChar(150)
+  descripcion      String?  @db.Text
+  datosAdicionales Json     @default("{}") @map("datos_adicionales") @db.JsonB
+  fechaRegistro    DateTime @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+
+  lote               LoteProduccion      @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  tipoEvento         TipoEvento          @relation(fields: [idTipoEvento], references: [idTipoEvento], onDelete: Restrict, onUpdate: Cascade)
+  usuario            Usuario             @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  registroBlockchain RegistroBlockchain?
+
+  @@index([idLote, fechaEvento])
+  @@index([idTipoEvento])
+  @@index([idUsuario])
+  @@map("eventos_trazabilidad")
+}
+
+model ControlCalidad {
+  idControl         BigInt           @id @default(autoincrement()) @map("id_control")
+  idLote            BigInt           @map("id_lote")
+  idUsuario         BigInt           @map("id_usuario")
+  fechaControl      DateTime         @default(now()) @map("fecha_control") @db.Timestamptz(6)
+  categoriaCalidad  String?          @map("categoria_calidad") @db.VarChar(30)
+  calibreMm         Decimal?         @map("calibre_mm") @db.Decimal(6, 2)
+  pesoMuestraKg     Decimal?         @map("peso_muestra_kg") @db.Decimal(8, 2)
+  porcentajeRechazo Decimal?         @map("porcentaje_rechazo") @db.Decimal(5, 2)
+  resultado         ResultadoControl
+  observaciones     String?          @db.Text
+
+  lote    LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  usuario Usuario        @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([idLote, fechaControl])
+  @@index([idUsuario])
+  @@map("controles_calidad")
+}
+
+model Certificacion {
+  idCertificacion   BigInt    @id @default(autoincrement()) @map("id_certificacion")
+  idFinca           BigInt    @map("id_finca")
+  tipoCertificacion String    @map("tipo_certificacion") @db.VarChar(80)
+  entidadEmisora    String    @map("entidad_emisora") @db.VarChar(120)
+  numeroCertificado String    @unique @map("numero_certificado") @db.VarChar(80)
+  fechaEmision      DateTime  @map("fecha_emision") @db.Date
+  fechaVencimiento  DateTime? @map("fecha_vencimiento") @db.Date
+  documentoUrl      String?   @map("documento_url") @db.VarChar(500)
+
+  finca Finca @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([idFinca])
+  @@map("certificaciones")
+}
+
+model Empaque {
+  idEmpaque    BigInt        @id @default(autoincrement()) @map("id_empaque")
+  idLote       BigInt        @map("id_lote")
+  codigoCaja   String        @unique @map("codigo_caja") @db.VarChar(50)
+  fechaEmpaque DateTime      @default(now()) @map("fecha_empaque") @db.Timestamptz(6)
+  pesoNetoKg   Decimal       @map("peso_neto_kg") @db.Decimal(8, 2)
+  categoria    String?       @db.VarChar(30)
+  codigoQr     String?       @unique @map("codigo_qr") @db.VarChar(255)
+  estado       EstadoEmpaque @default(DISPONIBLE)
+
+  lote          LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  enviosEmpaque EnvioEmpaque[]
+
+  @@index([idLote])
+  @@index([estado])
+  @@map("empaques")
+}
+
+model Envio {
+  idEnvio              BigInt      @id @default(autoincrement()) @map("id_envio")
+  codigoEnvio          String      @unique @map("codigo_envio") @db.VarChar(40)
+  numeroContenedor     String?     @map("numero_contenedor") @db.VarChar(30)
+  naviera              String?     @db.VarChar(100)
+  puertoOrigen         String      @map("puerto_origen") @db.VarChar(100)
+  puertoDestino        String      @map("puerto_destino") @db.VarChar(100)
+  paisDestino          String      @map("pais_destino") @db.VarChar(80)
+  fechaSalida          DateTime?   @map("fecha_salida") @db.Timestamptz(6)
+  fechaEstimadaLlegada DateTime?   @map("fecha_estimada_llegada") @db.Timestamptz(6)
+  temperaturaSalida    Decimal?    @map("temperatura_salida") @db.Decimal(5, 2)
+  estado               EstadoEnvio @default(PLANIFICADO)
+
+  empaques EnvioEmpaque[]
+
+  @@index([estado, fechaSalida])
+  @@map("envios")
+}
+
+model EnvioEmpaque {
+  idEnvio   BigInt @map("id_envio")
+  idEmpaque BigInt @map("id_empaque")
+
+  envio   Envio   @relation(fields: [idEnvio], references: [idEnvio], onDelete: Cascade, onUpdate: Cascade)
+  empaque Empaque @relation(fields: [idEmpaque], references: [idEmpaque], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([idEnvio, idEmpaque])
+  @@index([idEmpaque])
+  @@map("envio_empaque")
+}
+
+model RegistroBlockchain {
+  idRegistroBlockchain     BigInt                       @id @default(autoincrement()) @map("id_registro_blockchain")
+  idEvento                 BigInt                       @unique @map("id_evento")
+  hashDatos                String                       @unique @map("hash_datos") @db.Char(64)
+  hashAnterior             String?                      @map("hash_anterior") @db.Char(64)
+  identificadorTransaccion String?                      @map("identificador_transaccion") @db.VarChar(150)
+  redBlockchain            String?                      @map("red_blockchain") @db.VarChar(60)
+  fechaRegistro            DateTime                     @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+  estadoConfirmacion       EstadoConfirmacionBlockchain @default(PENDIENTE) @map("estado_confirmacion")
+
+  evento EventoTrazabilidad @relation(fields: [idEvento], references: [idEvento], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("registros_blockchain")
+}
