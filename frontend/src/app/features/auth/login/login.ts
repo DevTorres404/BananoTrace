@@ -56,7 +56,7 @@ export class Login {
       },
       error: () => {
         this.isLoading = false;
-        this.errorMessage = 'Credenciales inválidas o error en el servidor';
+        this.errorMessage = 'Credenciales inválidas';
         this.cdr.detectChanges();
       },
     });

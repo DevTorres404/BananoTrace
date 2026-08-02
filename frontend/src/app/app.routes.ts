@@ -2,12 +2,15 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 
+import { guestGuard } from './core/auth/guest.guard';
+
 const adminGuards = [authGuard, roleGuard];
 
 export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login').then((module) => module.Login),
+    canActivate: [guestGuard],
   },
   {
     path: 'usuarios/crear',
