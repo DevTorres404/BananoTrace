@@ -348,12 +348,23 @@ model Finca {
   @@map("fincas")
 }
 
+model Variedad {
+  idVariedad  Int              @id @default(autoincrement()) @map("id_variedad") @db.SmallInt
+  codigo      String           @unique @db.VarChar(30)
+  nombre      String           @db.VarChar(60)
+  descripcion String?          @db.VarChar(255)
+  activo      Boolean          @default(true)
+  lotes       LoteProduccion[]
+
+  @@map("variedades")
+}
+
 model LoteProduccion {
   idLote               BigInt     @id @default(autoincrement()) @map("id_lote")
   idUnidad             BigInt     @unique @map("id_unidad")
   idFinca              BigInt     @map("id_finca")
   codigoLote           String     @unique @default(dbgenerated()) @map("codigo_lote") @db.VarChar(40)
-  variedad             String     @default("Cavendish") @db.VarChar(60)
+  idVariedad           Int?       @map("id_variedad") @db.SmallInt
   fechaSiembra         DateTime?  @map("fecha_siembra") @db.Date
   fechaEstimadaCosecha DateTime?  @map("fecha_estimada_cosecha") @db.Date
   fechaCosecha         DateTime?  @map("fecha_cosecha") @db.Date
@@ -365,10 +376,12 @@ model LoteProduccion {
 
   unidad           UnidadTrazable   @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
   finca            Finca            @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
+  variedadCat      Variedad?        @relation(fields: [idVariedad], references: [idVariedad], onDelete: SetNull, onUpdate: Cascade)
   controlesCalidad ControlCalidad[]
   empaques         Empaque[]
 
   @@index([idFinca])
+  @@index([idVariedad])
   @@index([estado])
   @@map("lotes_produccion")
 }

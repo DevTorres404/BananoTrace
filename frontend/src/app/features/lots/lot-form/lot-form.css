@@ -1,0 +1,17 @@
+.lot-modal {
+  width: min(720px, 100%);
+}
+
+.generated-code-note {
+  margin: 0 0 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  border-radius: 11px;
+  padding: 0.75rem 0.9rem;
+  color: var(--color-text-secondary);
+  background: var(--color-primary-soft);
+  font-size: 0.82rem;
+}
+
+.generated-code-note strong {
+  color: var(--color-primary);
+}

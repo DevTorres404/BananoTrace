@@ -19,16 +19,16 @@ describe('FarmsService', () => {
 
   it('sends only populated farm filters', () => {
     service
-      .getFarms({ provincia: 'Los Ríos', canton: '', estado: 'true', idProductor: '5' })
+      .getFarms({ pais: 'Ecuador', region: 'Los Ríos', localidad: '', estado: 'true' })
       .subscribe();
 
     const request = httpMock.expectOne(
       (candidate) =>
         candidate.url === '/api/farms' &&
-        candidate.params.get('provincia') === 'Los Ríos' &&
+        candidate.params.get('pais') === 'Ecuador' &&
+        candidate.params.get('region') === 'Los Ríos' &&
         candidate.params.get('estado') === 'true' &&
-        candidate.params.get('idProductor') === '5' &&
-        !candidate.params.has('canton'),
+        !candidate.params.has('localidad'),
     );
     expect(request.request.method).toBe('GET');
     request.flush([]);

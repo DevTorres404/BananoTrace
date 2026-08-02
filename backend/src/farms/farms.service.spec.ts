@@ -17,9 +17,10 @@ describe('FarmsService', () => {
     idProductor: 5n,
     codigoFinca: 'FINCA-010',
     nombre: 'Finca Norte',
-    provincia: 'Los Ríos',
-    canton: 'Quevedo',
-    parroquia: null,
+    pais: 'Ecuador',
+    region: 'Los Ríos',
+    localidad: 'Quevedo',
+    sublocalidad: null,
     latitud: new Prisma.Decimal('-1.0223'),
     longitud: new Prisma.Decimal('-79.4604'),
     areaHectareas: new Prisma.Decimal('18.50'),
@@ -66,7 +67,7 @@ describe('FarmsService', () => {
     prisma.finca.findMany.mockResolvedValue([farmRow]);
 
     const result = await service.findAll(
-      { provincia: 'Ríos', canton: 'Quevedo', estado: 'true' },
+      { pais: 'Ecuador', region: 'Ríos', localidad: 'Quevedo', estado: 'true' },
       producerActor,
     );
 
@@ -75,8 +76,9 @@ describe('FarmsService', () => {
         where: {
           AND: expect.arrayContaining([
             { idProductor: 5n },
-            { provincia: { contains: 'Ríos', mode: 'insensitive' } },
-            { canton: { contains: 'Quevedo', mode: 'insensitive' } },
+            { pais: { contains: 'Ecuador', mode: 'insensitive' } },
+            { region: { contains: 'Ríos', mode: 'insensitive' } },
+            { localidad: { contains: 'Quevedo', mode: 'insensitive' } },
             { estado: true },
           ]),
         },
@@ -96,10 +98,10 @@ describe('FarmsService', () => {
       service.create(
         {
           idProductor: '8',
-          codigoFinca: 'FINCA-011',
           nombre: 'Finca Sur',
-          provincia: 'Guayas',
-          canton: 'Naranjal',
+          pais: 'Ecuador',
+          region: 'Guayas',
+          localidad: 'Naranjal',
         },
         producerActor,
       ),

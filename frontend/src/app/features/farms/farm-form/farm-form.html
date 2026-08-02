@@ -21,24 +21,24 @@
         </label>
 
         <label class="field">
-          <span>Código *</span>
-          <input name="codigoFinca" [(ngModel)]="model.codigoFinca" maxlength="30" required />
-        </label>
-        <label class="field">
           <span>Nombre *</span>
           <input name="nombre" [(ngModel)]="model.nombre" maxlength="100" required />
         </label>
         <label class="field">
-          <span>Provincia *</span>
-          <input name="provincia" [(ngModel)]="model.provincia" maxlength="60" required />
+          <span>País *</span>
+          <input name="pais" [(ngModel)]="model.pais" maxlength="80" required />
         </label>
         <label class="field">
-          <span>Cantón *</span>
-          <input name="canton" [(ngModel)]="model.canton" maxlength="60" required />
+          <span>Región / estado / provincia *</span>
+          <input name="region" [(ngModel)]="model.region" maxlength="100" required />
+        </label>
+        <label class="field">
+          <span>Ciudad / municipio *</span>
+          <input name="localidad" [(ngModel)]="model.localidad" maxlength="100" required />
         </label>
         <label class="field full">
-          <span>Parroquia</span>
-          <input name="parroquia" [(ngModel)]="model.parroquia" maxlength="60" />
+          <span>Distrito / localidad secundaria</span>
+          <input name="sublocalidad" [(ngModel)]="model.sublocalidad" maxlength="100" />
         </label>
         <label class="field">
           <span>Área (hectáreas)</span>

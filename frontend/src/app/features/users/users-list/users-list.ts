@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { UserForm } from '../user-form/user-form';
 import { UserAccount, UsersService } from '../users.service';
@@ -7,9 +8,9 @@ import { UserAccount, UsersService } from '../users.service';
 @Component({
   selector: 'app-users-list',
   standalone: true,
-  imports: [CommonModule, UserForm],
+  imports: [CommonModule, FormsModule, UserForm],
   templateUrl: './users-list.html',
-  styleUrls: ['./users-list.css'],
+  styleUrls: ['../../farms/farms-page/farms-page.css', './users-list.css'],
 })
 export class UsersList implements OnInit {
   private readonly usersService = inject(UsersService);
@@ -21,6 +22,32 @@ export class UsersList implements OnInit {
   modalUserId: string | null = null;
   isUserModalOpen = false;
   errorMessage = '';
+  searchTerm = '';
+  roleFilter = '';
+  statusFilter: '' | 'active' | 'inactive' = '';
+
+  get visibleUsers(): UserAccount[] {
+    const search = this.searchTerm.trim().toLowerCase();
+    return this.users.filter(
+      (user) =>
+        (!search ||
+          `${user.nombres} ${user.apellidos} ${user.correo}`.toLowerCase().includes(search)) &&
+        (!this.roleFilter || user.rol.nombre === this.roleFilter) &&
+        (!this.statusFilter || user.estado === (this.statusFilter === 'active')),
+    );
+  }
+
+  get activeUsers(): number {
+    return this.users.filter((user) => user.estado).length;
+  }
+
+  get linkedUsers(): number {
+    return this.users.filter((user) => user.idProductor !== null).length;
+  }
+
+  get roleOptions(): string[] {
+    return [...new Set(this.users.map((user) => user.rol.nombre))].sort();
+  }
 
   ngOnInit(): void {
     this.loadUsers();
@@ -87,6 +114,12 @@ export class UsersList implements OnInit {
   onUserSaved(): void {
     this.closeUserModal();
     this.loadUsers();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.roleFilter = '';
+    this.statusFilter = '';
   }
 
   getRoleClass(roleName: string): string {

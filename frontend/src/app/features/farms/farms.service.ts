@@ -13,9 +13,10 @@ export interface Farm {
   idProductor: string;
   codigoFinca: string;
   nombre: string;
-  provincia: string;
-  canton: string;
-  parroquia: string | null;
+  pais: string;
+  region: string;
+  localidad: string;
+  sublocalidad: string | null;
   latitud: string | null;
   longitud: string | null;
   areaHectareas: string | null;
@@ -28,11 +29,11 @@ export interface Farm {
 
 export interface FarmPayload {
   idProductor?: string;
-  codigoFinca: string;
   nombre: string;
-  provincia: string;
-  canton: string;
-  parroquia?: string;
+  pais: string;
+  region: string;
+  localidad: string;
+  sublocalidad?: string;
   latitud?: string | null;
   longitud?: string | null;
   areaHectareas?: string | null;
@@ -41,8 +42,9 @@ export interface FarmPayload {
 
 export interface FarmFilters {
   search?: string;
-  provincia?: string;
-  canton?: string;
+  pais?: string;
+  region?: string;
+  localidad?: string;
   idProductor?: string;
   estado?: '' | 'true' | 'false';
 }

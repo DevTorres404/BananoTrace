@@ -151,7 +151,7 @@ button:disabled {
 }
 .filters {
   display: grid;
-  grid-template-columns: minmax(170px, 1.5fr) repeat(4, minmax(130px, 1fr)) auto;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   align-items: end;
   gap: 0.75rem;
 }

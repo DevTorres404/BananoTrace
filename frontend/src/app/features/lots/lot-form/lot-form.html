@@ -1,0 +1,83 @@
+<div class="modal-backdrop" (mousedown)="onBackdropClick($event)">
+  <section class="modal-card lot-modal" role="dialog" aria-modal="true" aria-labelledby="lot-title">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Producción agrícola</p>
+        <h2 id="lot-title">{{ isEditMode ? 'Editar lote' : 'Nuevo lote' }}</h2>
+      </div>
+      <button type="button" class="close-button" aria-label="Cerrar" (click)="close()">×</button>
+    </header>
+
+    <form #lotForm="ngForm" (ngSubmit)="onSubmit()">
+      <p class="generated-code-note" *ngIf="!isEditMode">
+        El código <strong>BAN-AAAA-NNN</strong> se asignará automáticamente al guardar.
+      </p>
+      <div class="form-grid">
+        <label class="field full">
+          <span>Finca *</span>
+          <select name="idFinca" [(ngModel)]="model.idFinca" required [disabled]="isEditMode">
+            <option value="" disabled>Seleccioná una finca</option>
+            <option *ngFor="let farm of farms" [value]="farm.idFinca">
+              {{ farm.codigoFinca }} · {{ farm.nombre }}
+            </option>
+          </select>
+        </label>
+        <label class="field full">
+          <span>Variedad *</span>
+          <input name="variedad" [(ngModel)]="model.variedad" maxlength="60" required />
+        </label>
+        <label class="field">
+          <span>Fecha de siembra</span>
+          <input name="fechaSiembra" [(ngModel)]="model.fechaSiembra" type="date" />
+        </label>
+        <label class="field">
+          <span>Fecha estimada de cosecha</span>
+          <input name="fechaEstimada" [(ngModel)]="model.fechaEstimadaCosecha" type="date" />
+        </label>
+        <label class="field full">
+          <span>Cantidad de plantas</span>
+          <input
+            name="cantidadPlantas"
+            [(ngModel)]="model.cantidadPlantas"
+            type="number"
+            min="1"
+            step="1"
+          />
+        </label>
+
+        <ng-container *ngIf="isEditMode">
+          <label class="field">
+            <span>Fecha de cosecha</span>
+            <input name="fechaCosecha" [(ngModel)]="model.fechaCosecha" type="date" />
+          </label>
+          <label class="field">
+            <span>Peso cosechado (kg)</span>
+            <input
+              name="peso"
+              [(ngModel)]="model.pesoCosechadoKg"
+              type="number"
+              min="0.01"
+              step="0.01"
+            />
+          </label>
+          <label class="field full">
+            <span>Estado operativo</span>
+            <select name="estado" [(ngModel)]="model.estado">
+              <option *ngFor="let state of states" [ngValue]="state">
+                {{ stateLabels[state] }}
+              </option>
+            </select>
+          </label>
+        </ng-container>
+      </div>
+
+      <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <footer class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="close()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="lotForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : 'Guardar lote' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

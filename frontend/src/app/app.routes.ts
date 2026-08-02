@@ -60,6 +60,24 @@ export const routes: Routes = [
     data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR] },
   },
   {
+    path: 'lotes/:id',
+    loadComponent: () =>
+      import('./features/lots/lot-detail/lot-detail').then((module) => module.LotDetail),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA],
+    },
+  },
+  {
+    path: 'lotes',
+    loadComponent: () =>
+      import('./features/lots/lots-page/lots-page').then((module) => module.LotsPage),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA],
+    },
+  },
+  {
     path: 'dashboard',
     loadComponent: () =>
       import('./shared/feature-placeholder/feature-placeholder').then(

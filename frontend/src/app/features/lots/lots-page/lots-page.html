@@ -1,0 +1,158 @@
+<main class="farms-page lots-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Producción agrícola</p>
+      <h1>Lotes</h1>
+      <p>Gestión de ciclos productivos vinculados a fincas y flujos de trazabilidad.</p>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Resumen de lotes">
+    <article class="metric-card teal">
+      <span>Total de lotes</span><strong>{{ summary.totalLots }}</strong
+      ><small>Ciclos productivos registrados</small>
+    </article>
+    <article class="metric-card green">
+      <span>Lotes activos</span><strong>{{ summary.activeLots }}</strong
+      ><small>Flujos que todavía no están cerrados</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Plantas registradas</span><strong>{{ summary.totalPlants | number }}</strong
+      ><small>Total acumulado en los lotes</small>
+    </article>
+  </section>
+
+  <section *ngIf="canManage" class="creation-callout" aria-label="Crear lote">
+    <div class="creation-copy">
+      <span class="creation-icon" aria-hidden="true">+</span>
+      <div>
+        <strong>Nuevo ciclo productivo</strong>
+        <small>El código trazable y el flujo se asignarán automáticamente.</small>
+      </div>
+    </div>
+    <button type="button" class="btn-primary" (click)="openModal()">Crear lote</button>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Filtrar lotes</h2>
+        <p>Filtros por finca, estado o rango de siembra.</p>
+      </div>
+    </div>
+    <form class="lot-filters" (ngSubmit)="applyFilters()">
+      <label
+        ><span>Finca</span
+        ><select name="finca" [(ngModel)]="filters.idFinca">
+          <option value="">Todas</option>
+          <option *ngFor="let farm of farms" [value]="farm.idFinca">
+            {{ farm.codigoFinca }} · {{ farm.nombre }}
+          </option>
+        </select></label
+      >
+      <label
+        ><span>Estado</span
+        ><select name="estado" [(ngModel)]="filters.estado">
+          <option value="">Todos</option>
+          <option *ngFor="let state of states" [value]="state">{{ stateLabels[state] }}</option>
+        </select></label
+      >
+      <label
+        ><span>Siembra desde</span><input name="desde" [(ngModel)]="filters.desde" type="date"
+      /></label>
+      <label
+        ><span>Siembra hasta</span><input name="hasta" [(ngModel)]="filters.hasta" type="date"
+      /></label>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button
+        ><button type="submit" class="btn-primary">Aplicar</button>
+      </div>
+    </form>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="loadInitial()">Reintentar</button>
+  </p>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de lotes</h2>
+        <p>{{ pagination.total }} registro(s)</p>
+      </div>
+    </div>
+    <div *ngIf="isLoading" class="state">Cargando lotes...</div>
+    <div *ngIf="!isLoading" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Finca</th>
+            <th>Variedad</th>
+            <th>Siembra</th>
+            <th>Plantas</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let lot of lots">
+            <td data-label="Código">
+              <strong>{{ lot.codigoLote }}</strong
+              ><small>ID {{ lot.idLote }}</small>
+            </td>
+            <td data-label="Finca">
+              <strong>{{ lot.finca.nombre }}</strong
+              ><small>{{ lot.finca.localidad }}, {{ lot.finca.pais }}</small>
+            </td>
+            <td data-label="Variedad">{{ lot.variedadNombre || lot.variedad || '—' }}</td>
+            <td data-label="Siembra">
+              {{ lot.fechaSiembra ? (lot.fechaSiembra | date: 'dd/MM/yyyy' : 'UTC') : '—' }}
+            </td>
+            <td data-label="Plantas">{{ lot.cantidadPlantas || '—' }}</td>
+            <td data-label="Estado">
+              <span class="status lot-status">{{ stateLabels[lot.estado] }}</span>
+            </td>
+            <td data-label="Acciones">
+              <div class="row-actions">
+                <a class="table-link" [routerLink]="['/lotes', lot.idLote]">Detalle</a
+                ><button *ngIf="canManage" type="button" (click)="openModal(lot)">Editar</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="lots.length === 0">
+            <td colspan="7" class="state">No hay lotes para los filtros seleccionados.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <footer class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
+  </section>
+
+  <app-lot-form
+    *ngIf="isModalOpen"
+    [lot]="selectedLot"
+    [farms]="farms"
+    [states]="states"
+    (closed)="closeModal()"
+    (saved)="onSaved()"
+  />
+</main>

@@ -19,9 +19,10 @@ const farmSelect = {
   idProductor: true,
   codigoFinca: true,
   nombre: true,
-  provincia: true,
-  canton: true,
-  parroquia: true,
+  pais: true,
+  region: true,
+  localidad: true,
+  sublocalidad: true,
   latitud: true,
   longitud: true,
   areaHectareas: true,
@@ -98,7 +99,12 @@ export class FarmsService {
     const farms = await this.prisma.finca.findMany({
       where,
       select: farmSelect,
-      orderBy: [{ estado: 'desc' }, { provincia: 'asc' }, { nombre: 'asc' }],
+      orderBy: [
+        { estado: 'desc' },
+        { pais: 'asc' },
+        { region: 'asc' },
+        { nombre: 'asc' },
+      ],
     });
     return farms.map((farm) => this.serializeFarm(farm));
   }
@@ -107,7 +113,7 @@ export class FarmsService {
     const farms = await this.prisma.finca.findMany({
       where: { AND: [this.buildScope(actor), { estado: true }] },
       select: farmSelect,
-      orderBy: [{ provincia: 'asc' }, { nombre: 'asc' }],
+      orderBy: [{ pais: 'asc' }, { region: 'asc' }, { nombre: 'asc' }],
     });
     const serialized = farms.map((farm) => this.serializeFarm(farm));
 
@@ -148,20 +154,20 @@ export class FarmsService {
       const idProductor = await this.resolveProducerId(dto.idProductor, actor);
       data.productor = { connect: { idProductor } };
     }
-    if (dto.codigoFinca !== undefined) {
-      data.codigoFinca = this.requireText(dto.codigoFinca, 'código');
-    }
     if (dto.nombre !== undefined) {
       data.nombre = this.requireText(dto.nombre, 'nombre');
     }
-    if (dto.provincia !== undefined) {
-      data.provincia = this.requireText(dto.provincia, 'provincia');
+    if (dto.pais !== undefined) {
+      data.pais = this.requireText(dto.pais, 'país');
     }
-    if (dto.canton !== undefined) {
-      data.canton = this.requireText(dto.canton, 'cantón');
+    if (dto.region !== undefined) {
+      data.region = this.requireText(dto.region, 'región');
     }
-    if (dto.parroquia !== undefined) {
-      data.parroquia = dto.parroquia?.trim() || null;
+    if (dto.localidad !== undefined) {
+      data.localidad = this.requireText(dto.localidad, 'localidad');
+    }
+    if (dto.sublocalidad !== undefined) {
+      data.sublocalidad = dto.sublocalidad?.trim() || null;
     }
     if (dto.latitud !== undefined) {
       data.latitud = this.parseCoordinate(dto.latitud, 'latitud', -90, 90);
@@ -304,11 +310,11 @@ export class FarmsService {
     }
     return {
       idProductor,
-      codigoFinca: this.requireText(dto.codigoFinca, 'código'),
       nombre: this.requireText(dto.nombre, 'nombre'),
-      provincia: this.requireText(dto.provincia, 'provincia'),
-      canton: this.requireText(dto.canton, 'cantón'),
-      parroquia: dto.parroquia?.trim() || null,
+      pais: this.requireText(dto.pais, 'país'),
+      region: this.requireText(dto.region, 'región'),
+      localidad: this.requireText(dto.localidad, 'localidad'),
+      sublocalidad: dto.sublocalidad?.trim() || null,
       latitud: this.parseCoordinate(dto.latitud, 'latitud', -90, 90),
       longitud: this.parseCoordinate(dto.longitud, 'longitud', -180, 180),
       areaHectareas: this.parseArea(dto.areaHectareas),
@@ -375,8 +381,9 @@ export class FarmsService {
         OR: [
           { codigoFinca: { contains: search, mode: 'insensitive' } },
           { nombre: { contains: search, mode: 'insensitive' } },
-          { provincia: { contains: search, mode: 'insensitive' } },
-          { canton: { contains: search, mode: 'insensitive' } },
+          { pais: { contains: search, mode: 'insensitive' } },
+          { region: { contains: search, mode: 'insensitive' } },
+          { localidad: { contains: search, mode: 'insensitive' } },
           {
             productor: {
               nombreRazonSocial: { contains: search, mode: 'insensitive' },
@@ -385,14 +392,19 @@ export class FarmsService {
         ],
       });
     }
-    if (query.provincia?.trim()) {
+    if (query.pais?.trim()) {
       filters.push({
-        provincia: { contains: query.provincia.trim(), mode: 'insensitive' },
+        pais: { contains: query.pais.trim(), mode: 'insensitive' },
       });
     }
-    if (query.canton?.trim()) {
+    if (query.region?.trim()) {
       filters.push({
-        canton: { contains: query.canton.trim(), mode: 'insensitive' },
+        region: { contains: query.region.trim(), mode: 'insensitive' },
+      });
+    }
+    if (query.localidad?.trim()) {
+      filters.push({
+        localidad: { contains: query.localidad.trim(), mode: 'insensitive' },
       });
     }
     if (query.estado !== undefined && query.estado !== '') {
@@ -492,9 +504,10 @@ export class FarmsService {
       idProductor: row.idProductor.toString(),
       codigoFinca: row.codigoFinca,
       nombre: row.nombre,
-      provincia: row.provincia,
-      canton: row.canton,
-      parroquia: row.parroquia,
+      pais: row.pais,
+      region: row.region,
+      localidad: row.localidad,
+      sublocalidad: row.sublocalidad,
       latitud: row.latitud?.toString() ?? null,
       longitud: row.longitud?.toString() ?? null,
       areaHectareas: row.areaHectareas?.toString() ?? null,

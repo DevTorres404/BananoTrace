@@ -1,38 +1,103 @@
-<main class="list-container">
-  <header class="header-actions">
+<main class="farms-page users-page">
+  <header class="page-header">
     <div>
       <p class="eyebrow">Administración</p>
       <h1>Usuarios</h1>
-      <p class="subtitle">Gestioná accesos, roles y estado de las cuentas.</p>
+      <p>Gestión de accesos, roles y estado de las cuentas.</p>
     </div>
-    <button type="button" class="btn-create" (click)="openCreateModal()">
-      <span aria-hidden="true">+</span>
-      Nuevo usuario
-    </button>
   </header>
 
-  <section class="glass-panel" aria-live="polite">
-    <div *ngIf="isLoading" class="loading-state">Cargando usuarios...</div>
+  <section class="metrics" aria-label="Resumen de usuarios">
+    <article class="metric-card teal">
+      <span>Total de usuarios</span><strong>{{ users.length }}</strong
+      ><small>Cuentas registradas en el sistema</small>
+    </article>
+    <article class="metric-card green">
+      <span>Usuarios activos</span><strong>{{ activeUsers }}</strong
+      ><small>Con acceso operativo habilitado</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Vinculados a productor</span><strong>{{ linkedUsers }}</strong
+      ><small>Cuentas con alcance productivo</small>
+    </article>
+  </section>
 
-    <div *ngIf="errorMessage" class="error-msg">
-      <span>{{ errorMessage }}</span>
-      <button type="button" (click)="loadUsers()">Reintentar</button>
+  <section class="creation-callout" aria-label="Crear usuario">
+    <div class="creation-copy">
+      <span class="creation-icon" aria-hidden="true">+</span>
+      <div>
+        <strong>Nueva cuenta de usuario</strong>
+        <small>Asignación de rol y alcance operativo.</small>
+      </div>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreateModal()">Crear usuario</button>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Filtrar usuarios</h2>
+        <p>Búsqueda por nombre o correo, con filtros de rol y estado.</p>
+      </div>
+    </div>
+    <div class="user-filters">
+      <label
+        ><span>Búsqueda</span
+        ><input
+          type="search"
+          [(ngModel)]="searchTerm"
+          placeholder="Nombre o correo"
+          aria-label="Buscar usuarios"
+      /></label>
+      <label
+        ><span>Rol</span
+        ><select [(ngModel)]="roleFilter" aria-label="Filtrar por rol">
+          <option value="">Todos</option>
+          <option *ngFor="let role of roleOptions" [value]="role">
+            {{ role.replaceAll('_', ' ') }}
+          </option>
+        </select></label
+      >
+      <label
+        ><span>Estado</span
+        ><select [(ngModel)]="statusFilter" aria-label="Filtrar por estado">
+          <option value="">Todos</option>
+          <option value="active">Activo</option>
+          <option value="inactive">Inactivo</option>
+        </select></label
+      >
+      <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="loadUsers()">Reintentar</button>
+  </p>
+
+  <section class="panel" aria-live="polite">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de usuarios</h2>
+        <p>{{ visibleUsers.length }} resultado(s)</p>
+      </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="!isLoading && !errorMessage">
-      <table class="data-table">
+    <div *ngIf="isLoading" class="state">Cargando usuarios...</div>
+
+    <div class="table-scroll" *ngIf="!isLoading && !errorMessage">
+      <table>
         <thead>
           <tr>
             <th>Usuario</th>
             <th>Correo</th>
             <th>Rol</th>
             <th>Estado</th>
-            <th class="actions-heading">Acciones</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of users">
-            <td>
+          <tr *ngFor="let user of visibleUsers">
+            <td data-label="Usuario">
               <div class="user-cell">
                 <span class="avatar"
                   >{{ user.nombres.charAt(0) }}{{ user.apellidos.charAt(0) }}</span
@@ -43,44 +108,39 @@
                 </div>
               </div>
             </td>
-            <td>{{ user.correo }}</td>
-            <td>
-              <span class="badge role-badge" [ngClass]="getRoleClass(user.rol.nombre)">
+            <td data-label="Correo">{{ user.correo }}</td>
+            <td data-label="Rol">
+              <span class="role-badge" [ngClass]="getRoleClass(user.rol.nombre)">
                 {{ user.rol.nombre.replaceAll('_', ' ') }}
               </span>
             </td>
-            <td>
-              <span class="badge" [ngClass]="user.estado ? 'status-active' : 'status-inactive'">
+            <td data-label="Estado">
+              <span class="status" [class.inactive]="!user.estado">
                 {{ user.estado ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-            <td class="actions-cell">
-              <button
-                type="button"
-                class="btn-icon btn-edit"
-                (click)="openEditModal(user.idUsuario)"
-              >
-                Editar
-              </button>
-              <button
-                type="button"
-                class="btn-icon"
-                [class.btn-deactivate]="user.estado"
-                [disabled]="updatingUserId === user.idUsuario"
-                (click)="toggleStatus(user)"
-              >
-                {{
-                  updatingUserId === user.idUsuario
-                    ? 'Guardando...'
-                    : user.estado
-                      ? 'Desactivar'
-                      : 'Activar'
-                }}
-              </button>
+            <td data-label="Acciones">
+              <div class="row-actions">
+                <button type="button" (click)="openEditModal(user.idUsuario)">Editar</button>
+                <button
+                  type="button"
+                  [class.danger]="user.estado"
+                  [disabled]="updatingUserId === user.idUsuario"
+                  (click)="toggleStatus(user)"
+                >
+                  {{
+                    updatingUserId === user.idUsuario
+                      ? 'Guardando...'
+                      : user.estado
+                        ? 'Desactivar'
+                        : 'Activar'
+                  }}
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="users.length === 0">
-            <td colspan="5" class="empty-state">No se encontraron usuarios.</td>
+          <tr *ngIf="visibleUsers.length === 0">
+            <td colspan="5" class="state">No se encontraron usuarios con esos filtros.</td>
           </tr>
         </tbody>
       </table>

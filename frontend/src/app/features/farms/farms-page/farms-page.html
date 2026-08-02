@@ -3,10 +3,7 @@
     <div>
       <p class="eyebrow">Producción</p>
       <h1>Fincas</h1>
-      <p>Administrá las ubicaciones productivas y sus lotes activos.</p>
-    </div>
-    <div class="header-actions">
-      <button type="button" class="btn-primary" (click)="openFarmModal()">Nueva finca</button>
+      <p>Gestión de ubicaciones productivas y sus lotes activos.</p>
     </div>
   </header>
 
@@ -25,11 +22,22 @@
     </article>
   </section>
 
+  <section class="creation-callout" aria-label="Crear finca">
+    <div class="creation-copy">
+      <span class="creation-icon" aria-hidden="true">+</span>
+      <div>
+        <strong>Nueva ubicación productiva</strong>
+        <small>Registro de una ubicación vinculada con su productor.</small>
+      </div>
+    </div>
+    <button type="button" class="btn-primary" (click)="openFarmModal()">Crear finca</button>
+  </section>
+
   <section class="panel filter-panel">
     <div class="section-heading">
       <div>
         <h2>Buscar fincas</h2>
-        <p>Filtrá por ubicación, productor o estado operativo.</p>
+        <p>Filtros por ubicación, productor o estado operativo.</p>
       </div>
     </div>
     <form class="filters" (ngSubmit)="applyFilters()">
@@ -37,10 +45,11 @@
         ><span>Búsqueda</span
         ><input name="search" [(ngModel)]="filters.search" placeholder="Código, finca o productor"
       /></label>
+      <label><span>País</span><input name="pais" [(ngModel)]="filters.pais" /></label>
+      <label><span>Región</span><input name="region" [(ngModel)]="filters.region" /></label>
       <label
-        ><span>Provincia</span><input name="provincia" [(ngModel)]="filters.provincia"
+        ><span>Ciudad / municipio</span><input name="localidad" [(ngModel)]="filters.localidad"
       /></label>
-      <label><span>Cantón</span><input name="canton" [(ngModel)]="filters.canton" /></label>
       <label *ngIf="isAdmin"
         ><span>Productor</span
         ><select name="productor" [(ngModel)]="filters.idProductor">
@@ -99,10 +108,12 @@
             </td>
             <td data-label="Productor">{{ farm.productor.nombreRazonSocial }}</td>
             <td data-label="Ubicación">
-              <strong>{{ farm.canton }}</strong
+              <strong>{{ farm.localidad }}</strong
               ><small
-                >{{ farm.provincia
-                }}<ng-container *ngIf="farm.parroquia"> · {{ farm.parroquia }}</ng-container></small
+                >{{ farm.region }}, {{ farm.pais
+                }}<ng-container *ngIf="farm.sublocalidad">
+                  · {{ farm.sublocalidad }}</ng-container
+                ></small
               >
             </td>
             <td data-label="Área">

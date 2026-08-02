@@ -1,0 +1,188 @@
+<main class="farms-page lot-detail-page">
+  <a routerLink="/lotes" class="back-link">← Volver a lotes</a>
+  <div *ngIf="isLoading" class="state">Cargando lote...</div>
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="loadDetail()">Reintentar</button>
+  </p>
+
+  <ng-container *ngIf="lot as currentLot">
+    <header class="page-header detail-header">
+      <div>
+        <p class="eyebrow">Lote trazable</p>
+        <h1>{{ currentLot.codigoLote }}</h1>
+        <p>{{ currentLot.variedadNombre || currentLot.variedad || '—' }} · {{ currentLot.finca.nombre }}</p>
+      </div>
+      <div class="header-actions">
+        <span class="status lot-status">{{ stateLabels[currentLot.estado] }}</span
+        ><button *ngIf="canManage" type="button" class="btn-secondary" (click)="isEditOpen = true">
+          Editar lote
+        </button>
+      </div>
+    </header>
+
+    <section class="detail-grid">
+      <article class="panel info-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Datos productivos</h2>
+            <p>Información registrada para el lote.</p>
+          </div>
+        </div>
+        <dl class="data-grid">
+          <div>
+            <dt>Finca</dt>
+            <dd>{{ currentLot.finca.codigoFinca }} · {{ currentLot.finca.nombre }}</dd>
+          </div>
+          <div>
+            <dt>Ubicación</dt>
+            <dd>
+              {{ currentLot.finca.localidad }}, {{ currentLot.finca.region }},
+              {{ currentLot.finca.pais }}
+            </dd>
+          </div>
+          <div>
+            <dt>Fecha de siembra</dt>
+            <dd>
+              {{
+                currentLot.fechaSiembra
+                  ? (currentLot.fechaSiembra | date: 'dd/MM/yyyy' : 'UTC')
+                  : '—'
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Cosecha estimada</dt>
+            <dd>
+              {{
+                currentLot.fechaEstimadaCosecha
+                  ? (currentLot.fechaEstimadaCosecha | date: 'dd/MM/yyyy' : 'UTC')
+                  : '—'
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Fecha de cosecha</dt>
+            <dd>
+              {{
+                currentLot.fechaCosecha
+                  ? (currentLot.fechaCosecha | date: 'dd/MM/yyyy' : 'UTC')
+                  : '—'
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Cantidad de plantas</dt>
+            <dd>{{ currentLot.cantidadPlantas || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Peso cosechado</dt>
+            <dd>{{ currentLot.pesoCosechadoKg ? currentLot.pesoCosechadoKg + ' kg' : '—' }}</dd>
+          </div>
+          <div>
+            <dt>Productor</dt>
+            <dd>{{ currentLot.finca.productor.nombreRazonSocial }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="panel flow-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Estado del flujo</h2>
+            <p *ngIf="currentLot.flujo">
+              {{ currentLot.flujo.definicion.nombre }} · v{{ currentLot.flujo.definicion.version }}
+            </p>
+          </div>
+        </div>
+        <div *ngIf="currentLot.flujo as flow; else noFlow">
+          <div class="current-phase" *ngIf="flow.faseActual as phase">
+            <span>Fase actual</span><strong>{{ phase.nombre }}</strong
+            ><small
+              >Responsable: {{ roleLabels[phase.idRolResponsable || 0] || 'Sin asignar' }}</small
+            >
+          </div>
+          <ol class="phase-list">
+            <li
+              *ngFor="let execution of flow.fases"
+              [class.completed]="execution.estado === 'COMPLETADO'"
+              [class.current]="execution.idEjecucion === flow.faseActual?.idEjecucion"
+            >
+              <span class="phase-index">{{ execution.fase.orden }}</span>
+              <div>
+                <strong>{{ execution.fase.nombre }}</strong
+                ><small
+                  >{{ execution.estado | titlecase
+                  }}<ng-container *ngIf="execution.responsable">
+                    · {{ execution.responsable }}</ng-container
+                  ></small
+                >
+              </div>
+            </li>
+          </ol>
+          <form *ngIf="flow.faseActual && canAdvance" class="advance-box" (ngSubmit)="advance()">
+            <label
+              ><span>Comentario {{ flow.faseActual.requiereAprobacion ? '*' : '(opcional)' }}</span
+              ><textarea
+                name="comment"
+                [(ngModel)]="comment"
+                rows="3"
+                [required]="flow.faseActual.requiereAprobacion"
+                placeholder="Resultado o evidencia de la fase"
+              ></textarea>
+            </label>
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="isAdvancing || (flow.faseActual.requiereAprobacion && !comment.trim())"
+            >
+              {{ isAdvancing ? 'Avanzando...' : 'Completar y avanzar fase' }}
+            </button>
+          </form>
+          <p *ngIf="flow.faseActual && !canAdvance" class="role-notice">
+            La fase debe ser completada por el rol
+            {{ roleLabels[flow.faseActual.idRolResponsable || 0] || 'responsable' }}.
+          </p>
+          <p *ngIf="!flow.faseActual" class="completed-flow">Flujo completado.</p>
+        </div>
+        <ng-template #noFlow
+          ><p class="state">Este lote no tiene un flujo asociado.</p></ng-template
+        >
+      </article>
+    </section>
+
+    <section class="panel timeline-panel">
+      <div class="section-heading">
+        <div>
+          <h2>Línea de tiempo</h2>
+          <p>Eventos de trazabilidad registrados sobre la unidad.</p>
+        </div>
+      </div>
+      <ol class="timeline" *ngIf="currentLot.timeline.length > 0; else emptyTimeline">
+        <li *ngFor="let event of currentLot.timeline">
+          <span class="timeline-dot"></span>
+          <div>
+            <time>{{ event.fecha | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}</time
+            ><strong>{{ event.tipo | titlecase }}</strong>
+            <p>{{ event.descripcion || 'Sin descripción' }}</p>
+            <small
+              >Registrado por {{ event.usuario
+              }}<ng-container *ngIf="event.ubicacion"> · {{ event.ubicacion }}</ng-container></small
+            >
+          </div>
+        </li>
+      </ol>
+      <ng-template #emptyTimeline
+        ><p class="state">Todavía no hay eventos para este lote.</p></ng-template
+      >
+    </section>
+
+    <app-lot-form
+      *ngIf="isEditOpen"
+      [lot]="currentLot"
+      [farms]="farms"
+      [states]="states"
+      (closed)="isEditOpen = false"
+      (saved)="onSaved()"
+    />
+  </ng-container>
+</main>

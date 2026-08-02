@@ -3,17 +3,7 @@
     <div>
       <p class="eyebrow">Cumplimiento fitosanitario</p>
       <h1>Certificaciones</h1>
-      <p>Gestioná la vigencia y el respaldo documental de cada finca.</p>
-    </div>
-    <div class="header-actions">
-      <button
-        type="button"
-        class="btn-primary"
-        (click)="openModal()"
-        [disabled]="activeFarms.length === 0"
-      >
-        Nueva certificación
-      </button>
+      <p>Gestión de vigencia y respaldo documental de cada finca.</p>
     </div>
   </header>
 
@@ -32,11 +22,29 @@
     </article>
   </section>
 
+  <section class="creation-callout" aria-label="Crear certificación">
+    <div class="creation-copy">
+      <span class="creation-icon" aria-hidden="true">+</span>
+      <div>
+        <strong>Cumplimiento fitosanitario al día</strong>
+        <small>Registro del respaldo documental de una finca activa.</small>
+      </div>
+    </div>
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="openModal()"
+      [disabled]="activeFarms.length === 0"
+    >
+      Crear certificación
+    </button>
+  </section>
+
   <section class="panel filter-panel">
     <div class="section-heading">
       <div>
         <h2>Filtrar certificaciones</h2>
-        <p>Consultá documentos por finca o vigencia.</p>
+        <p>Consulta de documentos por finca o vigencia.</p>
       </div>
     </div>
     <div class="certification-filters">

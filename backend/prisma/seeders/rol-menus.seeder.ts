@@ -7,7 +7,7 @@ const assignments: Record<number, number[]> = {
   [ROLE_IDS.ADMINISTRADOR]: ALL_MENUS,
   [ROLE_IDS.PRODUCTOR]: [1, 2, 3, 4, 10, 11, 12, 13, 20, 21, 31],
   [ROLE_IDS.CALIDAD]: [1, 2, 3, 12, 20, 21, 22],
-  [ROLE_IDS.LOGISTICA]: [1, 3, 4, 22, 23, 30, 31],
+  [ROLE_IDS.LOGISTICA]: [1, 2, 3, 4, 12, 22, 23, 30, 31],
   [ROLE_IDS.CLIENTE]: [1, 4, 31],
 };
 

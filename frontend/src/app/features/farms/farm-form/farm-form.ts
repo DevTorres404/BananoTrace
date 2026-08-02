@@ -114,11 +114,11 @@ export class FarmForm implements OnInit, AfterViewInit, OnDestroy {
   onSubmit(): void {
     this.errorMessage = '';
     const payload: FarmPayload = {
-      codigoFinca: this.model.codigoFinca.trim().toUpperCase(),
       nombre: this.model.nombre.trim(),
-      provincia: this.model.provincia.trim(),
-      canton: this.model.canton.trim(),
-      parroquia: this.model.parroquia?.trim() || undefined,
+      pais: this.model.pais.trim(),
+      region: this.model.region.trim(),
+      localidad: this.model.localidad.trim(),
+      sublocalidad: this.model.sublocalidad?.trim() || undefined,
       latitud: this.model.latitud || null,
       longitud: this.model.longitud || null,
       areaHectareas: this.model.areaHectareas || null,
@@ -148,11 +148,11 @@ export class FarmForm implements OnInit, AfterViewInit, OnDestroy {
   private emptyModel(): FarmPayload {
     return {
       idProductor: '',
-      codigoFinca: '',
       nombre: '',
-      provincia: '',
-      canton: '',
-      parroquia: '',
+      pais: '',
+      region: '',
+      localidad: '',
+      sublocalidad: '',
       latitud: null,
       longitud: null,
       areaHectareas: null,
@@ -163,11 +163,11 @@ export class FarmForm implements OnInit, AfterViewInit, OnDestroy {
   private populate(farm: Farm): void {
     this.model = {
       idProductor: farm.idProductor,
-      codigoFinca: farm.codigoFinca,
       nombre: farm.nombre,
-      provincia: farm.provincia,
-      canton: farm.canton,
-      parroquia: farm.parroquia ?? '',
+      pais: farm.pais,
+      region: farm.region,
+      localidad: farm.localidad,
+      sublocalidad: farm.sublocalidad ?? '',
       latitud: farm.latitud,
       longitud: farm.longitud,
       areaHectareas: farm.areaHectareas,

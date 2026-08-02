@@ -30,7 +30,14 @@ export class FarmsPage implements OnInit {
     totalCertificaciones: 0,
     fincas: [],
   };
-  filters: FarmFilters = { search: '', provincia: '', canton: '', idProductor: '', estado: '' };
+  filters: FarmFilters = {
+    search: '',
+    pais: '',
+    region: '',
+    localidad: '',
+    idProductor: '',
+    estado: '',
+  };
   isLoading = true;
   busyId: string | null = null;
   errorMessage = '';
@@ -95,7 +102,14 @@ export class FarmsPage implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters = { search: '', provincia: '', canton: '', idProductor: '', estado: '' };
+    this.filters = {
+      search: '',
+      pais: '',
+      region: '',
+      localidad: '',
+      idProductor: '',
+      estado: '',
+    };
     this.applyFilters();
   }
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { EstadoLote, PrismaClient } from '@prisma/client';
 
 const FLOW_CODE = 'TRAZABILIDAD_BANANO_EXPORT';
 const FLOW_VERSION = 1;
@@ -10,6 +10,8 @@ const phaseDefinitions = [
     order: 1,
     responsibleRole: 'PRODUCTOR',
     requiresApproval: false,
+    lotStateStart: EstadoLote.EN_PRODUCCION,
+    lotStateEnd: EstadoLote.COSECHADO,
   },
   {
     code: 'CALIDAD',
@@ -17,6 +19,8 @@ const phaseDefinitions = [
     order: 2,
     responsibleRole: 'CALIDAD',
     requiresApproval: true,
+    lotStateStart: EstadoLote.COSECHADO,
+    lotStateEnd: EstadoLote.COSECHADO,
   },
   {
     code: 'EMPAQUE',
@@ -24,6 +28,8 @@ const phaseDefinitions = [
     order: 3,
     responsibleRole: 'CALIDAD',
     requiresApproval: false,
+    lotStateStart: EstadoLote.COSECHADO,
+    lotStateEnd: EstadoLote.EMPACADO,
   },
   {
     code: 'LOGISTICA',
@@ -31,6 +37,8 @@ const phaseDefinitions = [
     order: 4,
     responsibleRole: 'LOGISTICA',
     requiresApproval: true,
+    lotStateStart: EstadoLote.EMPACADO,
+    lotStateEnd: EstadoLote.EXPORTADO,
   },
 ] as const;
 
@@ -87,6 +95,8 @@ export async function seedFlujos(prisma: PrismaClient) {
         nombre: definition.name,
         orden: definition.order,
         requiereAprobacion: definition.requiresApproval,
+        estadoLoteInicio: definition.lotStateStart,
+        estadoLoteFin: definition.lotStateEnd,
         activo: true,
       },
       create: {
@@ -96,6 +106,8 @@ export async function seedFlujos(prisma: PrismaClient) {
         nombre: definition.name,
         orden: definition.order,
         requiereAprobacion: definition.requiresApproval,
+        estadoLoteInicio: definition.lotStateStart,
+        estadoLoteFin: definition.lotStateEnd,
         activo: true,
       },
       select: { idFase: true },

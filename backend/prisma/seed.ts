@@ -8,6 +8,7 @@ import * as path from 'path';
 import { seedRoles } from './seeders/roles.seeder';
 import { seedUsuarios } from './seeders/usuarios.seeder';
 import { seedTiposEvento } from './seeders/tipos-evento.seeder';
+import { seedVariedades } from './seeders/variedades.seeder';
 import { seedPantallas } from './seeders/pantallas.seeder';
 import { seedMenus } from './seeders/menus.seeder';
 import { seedRolMenus } from './seeders/rol-menus.seeder';
@@ -57,13 +58,14 @@ async function main() {
   // 1. Catálogos base (sin dependencias)
   await seedRoles(prisma);
   await seedTiposEvento(prisma);
+  await seedVariedades(prisma);
   await seedPantallas(prisma);
   await seedFlujos(prisma);
   const productorCanonico = await seedProductores(prisma);
-  await seedFincas(prisma, productorCanonico.idProductor);
 
   // 2. Dependen de roles
   await seedUsuarios(prisma, productorCanonico.idProductor);
+  await seedFincas(prisma, productorCanonico.idProductor);
   await seedMenus(prisma);
 
   // 3. Depende de roles + menus

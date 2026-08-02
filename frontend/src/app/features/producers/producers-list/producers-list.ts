@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../../../core/services/auth';
@@ -9,9 +10,9 @@ import { Producer, ProducersService } from '../producers.service';
 @Component({
   selector: 'app-producers-list',
   standalone: true,
-  imports: [CommonModule, ProducerForm],
+  imports: [CommonModule, FormsModule, ProducerForm],
   templateUrl: './producers-list.html',
-  styleUrls: ['./producers-list.css'],
+  styleUrls: ['../../farms/farms-page/farms-page.css', './producers-list.css'],
 })
 export class ProducersList implements OnInit {
   private readonly producersService = inject(ProducersService);
@@ -24,9 +25,34 @@ export class ProducersList implements OnInit {
   modalProducerId: string | null = null;
   isFormModalOpen = false;
   errorMessage = '';
+  searchTerm = '';
+  accountFilter: '' | 'linked' | 'unlinked' = '';
 
   get isAdmin(): boolean {
     return this.authService.currentUser()?.idRol === ROLE_IDS.ADMINISTRADOR;
+  }
+
+  get visibleProducers(): Producer[] {
+    const search = this.searchTerm.trim().toLowerCase();
+    return this.producers.filter(
+      (producer) =>
+        (!search ||
+          `${producer.nombreRazonSocial} ${producer.identificacion} ${producer.correo ?? ''}`
+            .toLowerCase()
+            .includes(search)) &&
+        (!this.accountFilter ||
+          (this.accountFilter === 'linked'
+            ? producer.usuarios.length > 0
+            : producer.usuarios.length === 0)),
+    );
+  }
+
+  get linkedProducers(): number {
+    return this.producers.filter((producer) => producer.usuarios.length > 0).length;
+  }
+
+  get totalFarms(): number {
+    return this.producers.reduce((total, producer) => total + producer.totalFincas, 0);
   }
 
   ngOnInit(): void {
@@ -70,6 +96,11 @@ export class ProducersList implements OnInit {
   onProducerSaved(): void {
     this.closeFormModal();
     this.loadProducers();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.accountFilter = '';
   }
 
   deleteProducer(producer: Producer): void {

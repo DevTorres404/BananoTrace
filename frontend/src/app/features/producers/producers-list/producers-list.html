@@ -1,26 +1,82 @@
-<main class="list-container">
-  <header class="header-actions">
+<main class="farms-page producers-page">
+  <header class="page-header">
     <div>
       <p class="eyebrow">Producción</p>
       <h1>Productores</h1>
-      <p class="subtitle">Registrá y gestioná los productores de banano.</p>
+      <p>Gestión de las entidades responsables de la producción.</p>
     </div>
-    <button *ngIf="isAdmin" type="button" class="btn-create" (click)="openCreateModal()">
-      <span aria-hidden="true">+</span>
-      Nuevo productor
-    </button>
   </header>
 
-  <section class="glass-panel" aria-live="polite">
-    <div *ngIf="isLoading" class="loading-state">Cargando productores...</div>
+  <section class="metrics" aria-label="Resumen de productores">
+    <article class="metric-card teal">
+      <span>Total de productores</span><strong>{{ producers.length }}</strong
+      ><small>Entidades de negocio registradas</small>
+    </article>
+    <article class="metric-card green">
+      <span>Con cuenta vinculada</span><strong>{{ linkedProducers }}</strong
+      ><small>Productores con acceso al sistema</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Fincas asociadas</span><strong>{{ totalFarms }}</strong
+      ><small>Ubicaciones productivas registradas</small>
+    </article>
+  </section>
 
-    <div *ngIf="errorMessage" class="error-msg">
-      <span>{{ errorMessage }}</span>
-      <button type="button" (click)="loadProducers()">Reintentar</button>
+  <section *ngIf="isAdmin" class="creation-callout" aria-label="Crear productor">
+    <div class="creation-copy">
+      <span class="creation-icon" aria-hidden="true">+</span>
+      <div>
+        <strong>Nuevo productor</strong>
+        <small>Registro de datos y vinculación de las cuentas responsables de sus fincas.</small>
+      </div>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreateModal()">Crear productor</button>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Filtrar productores</h2>
+        <p>Búsqueda por nombre, identificación o correo, con filtro de vinculación.</p>
+      </div>
+    </div>
+    <div class="producer-filters">
+      <label
+        ><span>Búsqueda</span
+        ><input
+          type="search"
+          [(ngModel)]="searchTerm"
+          placeholder="Nombre, identificación o correo"
+          aria-label="Buscar productores"
+      /></label>
+      <label
+        ><span>Cuenta vinculada</span
+        ><select [(ngModel)]="accountFilter" aria-label="Filtrar por cuenta vinculada">
+          <option value="">Todos</option>
+          <option value="linked">Con cuenta</option>
+          <option value="unlinked">Sin cuenta</option>
+        </select></label
+      >
+      <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="loadProducers()">Reintentar</button>
+  </p>
+
+  <section class="panel" aria-live="polite">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de productores</h2>
+        <p>{{ visibleProducers.length }} resultado(s)</p>
+      </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="!isLoading && !errorMessage">
-      <table class="data-table">
+    <div *ngIf="isLoading" class="state">Cargando productores...</div>
+
+    <div class="table-scroll" *ngIf="!isLoading && !errorMessage">
+      <table>
         <thead>
           <tr>
             <th>Productor</th>
@@ -29,12 +85,12 @@
             <th>Correo</th>
             <th>Cuenta vinculada</th>
             <th>Fincas</th>
-            <th class="actions-heading">Acciones</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let producer of producers">
-            <td>
+          <tr *ngFor="let producer of visibleProducers">
+            <td data-label="Productor">
               <div class="producer-cell">
                 <span class="avatar">{{ getInitials(producer.nombreRazonSocial) }}</span>
                 <div>
@@ -43,45 +99,37 @@
                 </div>
               </div>
             </td>
-            <td>
-              <span class="badge id-badge">{{ producer.identificacion }}</span>
+            <td data-label="Identificación">
+              <span class="id-badge">{{ producer.identificacion }}</span>
             </td>
-            <td>{{ producer.telefono || '—' }}</td>
-            <td>{{ producer.correo || '—' }}</td>
-            <td>
+            <td data-label="Teléfono">{{ producer.telefono || '—' }}</td>
+            <td data-label="Correo">{{ producer.correo || '—' }}</td>
+            <td data-label="Cuenta vinculada">
               <div class="account-list" *ngIf="producer.usuarios.length > 0; else noAccount">
-                <span *ngFor="let user of producer.usuarios">
-                  {{ user.correo }}
-                </span>
+                <span *ngFor="let user of producer.usuarios">{{ user.correo }}</span>
               </div>
-              <ng-template #noAccount>
-                <span class="unlinked-badge">Sin vincular</span>
-              </ng-template>
+              <ng-template #noAccount><span class="unlinked-badge">Sin vincular</span></ng-template>
             </td>
-            <td>
-              <span class="badge farms-badge">{{ producer.totalFincas }}</span>
+            <td data-label="Fincas">
+              <span class="count-badge">{{ producer.totalFincas }}</span>
             </td>
-            <td class="actions-cell">
-              <button
-                type="button"
-                class="btn-icon btn-edit"
-                (click)="openEditModal(producer.idProductor)"
-              >
-                Editar
-              </button>
-              <button
-                *ngIf="isAdmin"
-                type="button"
-                class="btn-icon btn-delete"
-                [disabled]="deletingId === producer.idProductor"
-                (click)="deleteProducer(producer)"
-              >
-                {{ deletingId === producer.idProductor ? 'Eliminando...' : 'Eliminar' }}
-              </button>
+            <td data-label="Acciones">
+              <div class="row-actions">
+                <button type="button" (click)="openEditModal(producer.idProductor)">Editar</button>
+                <button
+                  *ngIf="isAdmin"
+                  type="button"
+                  class="danger"
+                  [disabled]="deletingId === producer.idProductor"
+                  (click)="deleteProducer(producer)"
+                >
+                  {{ deletingId === producer.idProductor ? 'Eliminando...' : 'Eliminar' }}
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="producers.length === 0">
-            <td colspan="7" class="empty-state">No se encontraron productores.</td>
+          <tr *ngIf="visibleProducers.length === 0">
+            <td colspan="7" class="state">No se encontraron productores con esos filtros.</td>
           </tr>
         </tbody>
       </table>
