@@ -11,6 +11,7 @@ import { seedTiposEvento } from './seeders/tipos-evento.seeder';
 import { seedPantallas } from './seeders/pantallas.seeder';
 import { seedMenus } from './seeders/menus.seeder';
 import { seedRolMenus } from './seeders/rol-menus.seeder';
+import { seedFlujos } from './seeders/flujos.seeder';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 const connectionString = `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}?schema=public`;
@@ -25,6 +26,7 @@ async function main() {
   await seedRoles(prisma);
   await seedTiposEvento(prisma);
   await seedPantallas(prisma);
+  await seedFlujos(prisma);
 
   // 2. Dependen de roles
   await seedUsuarios(prisma);

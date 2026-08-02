@@ -1,48 +1,147 @@
-/* Global Styles & Design System */
+/* BananoTrace design system */
 
-:root {
-  /* =========================================
-     PALETA DE COLORES - BANANO TRACE
-     ========================================= */
-  
-  /* Colores Primarios (Basados en el logo) */
-  --color-primary: #0C9340;       /* Verde Hoja */
-  --color-primary-dark: #096b2e;
-  
-  --color-secondary: #FFC500;     /* Amarillo Banano */
-  --color-secondary-dark: #e6b200;
-  
-  --color-tertiary: #0B2052;      /* Azul Navy / Tech */
-  --color-tertiary-dark: #050a15; /* Fondo Ultra Oscuro */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
 
-  /* Neutrales & Superficies */
-  --color-bg-main: var(--color-tertiary-dark);
-  --color-surface: rgba(11, 32, 82, 0.4);
-  --color-surface-hover: rgba(11, 32, 82, 0.8);
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-glass: rgba(255, 255, 255, 0.03);
-  
-  /* Textos */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #cbd5e1;
-  
-  /* Feedback (Alertas, Errores, Éxitos) */
-  --color-error: #ef4444;
-  --color-error-text: #fca5a5;
-  --color-error-bg: rgba(239, 68, 68, 0.1);
-  
-  --color-success: #4ade80;
-  --color-success-bg: rgba(12, 147, 64, 0.1);
-  
-  /* Tipografía */
+  --color-primary: #16834b;
+  --color-primary-dark: #0e6338;
+  --color-primary-soft: rgba(22, 131, 75, 0.13);
+  --color-secondary: #e9ad00;
+  --color-secondary-dark: #bb8500;
+  --color-tertiary: #173b5f;
+  --color-tertiary-dark: #0b243b;
+
+  --color-bg-main: #f3f7f2;
+  --color-surface: #ffffff;
+  --color-surface-strong: #edf3ee;
+  --color-surface-hover: #e7f0e9;
+  --color-input: #fbfdfb;
+  --color-border: #d5e1d8;
+  --color-glass: rgba(255, 255, 255, 0.8);
+  --color-text-primary: #17251c;
+  --color-text-secondary: #607166;
+  --color-shadow: rgba(19, 53, 34, 0.13);
+
+  --color-sidebar: #f9fcf9;
+  --color-sidebar-text: #173326;
+  --color-sidebar-muted: #63796d;
+  --color-sidebar-border: #dce6df;
+  --color-sidebar-accent: #f0f5f1;
+  --color-sidebar-hover: #e8f1ea;
+  --color-sidebar-active: rgba(22, 131, 75, 0.13);
+  --color-sidebar-active-text: #0d6738;
+
+  --color-error: #d92d20;
+  --color-error-text: #b42318;
+  --color-error-bg: #fef3f2;
+  --color-success: #067647;
+  --color-success-bg: #ecfdf3;
+
+  --login-background:
+    radial-gradient(circle at 10% 10%, rgba(233, 173, 0, 0.2), transparent 30%),
+    radial-gradient(circle at 90% 85%, rgba(22, 131, 75, 0.25), transparent 34%),
+    linear-gradient(135deg, #eef5ee 0%, #dcebe1 48%, #f7f3df 100%);
+
   --font-family-base: 'Inter', 'Segoe UI', sans-serif;
 }
 
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary: #36c77a;
+  --color-primary-dark: #179354;
+  --color-primary-soft: rgba(54, 199, 122, 0.14);
+  --color-secondary: #f5c842;
+  --color-secondary-dark: #d9a711;
+  --color-tertiary: #173b5f;
+  --color-tertiary-dark: #071a24;
+
+  --color-bg-main: #081714;
+  --color-surface: #10231e;
+  --color-surface-strong: #152d26;
+  --color-surface-hover: #19362d;
+  --color-input: #0b1d19;
+  --color-border: #29443a;
+  --color-glass: rgba(16, 35, 30, 0.84);
+  --color-text-primary: #eef8f1;
+  --color-text-secondary: #a8bdb1;
+  --color-shadow: rgba(0, 0, 0, 0.36);
+
+  --color-sidebar: #0a1c18;
+  --color-sidebar-text: #f0f8f3;
+  --color-sidebar-muted: #9bb3a7;
+  --color-sidebar-border: #223b33;
+  --color-sidebar-accent: #102821;
+  --color-sidebar-hover: #17352c;
+  --color-sidebar-active: rgba(54, 199, 122, 0.16);
+  --color-sidebar-active-text: #70e4a3;
+
+  --color-error: #f97066;
+  --color-error-text: #fda29b;
+  --color-error-bg: rgba(217, 45, 32, 0.13);
+  --color-success: #6ce9a6;
+  --color-success-bg: rgba(3, 152, 85, 0.14);
+
+  --login-background:
+    radial-gradient(circle at 10% 15%, rgba(245, 200, 66, 0.12), transparent 28%),
+    radial-gradient(circle at 88% 82%, rgba(54, 199, 122, 0.16), transparent 34%),
+    linear-gradient(140deg, #061b18 0%, #0a2d28 48%, #071c2b 100%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--color-bg-main);
+}
+
 body {
+  min-height: 100vh;
   margin: 0;
   padding: 0;
-  font-family: var(--font-family-base);
-  background-color: var(--color-bg-main);
+  background: var(--color-bg-main);
   color: var(--color-text-primary);
-  min-height: 100vh;
+  font-family: var(--font-family-base);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

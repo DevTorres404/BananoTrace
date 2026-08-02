@@ -34,7 +34,13 @@ export async function seedMenus(prisma: PrismaClient) {
   for (const m of allMenus) {
     await prisma.menu.upsert({
       where: { idMenu: m.idMenu },
-      update: {},
+      update: {
+        etiqueta: m.etiqueta,
+        icono: m.icono,
+        orden: m.orden,
+        idPantalla: m.idPantalla,
+        idMenuPadre: m.idMenuPadre,
+      },
       create: {
         idMenu: m.idMenu,
         etiqueta: m.etiqueta,

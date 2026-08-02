@@ -1,0 +1,96 @@
+<main class="list-container">
+  <header class="header-actions">
+    <div>
+      <p class="eyebrow">Administración</p>
+      <h1>Usuarios</h1>
+      <p class="subtitle">Gestioná accesos, roles y estado de las cuentas.</p>
+    </div>
+    <button type="button" class="btn-create" (click)="openCreateModal()">
+      <span aria-hidden="true">+</span>
+      Nuevo usuario
+    </button>
+  </header>
+
+  <section class="glass-panel" aria-live="polite">
+    <div *ngIf="isLoading" class="loading-state">Cargando usuarios...</div>
+
+    <div *ngIf="errorMessage" class="error-msg">
+      <span>{{ errorMessage }}</span>
+      <button type="button" (click)="loadUsers()">Reintentar</button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!isLoading && !errorMessage">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th class="actions-heading">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>
+              <div class="user-cell">
+                <span class="avatar"
+                  >{{ user.nombres.charAt(0) }}{{ user.apellidos.charAt(0) }}</span
+                >
+                <div>
+                  <strong>{{ user.nombres }} {{ user.apellidos }}</strong>
+                  <small>ID {{ user.idUsuario }}</small>
+                </div>
+              </div>
+            </td>
+            <td>{{ user.correo }}</td>
+            <td>
+              <span class="badge role-badge" [ngClass]="getRoleClass(user.rol.nombre)">
+                {{ user.rol.nombre.replaceAll('_', ' ') }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="user.estado ? 'status-active' : 'status-inactive'">
+                {{ user.estado ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button
+                type="button"
+                class="btn-icon btn-edit"
+                (click)="openEditModal(user.idUsuario)"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                class="btn-icon"
+                [class.btn-deactivate]="user.estado"
+                [disabled]="updatingUserId === user.idUsuario"
+                (click)="toggleStatus(user)"
+              >
+                {{
+                  updatingUserId === user.idUsuario
+                    ? 'Guardando...'
+                    : user.estado
+                      ? 'Desactivar'
+                      : 'Activar'
+                }}
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="users.length === 0">
+            <td colspan="5" class="empty-state">No se encontraron usuarios.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-user-form
+    *ngIf="isUserModalOpen"
+    [userId]="modalUserId"
+    (closed)="closeUserModal()"
+    (saved)="onUserSaved()"
+  />
+</main>

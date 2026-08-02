@@ -53,12 +53,39 @@ enum EstadoConfirmacionBlockchain {
   @@map("estado_confirmacion_blockchain")
 }
 
+enum EstadoFlujo {
+  PENDIENTE
+  EN_PROCESO
+  COMPLETADO
+  RECHAZADO
+  CANCELADO
+
+  @@map("estado_flujo")
+}
+
+enum TipoUnidadTrazable {
+  LOTE
+  EMPAQUE
+  ENVIO
+
+  @@map("tipo_unidad_trazable")
+}
+
+enum RolUnidadFlujo {
+  PRINCIPAL
+  ENTRADA
+  SALIDA
+
+  @@map("rol_unidad_flujo")
+}
+
 model Rol {
   idRol       Int       @id @default(autoincrement()) @map("id_rol") @db.SmallInt
   nombre      String    @unique @db.VarChar(40)
   descripcion String?   @db.VarChar(150)
   usuarios    Usuario[]
   menus       RolMenu[]
+  fases       Fase[]
 
   @@map("roles")
 }
@@ -107,22 +134,175 @@ model RolMenu {
 }
 
 model Usuario {
-  idUsuario        BigInt   @id @default(autoincrement()) @map("id_usuario")
-  idRol            Int      @map("id_rol") @db.SmallInt
-  nombres          String   @db.VarChar(80)
-  apellidos        String   @db.VarChar(80)
-  correo           String   @unique @db.VarChar(120)
-  claveHash        String   @map("clave_hash") @db.VarChar(255)
-  estado           Boolean  @default(true)
-  fechaCreacion    DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  idUsuario          BigInt    @id @default(autoincrement()) @map("id_usuario")
+  idRol              Int       @map("id_rol") @db.SmallInt
+  nombres            String    @db.VarChar(80)
+  apellidos          String    @db.VarChar(80)
+  correo             String    @unique @db.VarChar(120)
+  claveHash          String    @map("clave_hash") @db.VarChar(255)
+  estado             Boolean   @default(true)
+  fechaCreacion      DateTime  @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
   fechaActualizacion DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
-  rol              Rol                  @relation(fields: [idRol], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
-  eventos          EventoTrazabilidad[]
-  controlesCalidad ControlCalidad[]
+  rol               Rol                   @relation(fields: [idRol], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
+  eventos           EventoTrazabilidad[]
+  controlesCalidad  ControlCalidad[]
+  fasesAsignadas    FaseEjecucion[]
+  transicionesFlujo TransicionEjecucion[]
 
   @@index([idRol])
   @@map("usuarios")
+}
+
+model Flujo {
+  idFlujo       Int      @id @default(autoincrement()) @map("id_flujo") @db.SmallInt
+  codigo        String   @db.VarChar(50)
+  version       Int      @default(1) @db.SmallInt
+  nombre        String   @db.VarChar(100)
+  descripcion   String?  @db.Text
+  activo        Boolean  @default(true)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+
+  fases      Fase[]
+  instancias FlujoInstancia[]
+
+  @@unique([codigo, version])
+  @@index([activo])
+  @@map("flujos")
+}
+
+model Fase {
+  idFase             Int     @id @default(autoincrement()) @map("id_fase") @db.SmallInt
+  idFlujo            Int     @map("id_flujo") @db.SmallInt
+  idRolResponsable   Int?    @map("id_rol_responsable") @db.SmallInt
+  codigo             String  @db.VarChar(50)
+  nombre             String  @db.VarChar(100)
+  orden              Int     @db.SmallInt
+  requiereAprobacion Boolean @default(false) @map("requiere_aprobacion")
+  activo             Boolean @default(true)
+
+  flujo               Flujo            @relation(fields: [idFlujo], references: [idFlujo], onDelete: Restrict, onUpdate: Cascade)
+  rolResponsable      Rol?             @relation(fields: [idRolResponsable], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
+  ejecuciones         FaseEjecucion[]
+  transicionesOrigen  TransicionFase[] @relation("FaseOrigen")
+  transicionesDestino TransicionFase[] @relation("FaseDestino")
+
+  @@unique([idFlujo, codigo])
+  @@unique([idFlujo, orden])
+  @@unique([idFase, idFlujo])
+  @@index([idRolResponsable])
+  @@map("fases")
+}
+
+model TransicionFase {
+  idTransicionFase Int     @id @default(autoincrement()) @map("id_transicion_fase") @db.SmallInt
+  idFaseOrigen     Int     @map("id_fase_origen") @db.SmallInt
+  idFaseDestino    Int     @map("id_fase_destino") @db.SmallInt
+  activo           Boolean @default(true)
+
+  faseOrigen  Fase @relation("FaseOrigen", fields: [idFaseOrigen], references: [idFase], onDelete: Restrict, onUpdate: Cascade)
+  faseDestino Fase @relation("FaseDestino", fields: [idFaseDestino], references: [idFase], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([idFaseOrigen, idFaseDestino])
+  @@index([idFaseDestino])
+  @@map("transiciones_fase")
+}
+
+model UnidadTrazable {
+  idUnidad      BigInt             @id @default(autoincrement()) @map("id_unidad")
+  tipo          TipoUnidadTrazable
+  codigo        String             @db.VarChar(255)
+  fechaRegistro DateTime           @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+
+  lote       LoteProduccion?
+  empaque    Empaque?
+  envio      Envio?
+  instancias FlujoInstanciaUnidad[]
+  eventos    EventoTrazabilidad[]
+
+  @@unique([tipo, codigo])
+  @@index([tipo])
+  @@map("unidades_trazables")
+}
+
+model FlujoInstancia {
+  idInstancia   BigInt      @id @default(autoincrement()) @map("id_instancia")
+  idFlujo       Int         @map("id_flujo") @db.SmallInt
+  codigo        String      @unique @db.VarChar(100)
+  estado        EstadoFlujo @default(PENDIENTE)
+  fechaInicio   DateTime?   @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFin      DateTime?   @map("fecha_fin") @db.Timestamptz(6)
+  fechaRegistro DateTime    @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+
+  flujo               Flujo                  @relation(fields: [idFlujo], references: [idFlujo], onDelete: Restrict, onUpdate: Cascade)
+  unidades            FlujoInstanciaUnidad[]
+  ejecuciones         FaseEjecucion[]
+  registrosBlockchain RegistroBlockchain[]
+
+  @@unique([idInstancia, idFlujo])
+  @@index([idFlujo, estado])
+  @@map("flujo_instancias")
+}
+
+model FlujoInstanciaUnidad {
+  idInstancia BigInt         @map("id_instancia")
+  idUnidad    BigInt         @map("id_unidad")
+  rol         RolUnidadFlujo @default(PRINCIPAL)
+
+  instancia FlujoInstancia @relation(fields: [idInstancia], references: [idInstancia], onDelete: Cascade, onUpdate: Cascade)
+  unidad    UnidadTrazable @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([idInstancia, idUnidad])
+  @@index([idUnidad, rol])
+  @@map("flujo_instancia_unidad")
+}
+
+model FaseEjecucion {
+  idEjecucion      BigInt      @id @default(autoincrement()) @map("id_ejecucion")
+  idInstancia      BigInt      @map("id_instancia")
+  idFase           Int         @map("id_fase") @db.SmallInt
+  idFlujo          Int         @map("id_flujo") @db.SmallInt
+  idResponsable    BigInt?     @map("id_responsable")
+  numeroIntento    Int         @default(1) @map("numero_intento") @db.SmallInt
+  estado           EstadoFlujo @default(PENDIENTE)
+  datosAdicionales Json        @default("{}") @map("datos_adicionales") @db.JsonB
+  fechaInicio      DateTime?   @map("fecha_inicio") @db.Timestamptz(6)
+  fechaFin         DateTime?   @map("fecha_fin") @db.Timestamptz(6)
+  fechaRegistro    DateTime    @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+
+  instancia        FlujoInstancia        @relation(fields: [idInstancia, idFlujo], references: [idInstancia, idFlujo], onDelete: Cascade, onUpdate: Cascade)
+  fase             Fase                  @relation(fields: [idFase, idFlujo], references: [idFase, idFlujo], onDelete: Restrict, onUpdate: Cascade)
+  responsable      Usuario?              @relation(fields: [idResponsable], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  transiciones     TransicionEjecucion[]
+  eventos          EventoTrazabilidad[]
+  controlesCalidad ControlCalidad[]
+  empaques         Empaque[]
+  envios           Envio[]
+
+  @@unique([idInstancia, idFase, numeroIntento])
+  @@index([idInstancia, estado])
+  @@index([idFase])
+  @@index([idResponsable])
+  @@map("fase_ejecuciones")
+}
+
+model TransicionEjecucion {
+  idTransicion     BigInt       @id @default(autoincrement()) @map("id_transicion")
+  idEjecucion      BigInt       @map("id_ejecucion")
+  idUsuario        BigInt       @map("id_usuario")
+  estadoAnterior   EstadoFlujo? @map("estado_anterior")
+  estadoNuevo      EstadoFlujo  @map("estado_nuevo")
+  comentario       String?      @db.Text
+  datosAdicionales Json         @default("{}") @map("datos_adicionales") @db.JsonB
+  fechaTransicion  DateTime     @default(now()) @map("fecha_transicion") @db.Timestamptz(6)
+
+  ejecucion          FaseEjecucion       @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  usuario            Usuario             @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  registroBlockchain RegistroBlockchain?
+
+  @@index([idEjecucion, fechaTransicion])
+  @@index([idUsuario])
+  @@map("transiciones_ejecucion")
 }
 
 model Productor {
@@ -163,6 +343,7 @@ model Finca {
 
 model LoteProduccion {
   idLote               BigInt     @id @default(autoincrement()) @map("id_lote")
+  idUnidad             BigInt     @unique @map("id_unidad")
   idFinca              BigInt     @map("id_finca")
   codigoLote           String     @unique @map("codigo_lote") @db.VarChar(40)
   variedad             String     @default("Cavendish") @db.VarChar(60)
@@ -175,8 +356,8 @@ model LoteProduccion {
   fechaRegistro        DateTime   @default(now()) @map("fecha_registro") @db.Timestamptz(6)
   fechaActualizacion   DateTime?  @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
-  finca            Finca                @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
-  eventos          EventoTrazabilidad[]
+  unidad           UnidadTrazable   @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+  finca            Finca            @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
   controlesCalidad ControlCalidad[]
   empaques         Empaque[]
 
@@ -197,7 +378,8 @@ model TipoEvento {
 
 model EventoTrazabilidad {
   idEvento         BigInt   @id @default(autoincrement()) @map("id_evento")
-  idLote           BigInt   @map("id_lote")
+  idUnidad         BigInt   @map("id_unidad")
+  idEjecucion      BigInt   @map("id_ejecucion")
   idTipoEvento     Int      @map("id_tipo_evento") @db.SmallInt
   idUsuario        BigInt   @map("id_usuario")
   fechaEvento      DateTime @map("fecha_evento") @db.Timestamptz(6)
@@ -206,13 +388,14 @@ model EventoTrazabilidad {
   datosAdicionales Json     @default("{}") @map("datos_adicionales") @db.JsonB
   fechaRegistro    DateTime @default(now()) @map("fecha_registro") @db.Timestamptz(6)
 
-  lote               LoteProduccion       @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
-  tipoEvento         TipoEvento           @relation(fields: [idTipoEvento], references: [idTipoEvento], onDelete: Restrict, onUpdate: Cascade)
-  usuario            Usuario              @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
-  registroBlockchain RegistroBlockchain?
-  documentos         DocumentoReferencia[]
+  unidad     UnidadTrazable        @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion  FaseEjecucion         @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  tipoEvento TipoEvento            @relation(fields: [idTipoEvento], references: [idTipoEvento], onDelete: Restrict, onUpdate: Cascade)
+  usuario    Usuario               @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  documentos DocumentoReferencia[]
 
-  @@index([idLote, fechaEvento])
+  @@index([idUnidad, fechaEvento])
+  @@index([idEjecucion])
   @@index([idTipoEvento])
   @@index([idUsuario])
   @@map("eventos_trazabilidad")
@@ -220,6 +403,7 @@ model EventoTrazabilidad {
 
 model ControlCalidad {
   idControl         BigInt           @id @default(autoincrement()) @map("id_control")
+  idEjecucion       BigInt           @map("id_ejecucion")
   idLote            BigInt           @map("id_lote")
   idUsuario         BigInt           @map("id_usuario")
   fechaControl      DateTime         @default(now()) @map("fecha_control") @db.Timestamptz(6)
@@ -230,9 +414,11 @@ model ControlCalidad {
   resultado         ResultadoControl
   observaciones     String?          @db.Text
 
-  lote    LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
-  usuario Usuario        @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  lote      LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  usuario   Usuario        @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
 
+  @@index([idEjecucion])
   @@index([idLote, fechaControl])
   @@index([idUsuario])
   @@map("controles_calidad")
@@ -256,6 +442,8 @@ model Certificacion {
 
 model Empaque {
   idEmpaque    BigInt        @id @default(autoincrement()) @map("id_empaque")
+  idUnidad     BigInt        @unique @map("id_unidad")
+  idEjecucion  BigInt        @map("id_ejecucion")
   idLote       BigInt        @map("id_lote")
   codigoCaja   String        @unique @map("codigo_caja") @db.VarChar(50)
   fechaEmpaque DateTime      @default(now()) @map("fecha_empaque") @db.Timestamptz(6)
@@ -264,9 +452,12 @@ model Empaque {
   codigoQr     String?       @unique @map("codigo_qr") @db.VarChar(255)
   estado       EstadoEmpaque @default(DISPONIBLE)
 
+  unidad        UnidadTrazable @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion     FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
   lote          LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
   enviosEmpaque EnvioEmpaque[]
 
+  @@index([idEjecucion])
   @@index([idLote])
   @@index([estado])
   @@map("empaques")
@@ -274,6 +465,8 @@ model Empaque {
 
 model Envio {
   idEnvio              BigInt      @id @default(autoincrement()) @map("id_envio")
+  idUnidad             BigInt      @unique @map("id_unidad")
+  idEjecucion          BigInt      @map("id_ejecucion")
   codigoEnvio          String      @unique @map("codigo_envio") @db.VarChar(40)
   numeroContenedor     String?     @map("numero_contenedor") @db.VarChar(30)
   naviera              String?     @db.VarChar(100)
@@ -285,8 +478,11 @@ model Envio {
   temperaturaSalida    Decimal?    @map("temperatura_salida") @db.Decimal(5, 2)
   estado               EstadoEnvio @default(PLANIFICADO)
 
-  empaques EnvioEmpaque[]
+  unidad    UnidadTrazable @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  empaques  EnvioEmpaque[]
 
+  @@index([idEjecucion])
   @@index([estado, fechaSalida])
   @@map("envios")
 }
@@ -305,17 +501,22 @@ model EnvioEmpaque {
 
 model RegistroBlockchain {
   idRegistroBlockchain     BigInt                       @id @default(autoincrement()) @map("id_registro_blockchain")
-  idEvento                 BigInt                       @unique @map("id_evento")
+  idInstancia              BigInt                       @map("id_instancia")
+  idTransicion             BigInt                       @unique @map("id_transicion")
   indice                   Int                          @map("indice")
   hashDatos                String                       @unique @map("hash_datos") @db.Char(64)
   hashAnterior             String?                      @map("hash_anterior") @db.Char(64)
+  payloadCanonico          String                       @map("payload_canonico") @db.Text
+  algoritmo                String                       @default("SHA-256") @db.VarChar(20)
   identificadorTransaccion String?                      @map("identificador_transaccion") @db.VarChar(150)
   redBlockchain            String?                      @map("red_blockchain") @db.VarChar(60)
   fechaRegistro            DateTime                     @default(now()) @map("fecha_registro") @db.Timestamptz(6)
   estadoConfirmacion       EstadoConfirmacionBlockchain @default(PENDIENTE) @map("estado_confirmacion")
 
-  evento EventoTrazabilidad @relation(fields: [idEvento], references: [idEvento], onDelete: Restrict, onUpdate: Cascade)
+  instancia  FlujoInstancia      @relation(fields: [idInstancia], references: [idInstancia], onDelete: Restrict, onUpdate: Cascade)
+  transicion TransicionEjecucion @relation(fields: [idTransicion], references: [idTransicion], onDelete: Restrict, onUpdate: Cascade)
 
+  @@unique([idInstancia, indice])
   @@map("registros_blockchain")
 }
 

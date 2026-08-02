@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-shell.authenticated {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.app-content {
+  min-width: 0;
+  min-height: 100vh;
+  background: var(--color-bg-main);
+}
+
+@media (max-width: 900px) {
+  .app-shell.authenticated {
+    display: block;
+  }
+
+  .app-shell.authenticated .app-content {
+    min-height: calc(100vh - 64px);
+  }
+}

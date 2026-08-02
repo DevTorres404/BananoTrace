@@ -19,7 +19,12 @@ export async function seedPantallas(prisma: PrismaClient) {
   for (const p of pantallas) {
     await prisma.pantalla.upsert({
       where: { ruta: p.ruta },
-      update: {},
+      update: {
+        nombre: p.nombre,
+        ruta: p.ruta,
+        icono: p.icono,
+        descripcion: p.descripcion
+      },
       create: p,
     });
   }

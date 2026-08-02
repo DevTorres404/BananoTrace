@@ -1,0 +1,124 @@
+<header class="mobile-bar">
+  <button
+    type="button"
+    class="icon-button menu-toggle"
+    [attr.aria-expanded]="isMenuOpen"
+    aria-controls="main-sidebar"
+    aria-label="Abrir navegación"
+    (click)="isMenuOpen = true"
+  >
+    <span></span><span></span><span></span>
+  </button>
+
+  <a class="mobile-brand" routerLink="/dashboard" (click)="closeMenu()">
+    <img class="brand-logo" src="logo.png" alt="BananoTrace - Trazabilidad inteligente" />
+  </a>
+
+  <button
+    type="button"
+    class="icon-button mobile-theme"
+    [attr.aria-label]="theme.theme() === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'"
+    (click)="toggleTheme()"
+  >
+    {{ theme.theme() === 'dark' ? '☀' : '☾' }}
+  </button>
+</header>
+
+<button
+  *ngIf="isMenuOpen"
+  type="button"
+  class="sidebar-backdrop"
+  aria-label="Cerrar navegación"
+  (click)="closeMenu()"
+></button>
+
+<aside id="main-sidebar" class="sidebar" [class.open]="isMenuOpen">
+  <div class="brand-row">
+    <a class="brand" routerLink="/dashboard" (click)="closeMenu()">
+      <img class="brand-logo" src="logo.png" alt="BananoTrace - Trazabilidad inteligente" />
+    </a>
+    <button
+      type="button"
+      class="close-sidebar"
+      aria-label="Cerrar navegación"
+      (click)="closeMenu()"
+    >
+      ×
+    </button>
+  </div>
+
+  <nav class="sidebar-navigation" aria-label="Navegación principal">
+    <span *ngIf="isLoading" class="nav-loading">Cargando navegación...</span>
+
+    <ng-container
+      *ngTemplateOutlet="navigationTree; context: { $implicit: items, depth: 0 }"
+    ></ng-container>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button type="button" class="theme-button" (click)="toggleTheme()">
+      <span class="theme-icon" aria-hidden="true">{{ theme.theme() === 'dark' ? '☀' : '☾' }}</span>
+      <span>
+        <strong>{{ theme.theme() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}</strong>
+        <small>Cambiar apariencia</small>
+      </span>
+    </button>
+
+    <div class="session">
+      <span class="avatar" aria-hidden="true">{{
+        auth.currentUser()?.email?.charAt(0)?.toUpperCase()
+      }}</span>
+      <div class="user-copy">
+        <strong>{{ auth.currentUser()?.email }}</strong>
+        <span>{{ auth.currentUser()?.rol?.replaceAll('_', ' ') }}</span>
+      </div>
+      <button type="button" class="logout-button" aria-label="Cerrar sesión" (click)="logout()">
+        Salir
+      </button>
+    </div>
+  </div>
+</aside>
+
+<ng-template #navigationTree let-nodes let-depth="depth">
+  <ul class="nav-list" [class.nested]="depth > 0">
+    <li
+      *ngFor="let item of nodes; trackBy: trackById"
+      class="nav-item"
+      [class.branch-active]="containsActiveRoute(item)"
+    >
+      <a
+        *ngIf="item.children.length === 0 && item.route"
+        class="nav-link"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMenu()"
+      >
+        <span class="nav-marker" [ngClass]="{'material-symbols-outlined': item.icon}" aria-hidden="true">{{ item.icon ? item.icon : item.label.charAt(0) }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+
+      <button
+        *ngIf="item.children.length > 0"
+        type="button"
+        class="nav-link group-trigger"
+        [class.active]="containsActiveRoute(item)"
+        [attr.aria-expanded]="isGroupOpen(item.id)"
+        (click)="toggleGroup(item.id)"
+      >
+        <span class="nav-marker" [ngClass]="{'material-symbols-outlined': item.icon}" aria-hidden="true">{{ item.icon ? item.icon : item.label.charAt(0) }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+        <span class="chevron" [class.expanded]="isGroupOpen(item.id)" aria-hidden="true">›</span>
+      </button>
+
+      <div *ngIf="item.children.length > 0" class="submenu" [class.open]="isGroupOpen(item.id)">
+        <ng-container
+          *ngTemplateOutlet="
+            navigationTree;
+            context: { $implicit: item.children, depth: depth + 1 }
+          "
+        ></ng-container>
+      </div>
+    </li>
+  </ul>
+</ng-template>

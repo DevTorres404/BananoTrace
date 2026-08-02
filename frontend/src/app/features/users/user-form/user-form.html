@@ -1,0 +1,115 @@
+<div class="modal-backdrop" (mousedown)="onBackdropClick($event)">
+  <section
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="user-modal-title"
+    [attr.aria-busy]="isLoadingData || isSaving"
+  >
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h2 id="user-modal-title">{{ isEditMode ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+        <p class="subtitle">
+          {{
+            isEditMode
+              ? 'Actualizá los datos y permisos de la cuenta.'
+              : 'Registrá una cuenta y asignale su rol operativo.'
+          }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="close-button"
+        aria-label="Cerrar formulario"
+        [disabled]="isSaving"
+        (click)="close()"
+      >
+        ×
+      </button>
+    </header>
+
+    <div *ngIf="isLoadingData" class="loading-state">Cargando formulario...</div>
+
+    <form *ngIf="!isLoadingData" (ngSubmit)="onSubmit()" #userForm="ngForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nombres">Nombres</label>
+          <input
+            #firstField
+            id="nombres"
+            name="nombres"
+            [(ngModel)]="user.nombres"
+            required
+            autocomplete="given-name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="apellidos">Apellidos</label>
+          <input
+            id="apellidos"
+            name="apellidos"
+            [(ngModel)]="user.apellidos"
+            required
+            autocomplete="family-name"
+          />
+        </div>
+
+        <div class="form-group full-width">
+          <label for="correo">Correo electrónico</label>
+          <input
+            id="correo"
+            type="email"
+            name="correo"
+            [(ngModel)]="user.correo"
+            required
+            email
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="idRol">Rol</label>
+          <select id="idRol" name="idRol" [(ngModel)]="user.idRol" required>
+            <option [ngValue]="0" disabled>Seleccioná un rol</option>
+            <option *ngFor="let role of roles" [ngValue]="role.idRol">
+              {{ role.nombre.replaceAll('_', ' ') }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="clave">{{ isEditMode ? 'Nueva contraseña' : 'Contraseña' }}</label>
+          <input
+            id="clave"
+            type="password"
+            name="clave"
+            [(ngModel)]="user.clave"
+            [required]="!isEditMode"
+            minlength="8"
+            autocomplete="new-password"
+          />
+          <small>{{
+            isEditMode ? 'Dejala vacía para conservar la actual.' : 'Mínimo 8 caracteres.'
+          }}</small>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-msg" role="alert">{{ errorMessage }}</div>
+
+      <footer class="actions">
+        <button type="button" class="btn-cancel" [disabled]="isSaving" (click)="close()">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="userForm.invalid || isSaving || user.idRol === 0"
+        >
+          {{ isSaving ? 'Guardando...' : isEditMode ? 'Guardar cambios' : 'Crear usuario' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>
