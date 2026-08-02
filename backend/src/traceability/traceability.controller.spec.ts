@@ -1,18 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { TraceabilityController } from './traceability.controller';
+import { TraceabilityService } from './traceability.service';
 
 describe('TraceabilityController', () => {
-  let controller: TraceabilityController;
+  it('delegates document type retrieval to the service', () => {
+    const service = { getDocumentTypes: jest.fn().mockReturnValue([]) };
+    const controller = new TraceabilityController(
+      service as unknown as TraceabilityService,
+    );
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [TraceabilityController],
-    }).compile();
-
-    controller = module.get<TraceabilityController>(TraceabilityController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(controller.getDocumentTypes()).toEqual([]);
+    expect(service.getDocumentTypes).toHaveBeenCalledTimes(1);
   });
 });

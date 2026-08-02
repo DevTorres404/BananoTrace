@@ -8,9 +8,14 @@ const roles = [
     descripcion: 'Administración, configuración y seguridad del sistema',
   },
   {
-    idRol: ROLE_IDS.PRODUCTOR,
-    nombre: 'PRODUCTOR',
+    idRol: ROLE_IDS.SUPERVISOR_AGRICOLA,
+    nombre: 'SUPERVISOR_AGRICOLA',
     descripcion: 'Gestión de finca, producción y actividades agrícolas',
+  },
+  {
+    idRol: ROLE_IDS.GERENTE_PRODUCTOR,
+    nombre: 'GERENTE_PRODUCTOR',
+    descripcion: 'Gestión integral de la unidad productiva y toma de decisiones',
   },
   {
     idRol: ROLE_IDS.CALIDAD,

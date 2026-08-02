@@ -9,6 +9,7 @@ import {
   EstadoFlujo,
   EstadoLote,
   Prisma,
+  ResultadoControl,
   RolUnidadFlujo,
   TipoUnidadTrazable,
 } from '@prisma/client';
@@ -238,17 +239,25 @@ export class LotsService {
   }
 
   async options(actor: LotActor) {
-    const farms = await this.prisma.finca.findMany({
-      where: { AND: [this.buildFarmScope(actor), { estado: true }] },
-      select: { idFinca: true, codigoFinca: true, nombre: true },
-      orderBy: { nombre: 'asc' },
-    });
+    const [farms, varieties] = await Promise.all([
+      this.prisma.finca.findMany({
+        where: { AND: [this.buildFarmScope(actor), { estado: true }] },
+        select: { idFinca: true, codigoFinca: true, nombre: true },
+        orderBy: { nombre: 'asc' },
+      }),
+      this.prisma.variedad.findMany({
+        where: { activo: true },
+        select: { idVariedad: true, codigo: true, nombre: true },
+        orderBy: { nombre: 'asc' },
+      }),
+    ]);
     return {
       states: Object.values(EstadoLote),
       farms: farms.map((farm) => ({
         ...farm,
         idFinca: farm.idFinca.toString(),
       })),
+      varieties,
     };
   }
 
@@ -510,6 +519,19 @@ export class LotsService {
       (a, b) => a.faseDestino.orden - b.faseDestino.orden,
     )[0]?.faseDestino;
 
+    if (current.fase.codigo === 'CALIDAD' && next?.codigo === 'EMPAQUE') {
+      const lastControl = await this.prisma.controlCalidad.findFirst({
+        where: { idLote },
+        orderBy: { fechaControl: 'desc' },
+        select: { resultado: true },
+      });
+      if (lastControl?.resultado === ResultadoControl.RECHAZADO) {
+        throw new ConflictException(
+          'El último control de calidad fue rechazado. Registre una nueva inspección aprobada antes de avanzar a empaque',
+        );
+      }
+    }
+
     await this.prisma.$transaction(async (tx) => {
       const finishedAt = new Date();
       await tx.faseEjecucion.update({
@@ -599,7 +621,7 @@ export class LotsService {
   }
 
   private buildScope(actor: LotActor): Prisma.LoteProduccionWhereInput {
-    if (actor.idRol === ROLE_IDS.PRODUCTOR) {
+    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
       return actor.idProductor
         ? {
             finca: {
@@ -623,7 +645,7 @@ export class LotsService {
   }
 
   private buildFarmScope(actor: LotActor): Prisma.FincaWhereInput {
-    if (actor.idRol === ROLE_IDS.PRODUCTOR) {
+    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
       return actor.idProductor
         ? { idProductor: this.parseId(actor.idProductor, 'productor') }
         : { idFinca: -1n };

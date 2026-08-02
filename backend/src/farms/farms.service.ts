@@ -46,8 +46,10 @@ const farmSelect = {
 const certificationSelect = {
   idCertificacion: true,
   idFinca: true,
+  idTipoCertificacion: true,
+  idEntidadCertificadora: true,
   tipoCertificacion: true,
-  entidadEmisora: true,
+  entidadCertificadora: true,
   numeroCertificado: true,
   fechaEmision: true,
   fechaVencimiento: true,
@@ -223,6 +225,27 @@ export class FarmsService {
     return certifications.map((row) => this.serializeCertification(row));
   }
 
+  async certificationOptions() {
+    const [types, issuers] = await Promise.all([
+      this.prisma.tipoCertificacion.findMany({
+        where: { activo: true },
+        select: { idTipoCertificacion: true, codigo: true, nombre: true },
+        orderBy: { nombre: 'asc' },
+      }),
+      this.prisma.entidadCertificadora.findMany({
+        where: { activo: true },
+        select: {
+          idEntidadCertificadora: true,
+          codigo: true,
+          nombre: true,
+          alcance: true,
+        },
+        orderBy: { nombre: 'asc' },
+      }),
+    ]);
+    return { types, issuers };
+  }
+
   async createCertification(
     farmId: string,
     dto: CreateCertificationDto,
@@ -231,13 +254,17 @@ export class FarmsService {
     const idFinca = this.parseId(farmId, 'finca');
     await this.findAccessibleFarm(idFinca, actor);
     const data = this.buildCertificationData(dto);
+    const [idTipoCertificacion, idEntidadCertificadora] = await Promise.all([
+      this.resolveCertificationType(data.tipoCertificacion!),
+      this.resolveCertificationIssuer(data.entidadEmisora!),
+    ]);
 
     try {
       const certification = await this.prisma.certificacion.create({
         data: {
           idFinca,
-          tipoCertificacion: data.tipoCertificacion!,
-          entidadEmisora: data.entidadEmisora!,
+          idTipoCertificacion,
+          idEntidadCertificadora,
           numeroCertificado: data.numeroCertificado!,
           fechaEmision: data.fechaEmision!,
           fechaVencimiento: data.fechaVencimiento,
@@ -277,9 +304,24 @@ export class FarmsService {
       );
     }
     try {
+      const updateData: Prisma.CertificacionUncheckedUpdateInput = {
+        numeroCertificado: data.numeroCertificado,
+        fechaEmision: data.fechaEmision,
+        fechaVencimiento: data.fechaVencimiento,
+        documentoUrl: data.documentoUrl,
+      };
+      if (data.tipoCertificacion !== undefined) {
+        updateData.idTipoCertificacion = await this.resolveCertificationType(
+          data.tipoCertificacion,
+        );
+      }
+      if (data.entidadEmisora !== undefined) {
+        updateData.idEntidadCertificadora =
+          await this.resolveCertificationIssuer(data.entidadEmisora);
+      }
       const certification = await this.prisma.certificacion.update({
         where: { idCertificacion },
-        data,
+        data: updateData,
         select: certificationSelect,
       });
       return this.serializeCertification(certification);
@@ -413,7 +455,7 @@ export class FarmsService {
     if (query.idProductor) {
       const idProductor = this.parseId(query.idProductor, 'productor');
       if (
-        actor.idRol === ROLE_IDS.PRODUCTOR &&
+        actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA &&
         actor.idProductor !== idProductor.toString()
       ) {
         throw new ForbiddenException('No tenés acceso a ese productor');
@@ -425,7 +467,7 @@ export class FarmsService {
 
   private buildScope(actor: FarmActor): Prisma.FincaWhereInput {
     if (actor.idRol === ROLE_IDS.ADMINISTRADOR) return {};
-    if (actor.idRol === ROLE_IDS.PRODUCTOR) {
+    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
       return actor.idProductor
         ? { idProductor: this.parseId(actor.idProductor, 'productor') }
         : { idFinca: { equals: -1n } };
@@ -438,7 +480,7 @@ export class FarmsService {
     actor: FarmActor,
   ): Promise<bigint> {
     let idProductor: bigint;
-    if (actor.idRol === ROLE_IDS.PRODUCTOR) {
+    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
       if (!actor.idProductor) {
         throw new BadRequestException(
           'Tu cuenta no está vinculada a un productor',
@@ -531,9 +573,18 @@ export class FarmsService {
         ? 'VENCIDA'
         : 'VIGENTE';
     return {
-      ...row,
       idCertificacion: row.idCertificacion.toString(),
       idFinca: row.idFinca.toString(),
+      idTipoCertificacion: row.idTipoCertificacion,
+      idEntidadCertificadora: row.idEntidadCertificadora,
+      tipoCertificacion: row.tipoCertificacion.nombre,
+      tipoCertificacionCodigo: row.tipoCertificacion.codigo,
+      entidadEmisora: row.entidadCertificadora.nombre,
+      entidadEmisoraCodigo: row.entidadCertificadora.codigo,
+      numeroCertificado: row.numeroCertificado,
+      fechaEmision: row.fechaEmision,
+      fechaVencimiento: row.fechaVencimiento,
+      documentoUrl: row.documentoUrl,
       estado: status,
       finca: {
         ...row.finca,
@@ -544,6 +595,28 @@ export class FarmsService {
         },
       },
     };
+  }
+
+  private async resolveCertificationType(codigo: string): Promise<number> {
+    const type = await this.prisma.tipoCertificacion.findFirst({
+      where: { codigo: codigo.trim().toUpperCase(), activo: true },
+      select: { idTipoCertificacion: true },
+    });
+    if (!type) {
+      throw new BadRequestException('Tipo de certificación no válido');
+    }
+    return type.idTipoCertificacion;
+  }
+
+  private async resolveCertificationIssuer(codigo: string): Promise<number> {
+    const issuer = await this.prisma.entidadCertificadora.findFirst({
+      where: { codigo: codigo.trim().toUpperCase(), activo: true },
+      select: { idEntidadCertificadora: true },
+    });
+    if (!issuer) {
+      throw new BadRequestException('Entidad certificadora no válida');
+    }
+    return issuer.idEntidadCertificadora;
   }
 
   private parseId(value: string, label: string): bigint {

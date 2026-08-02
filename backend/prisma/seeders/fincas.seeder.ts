@@ -82,26 +82,35 @@ export async function seedFincas(prisma: PrismaClient, idProductor: bigint) {
     data: { codigo: lot.codigoLote },
   });
 
-  await prisma.certificacion.upsert({
-    where: { numeroCertificado: 'PHYTO-BT-2026-001' },
-    update: {
-      idFinca: finca.idFinca,
-      tipoCertificacion: 'Certificado fitosanitario',
-      entidadEmisora: 'Agrocalidad Ecuador',
-      fechaEmision: new Date('2026-01-10T00:00:00.000Z'),
-      fechaVencimiento: new Date('2027-01-10T00:00:00.000Z'),
-      documentoUrl: 'https://www.agrocalidad.gob.ec/',
-    },
-    create: {
-      idFinca: finca.idFinca,
-      tipoCertificacion: 'Certificado fitosanitario',
-      entidadEmisora: 'Agrocalidad Ecuador',
-      numeroCertificado: 'PHYTO-BT-2026-001',
-      fechaEmision: new Date('2026-01-10T00:00:00.000Z'),
-      fechaVencimiento: new Date('2027-01-10T00:00:00.000Z'),
-      documentoUrl: 'https://www.agrocalidad.gob.ec/',
-    },
+  const tipoCert = await prisma.tipoCertificacion.findFirst({
+    where: { nombre: 'Certificado fitosanitario' },
   });
+  const entidadCert = await prisma.entidadCertificadora.findFirst({
+    where: { nombre: 'Agrocalidad Ecuador' },
+  });
+
+  if (tipoCert && entidadCert) {
+    await prisma.certificacion.upsert({
+      where: { numeroCertificado: 'PHYTO-BT-2026-001' },
+      update: {
+        idFinca: finca.idFinca,
+        idTipoCertificacion: tipoCert.idTipoCertificacion,
+        idEntidadCertificadora: entidadCert.idEntidadCertificadora,
+        fechaEmision: new Date('2026-01-10T00:00:00.000Z'),
+        fechaVencimiento: new Date('2027-01-10T00:00:00.000Z'),
+        documentoUrl: 'https://www.agrocalidad.gob.ec/',
+      },
+      create: {
+        idFinca: finca.idFinca,
+        idTipoCertificacion: tipoCert.idTipoCertificacion,
+        idEntidadCertificadora: entidadCert.idEntidadCertificadora,
+        numeroCertificado: 'PHYTO-BT-2026-001',
+        fechaEmision: new Date('2026-01-10T00:00:00.000Z'),
+        fechaVencimiento: new Date('2027-01-10T00:00:00.000Z'),
+        documentoUrl: 'https://www.agrocalidad.gob.ec/',
+      },
+    });
+  }
 
   const existingLink = await prisma.flujoInstanciaUnidad.findFirst({
     where: { idUnidad: lot.idUnidad, rol: RolUnidadFlujo.PRINCIPAL },
@@ -116,7 +125,7 @@ export async function seedFincas(prisma: PrismaClient, idProductor: bigint) {
     });
     const phase = flow?.fases[0];
     const user = await prisma.usuario.findFirst({
-      where: { idProductor, rol: { nombre: 'PRODUCTOR' }, estado: true },
+      where: { idProductor, rol: { nombre: 'SUPERVISOR_AGRICOLA' }, estado: true },
     });
     if (!flow || !phase || !user) {
       throw new Error(

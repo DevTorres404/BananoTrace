@@ -23,7 +23,7 @@ import { FarmsService } from './farms.service';
 
 @Controller('farms')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR)
+@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
 export class FarmsController {
   constructor(private readonly farmsService: FarmsService) {}
 
@@ -43,6 +43,11 @@ export class FarmsController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.farmsService.findCertifications(request.user, farmId);
+  }
+
+  @Get('certification-options')
+  certificationOptions() {
+    return this.farmsService.certificationOptions();
   }
 
   @Get()

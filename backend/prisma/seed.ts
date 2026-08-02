@@ -9,6 +9,7 @@ import { seedRoles } from './seeders/roles.seeder';
 import { seedUsuarios } from './seeders/usuarios.seeder';
 import { seedTiposEvento } from './seeders/tipos-evento.seeder';
 import { seedVariedades } from './seeders/variedades.seeder';
+import { seedCatalogosDominio } from './seeders/catalogos-dominio.seeder';
 import { seedPantallas } from './seeders/pantallas.seeder';
 import { seedMenus } from './seeders/menus.seeder';
 import { seedRolMenus } from './seeders/rol-menus.seeder';
@@ -59,6 +60,7 @@ async function main() {
   await seedRoles(prisma);
   await seedTiposEvento(prisma);
   await seedVariedades(prisma);
+  await seedCatalogosDominio(prisma);
   await seedPantallas(prisma);
   await seedFlujos(prisma);
   const productorCanonico = await seedProductores(prisma);

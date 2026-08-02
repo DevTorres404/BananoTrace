@@ -60,7 +60,7 @@ describe('ProducersService', () => {
     prisma.productor.findMany.mockResolvedValue([producerRow]);
 
     const result = await service.findAll({
-      idRol: ROLE_IDS.PRODUCTOR,
+      idRol: ROLE_IDS.SUPERVISOR_AGRICOLA,
       idProductor: '5',
     });
 
@@ -79,7 +79,7 @@ describe('ProducersService', () => {
   it('links only available PRODUCTOR accounts during an update', async () => {
     prisma.productor.findFirst.mockResolvedValue({ idProductor: 5n });
     prisma.usuario.findMany.mockResolvedValue([
-      { idUsuario: 7n, idRol: ROLE_IDS.PRODUCTOR, idProductor: null },
+      { idUsuario: 7n, idRol: ROLE_IDS.SUPERVISOR_AGRICOLA, idProductor: null },
     ]);
     prisma.usuario.updateMany.mockResolvedValue({ count: 1 });
     prisma.productor.findUniqueOrThrow.mockResolvedValue(producerRow);
@@ -102,7 +102,7 @@ describe('ProducersService', () => {
   it('rejects an account already linked to another producer', async () => {
     prisma.productor.findFirst.mockResolvedValue({ idProductor: 5n });
     prisma.usuario.findMany.mockResolvedValue([
-      { idUsuario: 7n, idRol: ROLE_IDS.PRODUCTOR, idProductor: 9n },
+      { idUsuario: 7n, idRol: ROLE_IDS.SUPERVISOR_AGRICOLA, idProductor: 9n },
     ]);
 
     await expect(

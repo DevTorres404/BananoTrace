@@ -20,8 +20,15 @@ export async function seedUsuarios(
     {
       nombres: 'Juan',
       apellidos: 'Pérez',
-      correo: 'productor@coil.com',
-      idRol: ROLE_IDS.PRODUCTOR,
+      correo: 'supervisor@coil.com',
+      idRol: ROLE_IDS.SUPERVISOR_AGRICOLA,
+      idProductor: idProductorCanonico,
+    },
+    {
+      nombres: 'Carlos',
+      apellidos: 'Rodríguez',
+      correo: 'gerente@coil.com',
+      idRol: ROLE_IDS.GERENTE_PRODUCTOR,
       idProductor: idProductorCanonico,
     },
     {

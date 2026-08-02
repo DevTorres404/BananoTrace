@@ -22,7 +22,7 @@ describe('UsersService', () => {
     fechaActualizacion: null,
     idProductor: null,
     productor: null,
-    rol: { idRol: 2, nombre: 'PRODUCTOR', descripcion: null },
+    rol: { idRol: 2, nombre: 'SUPERVISOR_AGRICOLA', descripcion: null },
   };
 
   beforeEach(async () => {

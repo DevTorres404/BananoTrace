@@ -244,7 +244,7 @@ export class UsersService {
       await this.validateProducerLink(resultingRoleId, requestedProducerId);
     }
     const resultingProducerId =
-      resultingRoleId === ROLE_IDS.PRODUCTOR ? requestedProducerId : null;
+      resultingRoleId === ROLE_IDS.SUPERVISOR_AGRICOLA ? requestedProducerId : null;
 
     await this.validateProducerLink(resultingRoleId, resultingProducerId);
     if (
@@ -334,9 +334,13 @@ export class UsersService {
     idRol: number,
     idProductor: bigint | null,
   ): Promise<void> {
-    if (idProductor !== null && idRol !== ROLE_IDS.PRODUCTOR) {
+    if (
+      idProductor !== null &&
+      idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA &&
+      idRol !== ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
       throw new BadRequestException(
-        'Solo un usuario con rol PRODUCTOR puede vincularse a un productor',
+        'Solo los roles SUPERVISOR y GERENTE pueden vincularse a un productor',
       );
     }
     if (idProductor === null) return;

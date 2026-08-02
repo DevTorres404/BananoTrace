@@ -35,7 +35,7 @@ describe('FarmsService', () => {
   };
 
   const producerActor = {
-    idRol: ROLE_IDS.PRODUCTOR,
+    idRol: ROLE_IDS.SUPERVISOR_AGRICOLA,
     idProductor: '5',
   };
   const adminActor = {

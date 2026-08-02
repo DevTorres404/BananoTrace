@@ -23,7 +23,7 @@ import { LotsService } from './lots.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(
   ROLE_IDS.ADMINISTRADOR,
-  ROLE_IDS.PRODUCTOR,
+  ROLE_IDS.SUPERVISOR_AGRICOLA,
   ROLE_IDS.CALIDAD,
   ROLE_IDS.LOGISTICA,
 )
@@ -31,7 +31,7 @@ export class LotsController {
   constructor(private readonly lotsService: LotsService) {}
 
   @Post()
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
   create(@Body() dto: CreateLotDto, @Req() request: AuthenticatedRequest) {
     return this.lotsService.create(dto, request.user);
   }
@@ -55,7 +55,7 @@ export class LotsController {
   }
 
   @Patch(':id')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateLotDto,

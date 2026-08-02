@@ -1,5 +1,10 @@
-import { ForbiddenException } from '@nestjs/common';
-import { EstadoFlujo, EstadoLote, Prisma } from '@prisma/client';
+import { ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  EstadoFlujo,
+  EstadoLote,
+  Prisma,
+  ResultadoControl,
+} from '@prisma/client';
 import { ROLE_IDS } from '../auth/domain/role.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { LotsService } from './lots.service';
@@ -34,7 +39,7 @@ describe('LotsService', () => {
     },
   };
 
-  const producer = { sub: '2', idRol: ROLE_IDS.PRODUCTOR, idProductor: '3' };
+  const producer = { sub: '2', idRol: ROLE_IDS.SUPERVISOR_AGRICOLA, idProductor: '3' };
 
   beforeEach(() => {
     prisma = {
@@ -46,6 +51,7 @@ describe('LotsService', () => {
         update: jest.fn(),
       },
       finca: { findMany: jest.fn() },
+      variedad: { findMany: jest.fn() },
       flujoInstanciaUnidad: { findFirst: jest.fn() },
       faseEjecucion: {
         findFirst: jest.fn(),
@@ -55,6 +61,7 @@ describe('LotsService', () => {
       transicionFase: { findMany: jest.fn() },
       transicionEjecucion: { create: jest.fn() },
       flujoInstancia: { update: jest.fn() },
+      controlCalidad: { findFirst: jest.fn() },
       $transaction: jest.fn((input: unknown) =>
         Array.isArray(input)
           ? Promise.all(input)
@@ -62,6 +69,27 @@ describe('LotsService', () => {
       ),
     };
     service = new LotsService(prisma as PrismaService);
+  });
+
+  it('returns active varieties from the catalog as lot options', async () => {
+    prisma.finca.findMany.mockResolvedValue([
+      { idFinca: 5n, codigoFinca: 'FIN-2026-001', nombre: 'Finca Global' },
+    ]);
+    prisma.variedad.findMany.mockResolvedValue([
+      { idVariedad: 1, codigo: 'CAVENDISH', nombre: 'Cavendish' },
+    ]);
+
+    const result = await service.options(producer);
+
+    expect(prisma.variedad.findMany).toHaveBeenCalledWith({
+      where: { activo: true },
+      select: { idVariedad: true, codigo: true, nombre: true },
+      orderBy: { nombre: 'asc' },
+    });
+    expect(result.farms[0].idFinca).toBe('5');
+    expect(result.varieties).toEqual([
+      expect.objectContaining({ codigo: 'CAVENDISH', nombre: 'Cavendish' }),
+    ]);
   });
 
   it('paginates and scopes lot listing to the linked producer', async () => {
@@ -182,7 +210,7 @@ describe('LotsService', () => {
       estado: EstadoFlujo.EN_PROCESO,
       fase: {
         nombre: 'Producción',
-        idRolResponsable: ROLE_IDS.PRODUCTOR,
+        idRolResponsable: ROLE_IDS.SUPERVISOR_AGRICOLA,
         requiereAprobacion: false,
       },
     });
@@ -216,5 +244,50 @@ describe('LotsService', () => {
       where: { idLote: 8n },
       data: { estado: EstadoLote.COSECHADO },
     });
+  });
+
+  it('blocks the transition to packaging when the latest control was rejected', async () => {
+    const qualityActor = {
+      sub: '3',
+      idRol: ROLE_IDS.CALIDAD,
+      idProductor: null,
+    };
+    prisma.loteProduccion.findFirst.mockResolvedValue({
+      idLote: 8n,
+      idUnidad: 9n,
+    });
+    prisma.flujoInstanciaUnidad.findFirst.mockResolvedValue({
+      idInstancia: 12n,
+      instancia: { idFlujo: 1, estado: EstadoFlujo.EN_PROCESO },
+    });
+    prisma.faseEjecucion.findFirst.mockResolvedValue({
+      idEjecucion: 20n,
+      idFase: 2,
+      estado: EstadoFlujo.EN_PROCESO,
+      fase: {
+        codigo: 'CALIDAD',
+        nombre: 'Control de calidad',
+        idRolResponsable: ROLE_IDS.CALIDAD,
+        requiereAprobacion: false,
+      },
+    });
+    prisma.transicionFase.findMany.mockResolvedValue([
+      {
+        faseDestino: {
+          idFase: 3,
+          codigo: 'EMPAQUE',
+          orden: 3,
+          idRolResponsable: ROLE_IDS.CALIDAD,
+        },
+      },
+    ]);
+    prisma.controlCalidad.findFirst.mockResolvedValue({
+      resultado: ResultadoControl.RECHAZADO,
+    });
+
+    await expect(service.advance('8', {}, qualityActor)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(prisma.faseEjecucion.update).not.toHaveBeenCalled();
   });
 });

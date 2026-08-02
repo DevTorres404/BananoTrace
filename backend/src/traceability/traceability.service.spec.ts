@@ -1,18 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { PrismaService } from '../prisma/prisma.service';
 import { TraceabilityService } from './traceability.service';
 
 describe('TraceabilityService', () => {
-  let service: TraceabilityService;
+  it('returns active document types', async () => {
+    const findMany = jest.fn().mockResolvedValue([{ codigo: 'CERTIFICADO' }]);
+    const prisma = { tipoDocumento: { findMany } } as unknown as PrismaService;
+    const service = new TraceabilityService(prisma);
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [TraceabilityService],
-    }).compile();
-
-    service = module.get<TraceabilityService>(TraceabilityService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    await expect(service.getDocumentTypes()).resolves.toEqual([
+      { codigo: 'CERTIFICADO' },
+    ]);
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { activo: true } }),
+    );
   });
 });

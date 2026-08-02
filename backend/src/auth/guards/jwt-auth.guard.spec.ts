@@ -35,7 +35,7 @@ describe('JwtAuthGuard', () => {
       estado: true,
       idRol: 2,
       idProductor: 11n,
-      rol: { nombre: 'PRODUCTOR' },
+      rol: { nombre: 'SUPERVISOR_AGRICOLA' },
     });
     const { context, request } = contextFor('Bearer token');
 
@@ -45,7 +45,7 @@ describe('JwtAuthGuard', () => {
         sub: '7',
         email: 'actual@coil.com',
         idRol: 2,
-        rol: 'PRODUCTOR',
+        rol: 'SUPERVISOR_AGRICOLA',
         idProductor: '11',
       }),
     );

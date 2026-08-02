@@ -422,64 +422,72 @@ model EventoTrazabilidad {
 }
 
 model ControlCalidad {
-  idControl         BigInt           @id @default(autoincrement()) @map("id_control")
-  idEjecucion       BigInt           @map("id_ejecucion")
-  idLote            BigInt           @map("id_lote")
-  idUsuario         BigInt           @map("id_usuario")
-  fechaControl      DateTime         @default(now()) @map("fecha_control") @db.Timestamptz(6)
-  categoriaCalidad  String?          @map("categoria_calidad") @db.VarChar(30)
-  calibreMm         Decimal?         @map("calibre_mm") @db.Decimal(6, 2)
-  pesoMuestraKg     Decimal?         @map("peso_muestra_kg") @db.Decimal(8, 2)
-  porcentajeRechazo Decimal?         @map("porcentaje_rechazo") @db.Decimal(5, 2)
-  resultado         ResultadoControl
-  observaciones     String?          @db.Text
+  idControl           BigInt           @id @default(autoincrement()) @map("id_control")
+  idEjecucion         BigInt           @map("id_ejecucion")
+  idLote              BigInt           @map("id_lote")
+  idUsuario           BigInt           @map("id_usuario")
+  idCategoriaCalidad  Int?             @map("id_categoria_calidad")
+  fechaControl        DateTime         @default(now()) @map("fecha_control") @db.Timestamptz(6)
+  calibreMm           Decimal?         @map("calibre_mm") @db.Decimal(6, 2)
+  pesoMuestraKg       Decimal?         @map("peso_muestra_kg") @db.Decimal(8, 2)
+  porcentajeRechazo   Decimal?         @map("porcentaje_rechazo") @db.Decimal(5, 2)
+  resultado           ResultadoControl
+  observaciones       String?          @db.Text
 
-  ejecucion FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
-  lote      LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
-  usuario   Usuario        @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion           FaseEjecucion    @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  lote                LoteProduccion   @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  usuario             Usuario          @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict, onUpdate: Cascade)
+  categoriaCalidadCat CategoriaCalidad? @relation(fields: [idCategoriaCalidad], references: [idCategoriaCalidad], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([idEjecucion])
   @@index([idLote, fechaControl])
   @@index([idUsuario])
+  @@index([idCategoriaCalidad])
   @@map("controles_calidad")
 }
 
 model Certificacion {
-  idCertificacion   BigInt    @id @default(autoincrement()) @map("id_certificacion")
-  idFinca           BigInt    @map("id_finca")
-  tipoCertificacion String    @map("tipo_certificacion") @db.VarChar(80)
-  entidadEmisora    String    @map("entidad_emisora") @db.VarChar(120)
-  numeroCertificado String    @unique @map("numero_certificado") @db.VarChar(80)
-  fechaEmision      DateTime  @map("fecha_emision") @db.Date
-  fechaVencimiento  DateTime? @map("fecha_vencimiento") @db.Date
-  documentoUrl      String?   @map("documento_url") @db.VarChar(500)
+  idCertificacion        BigInt    @id @default(autoincrement()) @map("id_certificacion")
+  idFinca                BigInt    @map("id_finca")
+  idTipoCertificacion    Int       @map("id_tipo_certificacion")
+  idEntidadCertificadora Int       @map("id_entidad_certificadora")
+  numeroCertificado      String    @unique @map("numero_certificado") @db.VarChar(80)
+  fechaEmision           DateTime  @map("fecha_emision") @db.Date
+  fechaVencimiento       DateTime? @map("fecha_vencimiento") @db.Date
+  documentoUrl           String?   @map("documento_url") @db.VarChar(500)
 
-  finca Finca @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
+  finca                Finca                @relation(fields: [idFinca], references: [idFinca], onDelete: Restrict, onUpdate: Cascade)
+  tipoCertificacion    TipoCertificacion    @relation(fields: [idTipoCertificacion], references: [idTipoCertificacion], onDelete: Restrict, onUpdate: Cascade)
+  entidadCertificadora EntidadCertificadora @relation(fields: [idEntidadCertificadora], references: [idEntidadCertificadora], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([idFinca])
+  @@index([idTipoCertificacion])
+  @@index([idEntidadCertificadora])
   @@map("certificaciones")
 }
 
 model Empaque {
-  idEmpaque    BigInt        @id @default(autoincrement()) @map("id_empaque")
-  idUnidad     BigInt        @unique @map("id_unidad")
-  idEjecucion  BigInt        @map("id_ejecucion")
-  idLote       BigInt        @map("id_lote")
-  codigoCaja   String        @unique @default("") @map("codigo_caja") @db.VarChar(50)
-  fechaEmpaque DateTime      @default(now()) @map("fecha_empaque") @db.Timestamptz(6)
-  pesoNetoKg   Decimal       @map("peso_neto_kg") @db.Decimal(8, 2)
-  categoria    String?       @db.VarChar(30)
-  codigoQr     String?       @unique @map("codigo_qr") @db.VarChar(255)
-  estado       EstadoEmpaque @default(DISPONIBLE)
+  idEmpaque           BigInt        @id @default(autoincrement()) @map("id_empaque")
+  idUnidad            BigInt        @unique @map("id_unidad")
+  idEjecucion         BigInt        @map("id_ejecucion")
+  idLote              BigInt        @map("id_lote")
+  idCategoriaCalidad  Int?          @map("id_categoria_calidad")
+  codigoCaja          String        @unique @default("") @map("codigo_caja") @db.VarChar(50)
+  fechaEmpaque        DateTime      @default(now()) @map("fecha_empaque") @db.Timestamptz(6)
+  pesoNetoKg          Decimal       @map("peso_neto_kg") @db.Decimal(8, 2)
+  codigoQr            String?       @unique @map("codigo_qr") @db.VarChar(255)
+  estado              EstadoEmpaque @default(DISPONIBLE)
 
-  unidad        UnidadTrazable @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
-  ejecucion     FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
-  lote          LoteProduccion @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
-  enviosEmpaque EnvioEmpaque[]
+  unidad              UnidadTrazable  @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion           FaseEjecucion   @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  lote                LoteProduccion  @relation(fields: [idLote], references: [idLote], onDelete: Restrict, onUpdate: Cascade)
+  categoriaCalidadCat CategoriaCalidad? @relation(fields: [idCategoriaCalidad], references: [idCategoriaCalidad], onDelete: SetNull, onUpdate: Cascade)
+  enviosEmpaque       EnvioEmpaque[]
 
   @@index([idEjecucion])
   @@index([idLote])
   @@index([estado])
+  @@index([idCategoriaCalidad])
   @@map("empaques")
 }
 
@@ -487,23 +495,28 @@ model Envio {
   idEnvio              BigInt      @id @default(autoincrement()) @map("id_envio")
   idUnidad             BigInt      @unique @map("id_unidad")
   idEjecucion          BigInt      @map("id_ejecucion")
+  idNaviera            Int?        @map("id_naviera")
+  idPuertoOrigen       Int         @map("id_puerto_origen")
+  idPuertoDestino      Int         @map("id_puerto_destino")
   codigoEnvio          String      @unique @default("") @map("codigo_envio") @db.VarChar(40)
   numeroContenedor     String?     @map("numero_contenedor") @db.VarChar(30)
-  naviera              String?     @db.VarChar(100)
-  puertoOrigen         String      @map("puerto_origen") @db.VarChar(100)
-  puertoDestino        String      @map("puerto_destino") @db.VarChar(100)
-  paisDestino          String      @map("pais_destino") @db.VarChar(80)
   fechaSalida          DateTime?   @map("fecha_salida") @db.Timestamptz(6)
   fechaEstimadaLlegada DateTime?   @map("fecha_estimada_llegada") @db.Timestamptz(6)
   temperaturaSalida    Decimal?    @map("temperatura_salida") @db.Decimal(5, 2)
   estado               EstadoEnvio @default(PLANIFICADO)
 
-  unidad    UnidadTrazable @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
-  ejecucion FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
-  empaques  EnvioEmpaque[]
+  unidad         UnidadTrazable @relation(fields: [idUnidad], references: [idUnidad], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion      FaseEjecucion  @relation(fields: [idEjecucion], references: [idEjecucion], onDelete: Restrict, onUpdate: Cascade)
+  naviera        Naviera?       @relation(fields: [idNaviera], references: [idNaviera], onDelete: SetNull, onUpdate: Cascade)
+  puertoOrigen   Puerto         @relation("puertoOrigen", fields: [idPuertoOrigen], references: [idPuerto], onDelete: Restrict, onUpdate: Cascade)
+  puertoDestino  Puerto         @relation("puertoDestino", fields: [idPuertoDestino], references: [idPuerto], onDelete: Restrict, onUpdate: Cascade)
+  empaques       EnvioEmpaque[]
 
   @@index([idEjecucion])
   @@index([estado, fechaSalida])
+  @@index([idNaviera])
+  @@index([idPuertoOrigen])
+  @@index([idPuertoDestino])
   @@map("envios")
 }
 
@@ -541,15 +554,90 @@ model RegistroBlockchain {
 }
 
 model DocumentoReferencia {
-  idDocumento BigInt   @id @default(autoincrement()) @map("id_documento")
-  idEvento    BigInt   @map("id_evento")
-  nombre      String   @db.VarChar(120)
-  tipo        String   @db.VarChar(40)
-  url         String   @db.VarChar(500)
-  fechaCarga  DateTime @default(now()) @map("fecha_carga") @db.Timestamptz(6)
+  idDocumento      BigInt   @id @default(autoincrement()) @map("id_documento")
+  idEvento         BigInt   @map("id_evento")
+  idTipoDocumento  Int      @map("id_tipo_documento")
+  nombre           String   @db.VarChar(120)
+  url              String   @db.VarChar(500)
+  fechaCarga       DateTime @default(now()) @map("fecha_carga") @db.Timestamptz(6)
 
-  evento EventoTrazabilidad @relation(fields: [idEvento], references: [idEvento], onDelete: Restrict, onUpdate: Cascade)
+  evento         EventoTrazabilidad @relation(fields: [idEvento], references: [idEvento], onDelete: Restrict, onUpdate: Cascade)
+  tipoDocumento  TipoDocumento      @relation(fields: [idTipoDocumento], references: [idTipoDocumento], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([idEvento])
+  @@index([idTipoDocumento])
   @@map("documentos_referencia")
+}
+
+model TipoDocumento {
+  idTipoDocumento Int     @id @default(autoincrement()) @map("id_tipo_documento")
+  codigo          String  @unique @db.VarChar(40)
+  nombre          String  @db.VarChar(100)
+  descripcion     String? @db.VarChar(255)
+  activo          Boolean @default(true)
+
+  documentos DocumentoReferencia[]
+
+  @@map("tipos_documento")
+}
+
+model CategoriaCalidad {
+  idCategoriaCalidad Int     @id @default(autoincrement()) @map("id_categoria_calidad")
+  codigo             String  @unique @db.VarChar(40)
+  nombre             String  @db.VarChar(100)
+  descripcion        String? @db.VarChar(255)
+  activo             Boolean @default(true)
+
+  controles ControlCalidad[]
+  empaques  Empaque[]
+
+  @@map("categorias_calidad")
+}
+
+model Naviera {
+  idNaviera Int     @id @default(autoincrement()) @map("id_naviera")
+  codigo    String  @unique @db.VarChar(40)
+  nombre    String  @db.VarChar(100)
+  activo    Boolean @default(true)
+
+  envios Envio[]
+
+  @@map("navieras")
+}
+
+model Puerto {
+  idPuerto   Int     @id @default(autoincrement()) @map("id_puerto")
+  codigo     String  @unique @db.VarChar(10)
+  nombre     String  @db.VarChar(100)
+  paisCodigo String  @map("pais_codigo") @db.VarChar(5)
+  paisNombre String  @map("pais_nombre") @db.VarChar(80)
+  activo     Boolean @default(true)
+
+  enviosOrigen  Envio[] @relation("puertoOrigen")
+  enviosDestino Envio[] @relation("puertoDestino")
+
+  @@map("puertos")
+}
+
+model TipoCertificacion {
+  idTipoCertificacion Int     @id @default(autoincrement()) @map("id_tipo_certificacion")
+  codigo              String  @unique @db.VarChar(40)
+  nombre              String  @db.VarChar(100)
+  activo              Boolean @default(true)
+
+  certificaciones Certificacion[]
+
+  @@map("tipos_certificacion")
+}
+
+model EntidadCertificadora {
+  idEntidadCertificadora Int     @id @default(autoincrement()) @map("id_entidad_certificadora")
+  codigo                 String  @unique @db.VarChar(40)
+  nombre                 String  @db.VarChar(100)
+  alcance                String? @db.VarChar(100)
+  activo                 Boolean @default(true)
+
+  certificaciones Certificacion[]
+
+  @@map("entidades_certificadoras")
 }

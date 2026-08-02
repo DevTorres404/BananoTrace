@@ -1,18 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { LogisticsController } from './logistics.controller';
+import { LogisticsService } from './logistics.service';
 
 describe('LogisticsController', () => {
-  let controller: LogisticsController;
+  it('delegates catalog options to the service', () => {
+    const service = { options: jest.fn().mockReturnValue({ puertos: [] }) };
+    const controller = new LogisticsController(
+      service as unknown as LogisticsService,
+    );
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [LogisticsController],
-    }).compile();
-
-    controller = module.get<LogisticsController>(LogisticsController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+    const request = { user: { sub: '1', idRol: 1 } };
+    expect(controller.options(request as never)).toEqual({ puertos: [] });
+    expect(service.options).toHaveBeenCalledWith(request.user);
   });
 });

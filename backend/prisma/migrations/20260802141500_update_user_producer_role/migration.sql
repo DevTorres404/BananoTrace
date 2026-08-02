@@ -1,0 +1,2 @@
+ALTER TABLE "usuarios" DROP CONSTRAINT IF EXISTS "usuarios_productor_role_check";
+ALTER TABLE "usuarios" ADD CONSTRAINT "usuarios_productor_role_check" CHECK ("id_productor" IS NULL OR "id_rol" IN (2, 6));

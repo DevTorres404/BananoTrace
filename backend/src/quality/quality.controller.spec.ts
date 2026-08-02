@@ -1,18 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { QualityController } from './quality.controller';
+import { QualityService } from './quality.service';
 
 describe('QualityController', () => {
-  let controller: QualityController;
+  it('delegates category retrieval to the service', () => {
+    const service = { getCategories: jest.fn().mockReturnValue([]) };
+    const controller = new QualityController(
+      service as unknown as QualityService,
+    );
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [QualityController],
-    }).compile();
-
-    controller = module.get<QualityController>(QualityController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(controller.getCategories()).toEqual([]);
+    expect(service.getCategories).toHaveBeenCalledTimes(1);
   });
 });
