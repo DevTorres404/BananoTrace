@@ -14,7 +14,10 @@ import { seedRolMenus } from './seeders/rol-menus.seeder';
 import { seedFlujos } from './seeders/flujos.seeder';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
-const connectionString = `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}?schema=public`;
+const port = process.env.POSTGRES_PORT || '5432';
+const user = encodeURIComponent(process.env.POSTGRES_USER || '');
+const pass = encodeURIComponent(process.env.POSTGRES_PASSWORD || '');
+const connectionString = process.env.DATABASE_URL || `postgresql://${user}:${pass}@${process.env.POSTGRES_HOST}:${port}/${process.env.POSTGRES_DB}?schema=public`;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
