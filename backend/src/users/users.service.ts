@@ -175,7 +175,8 @@ export class UsersService {
           icon: menu.icono,
           route: menu.pantalla?.ruta ?? null,
           children: buildTree(menu.idMenu),
-        }));
+        }))
+        .filter((item) => item.route !== null || item.children.length > 0);
 
     return buildTree(null);
   }

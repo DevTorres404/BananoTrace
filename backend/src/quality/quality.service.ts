@@ -300,7 +300,12 @@ export class QualityService {
   }
 
   private buildScope(actor: Actor): Prisma.ControlCalidadWhereInput {
-    if (actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA) return {};
+    if (
+      actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA &&
+      actor.idRol !== ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
+      return {};
+    }
     return actor.idProductor
       ? {
           lote: {
@@ -313,7 +318,12 @@ export class QualityService {
   }
 
   private async assertLotAccess(idLote: bigint, actor: Actor) {
-    if (actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA) return;
+    if (
+      actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA &&
+      actor.idRol !== ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
+      return;
+    }
     const lot = await this.prisma.loteProduccion.findUnique({
       where: { idLote },
       select: { finca: { select: { idProductor: true } } },
@@ -324,7 +334,8 @@ export class QualityService {
 
   private assertProducerAccess(idProductor: bigint, actor: Actor) {
     if (
-      actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA &&
+      (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA ||
+        actor.idRol === ROLE_IDS.GERENTE_PRODUCTOR) &&
       (!actor.idProductor || idProductor.toString() !== actor.idProductor)
     ) {
       throw new ForbiddenException('No tiene acceso a este lote');

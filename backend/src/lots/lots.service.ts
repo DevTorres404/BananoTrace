@@ -621,7 +621,10 @@ export class LotsService {
   }
 
   private buildScope(actor: LotActor): Prisma.LoteProduccionWhereInput {
-    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
+    if (
+      actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA ||
+      actor.idRol === ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
       return actor.idProductor
         ? {
             finca: {
@@ -645,7 +648,10 @@ export class LotsService {
   }
 
   private buildFarmScope(actor: LotActor): Prisma.FincaWhereInput {
-    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
+    if (
+      actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA ||
+      actor.idRol === ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
       return actor.idProductor
         ? { idProductor: this.parseId(actor.idProductor, 'productor') }
         : { idFinca: -1n };

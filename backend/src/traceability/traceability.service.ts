@@ -391,7 +391,12 @@ export class TraceabilityService {
   }
 
   private buildScope(actor: Actor): Prisma.EventoTrazabilidadWhereInput {
-    if (actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA) return {};
+    if (
+      actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA &&
+      actor.idRol !== ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
+      return {};
+    }
     if (!actor.idProductor) return { idEvento: -1n };
     const idProductor = this.parseId(actor.idProductor, 'productor');
     return {
@@ -443,7 +448,12 @@ export class TraceabilityService {
     }> & { idUnidad: bigint },
     actor: Actor,
   ) {
-    if (actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA) return;
+    if (
+      actor.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA &&
+      actor.idRol !== ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
+      return;
+    }
     const producerId = actor.idProductor;
     const accessible =
       !!producerId &&

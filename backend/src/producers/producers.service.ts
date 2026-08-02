@@ -87,7 +87,7 @@ export class ProducersService {
 
     const users = await this.prisma.usuario.findMany({
       where: {
-        idRol: ROLE_IDS.SUPERVISOR_AGRICOLA,
+        idRol: { in: [ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR] },
         OR: [
           { estado: true, idProductor: null },
           ...(idProductor ? [{ idProductor }] : []),
@@ -222,7 +222,10 @@ export class ProducersService {
 
   private buildScope(actor: ProducerActor): Prisma.ProductorWhereInput {
     if (actor.idRol === ROLE_IDS.ADMINISTRADOR) return {};
-    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
+    if (
+      actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA ||
+      actor.idRol === ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
       return actor.idProductor
         ? { idProductor: this.parseId(actor.idProductor) }
         : { idProductor: { equals: -1n } };
@@ -257,9 +260,12 @@ export class ProducersService {
     }
 
     for (const user of users) {
-      if (user.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA) {
+      if (
+        user.idRol !== ROLE_IDS.SUPERVISOR_AGRICOLA &&
+        user.idRol !== ROLE_IDS.GERENTE_PRODUCTOR
+      ) {
         throw new BadRequestException(
-          'Solo se pueden vincular cuentas con rol PRODUCTOR',
+          'Solo se pueden vincular cuentas con rol SUPERVISOR o GERENTE',
         );
       }
       if (user.idProductor !== null && user.idProductor !== idProductor) {

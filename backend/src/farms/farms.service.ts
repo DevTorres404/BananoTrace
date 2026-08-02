@@ -467,7 +467,10 @@ export class FarmsService {
 
   private buildScope(actor: FarmActor): Prisma.FincaWhereInput {
     if (actor.idRol === ROLE_IDS.ADMINISTRADOR) return {};
-    if (actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA) {
+    if (
+      actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA ||
+      actor.idRol === ROLE_IDS.GERENTE_PRODUCTOR
+    ) {
       return actor.idProductor
         ? { idProductor: this.parseId(actor.idProductor, 'productor') }
         : { idFinca: { equals: -1n } };
