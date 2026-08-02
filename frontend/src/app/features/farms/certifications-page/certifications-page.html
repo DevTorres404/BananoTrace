@@ -22,24 +22,6 @@
     </article>
   </section>
 
-  <section class="creation-callout" aria-label="Crear certificación">
-    <div class="creation-copy">
-      <span class="creation-icon" aria-hidden="true">+</span>
-      <div>
-        <strong>Cumplimiento fitosanitario al día</strong>
-        <small>Registro del respaldo documental de una finca activa.</small>
-      </div>
-    </div>
-    <button
-      type="button"
-      class="btn-primary"
-      (click)="openModal()"
-      [disabled]="activeFarms.length === 0"
-    >
-      Crear certificación
-    </button>
-  </section>
-
   <section class="panel filter-panel">
     <div class="section-heading">
       <div>
@@ -80,6 +62,14 @@
         <h2>Listado de certificaciones</h2>
         <p>{{ visibleCertifications.length }} resultado(s)</p>
       </div>
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="openModal()"
+        [disabled]="activeFarms.length === 0"
+      >
+        Nueva certificación
+      </button>
     </div>
     <div *ngIf="isLoading" class="state">Cargando certificaciones...</div>
     <div *ngIf="!isLoading" class="table-scroll">

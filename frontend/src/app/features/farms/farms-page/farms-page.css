@@ -36,6 +36,10 @@ h2 {
   margin-bottom: 0;
   color: var(--color-text-secondary, #64756f);
 }
+.section-heading > .btn-primary {
+  flex: 0 0 auto;
+  align-self: center;
+}
 .eyebrow {
   margin: 0 0 0.3rem !important;
   color: var(--color-primary, #16825d) !important;
@@ -306,6 +310,9 @@ td a {
   .page-header,
   .section-heading {
     flex-direction: column;
+  }
+  .section-heading > .btn-primary {
+    width: 100%;
   }
   .header-actions {
     width: 100%;

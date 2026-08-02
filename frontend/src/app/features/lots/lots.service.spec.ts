@@ -36,7 +36,7 @@ describe('LotsService', () => {
   });
 
   it('creates a lot without sending a user-entered code', () => {
-    const payload = { idFinca: '5', variedad: 'Cavendish', cantidadPlantas: 1200 };
+    const payload = { idFinca: '5', variedad: 'CAVENDISH', cantidadPlantas: 1200 };
     service.createLot(payload).subscribe();
 
     const request = httpMock.expectOne('/api/lots');
@@ -44,6 +44,22 @@ describe('LotsService', () => {
     expect(request.request.body).toEqual(payload);
     expect(request.request.body.codigoLote).toBeUndefined();
     request.flush({});
+  });
+
+  it('loads farms, states and the variety catalog for the lot form', () => {
+    service.getOptions().subscribe((options) => {
+      expect(options.varieties[0]).toEqual(
+        expect.objectContaining({ codigo: 'CAVENDISH', nombre: 'Cavendish' }),
+      );
+    });
+
+    const request = httpMock.expectOne('/api/lots/options');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      states: ['PLANIFICADO'],
+      farms: [],
+      varieties: [{ idVariedad: 1, codigo: 'CAVENDISH', nombre: 'Cavendish' }],
+    });
   });
 
   it('loads the complete lot detail', () => {

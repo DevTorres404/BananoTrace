@@ -13,7 +13,7 @@
         <label class="field full" *ngIf="isAdmin">
           <span>Productor *</span>
           <select name="idProductor" [(ngModel)]="model.idProductor" required autofocus>
-            <option value="" disabled>Seleccioná un productor</option>
+            <option value="" disabled>Seleccione un productor</option>
             <option *ngFor="let producer of producers" [value]="producer.idProductor">
               {{ producer.nombreRazonSocial }}
             </option>

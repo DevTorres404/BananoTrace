@@ -16,7 +16,7 @@
         <label class="field full">
           <span>Finca *</span>
           <select name="idFinca" [(ngModel)]="model.idFinca" required [disabled]="isEditMode">
-            <option value="" disabled>Seleccioná una finca</option>
+            <option value="" disabled>Seleccione una finca</option>
             <option *ngFor="let farm of farms" [value]="farm.idFinca">
               {{ farm.codigoFinca }} · {{ farm.nombre }}
             </option>
@@ -24,7 +24,12 @@
         </label>
         <label class="field full">
           <span>Variedad *</span>
-          <input name="variedad" [(ngModel)]="model.variedad" maxlength="60" required />
+          <select name="variedad" [(ngModel)]="model.variedad" required>
+            <option value="" disabled>Seleccione una variedad</option>
+            <option *ngFor="let variety of varieties" [value]="variety.codigo">
+              {{ variety.nombre }} · {{ variety.codigo }}
+            </option>
+          </select>
         </label>
         <label class="field">
           <span>Fecha de siembra</span>

@@ -5,6 +5,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, finalize } from 'rxjs';
 import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../../../core/services/auth';
+import { QualityForm } from '../../quality/quality-form/quality-form';
+import { LotQualityStatus, QualityService } from '../../quality/quality.service';
+import { EventForm } from '../../traceability/event-form/event-form';
 import { LotForm } from '../lot-form/lot-form';
 import {
   LOT_STATE_LABELS,
@@ -17,12 +20,13 @@ import {
 @Component({
   selector: 'app-lot-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LotForm],
+  imports: [CommonModule, FormsModule, RouterLink, LotForm, EventForm, QualityForm],
   templateUrl: './lot-detail.html',
   styleUrls: ['../../farms/farms-page/farms-page.css', './lot-detail.css'],
 })
 export class LotDetail implements OnInit {
   private readonly lotsService = inject(LotsService);
+  private readonly qualityService = inject(QualityService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -34,18 +38,21 @@ export class LotDetail implements OnInit {
   isLoading = true;
   isAdvancing = false;
   isEditOpen = false;
+  isEventFormOpen = false;
+  isQualityFormOpen = false;
+  qualityStatus: LotQualityStatus | null = null;
   errorMessage = '';
   readonly stateLabels = LOT_STATE_LABELS;
   readonly roleLabels: Record<number, string> = {
     [ROLE_IDS.ADMINISTRADOR]: 'Administrador',
-    [ROLE_IDS.PRODUCTOR]: 'Productor',
+    [ROLE_IDS.SUPERVISOR_AGRICOLA]: 'Productor',
     [ROLE_IDS.CALIDAD]: 'Calidad',
     [ROLE_IDS.LOGISTICA]: 'Logística',
   };
 
   get canManage(): boolean {
     const role = this.authService.currentUser()?.idRol;
-    return role === ROLE_IDS.ADMINISTRADOR || role === ROLE_IDS.PRODUCTOR;
+    return role === ROLE_IDS.ADMINISTRADOR || role === ROLE_IDS.SUPERVISOR_AGRICOLA;
   }
 
   get canAdvance(): boolean {
@@ -75,11 +82,21 @@ export class LotDetail implements OnInit {
           this.lot = lot;
           this.farms = options.farms;
           this.states = options.states;
+          this.loadQualityStatus(lot.idLote);
         },
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudo cargar el lote.';
         },
       });
+  }
+
+  loadQualityStatus(lotId: string): void {
+    this.qualityService.getLotStatus(lotId).subscribe({
+      next: (status) => {
+        this.qualityStatus = status;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   advance(): void {
@@ -108,5 +125,33 @@ export class LotDetail implements OnInit {
   onSaved(): void {
     this.isEditOpen = false;
     this.loadDetail();
+  }
+
+  onEventSaved(): void {
+    this.isEventFormOpen = false;
+    this.loadDetail();
+  }
+
+  onQualitySaved(): void {
+    this.isQualityFormOpen = false;
+    this.loadDetail();
+  }
+
+  get currentEjecucionId(): string | null {
+    return this.lot?.flujo?.faseActual?.idEjecucion ?? null;
+  }
+
+  get isAdvanceBlocked(): boolean {
+    return (
+      this.lot?.flujo?.faseActual?.codigo === 'CALIDAD' && this.qualityStatus?.isBlocked === true
+    );
+  }
+
+  get canRegisterQuality(): boolean {
+    const role = this.authService.currentUser()?.idRol;
+    return (
+      this.lot?.flujo?.faseActual?.codigo === 'CALIDAD' &&
+      (role === ROLE_IDS.ADMINISTRADOR || role === ROLE_IDS.CALIDAD)
+    );
   }
 }

@@ -22,17 +22,6 @@
     </article>
   </section>
 
-  <section *ngIf="isAdmin" class="creation-callout" aria-label="Crear productor">
-    <div class="creation-copy">
-      <span class="creation-icon" aria-hidden="true">+</span>
-      <div>
-        <strong>Nuevo productor</strong>
-        <small>Registro de datos y vinculación de las cuentas responsables de sus fincas.</small>
-      </div>
-    </div>
-    <button type="button" class="btn-primary" (click)="openCreateModal()">Crear productor</button>
-  </section>
-
   <section class="panel filter-panel">
     <div class="section-heading">
       <div>
@@ -71,6 +60,9 @@
         <h2>Listado de productores</h2>
         <p>{{ visibleProducers.length }} resultado(s)</p>
       </div>
+      <button *ngIf="isAdmin" type="button" class="btn-primary" (click)="openCreateModal()">
+        Nuevo productor
+      </button>
     </div>
 
     <div *ngIf="isLoading" class="state">Cargando productores...</div>

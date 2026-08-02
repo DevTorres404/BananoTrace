@@ -1,0 +1,141 @@
+<main class="farms-page shipments-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Empaque y logística</p>
+      <h1>Envíos</h1>
+      <p>Planificación, tránsito y entrega de contenedores.</p>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Resumen de envíos">
+    <article class="metric-card green">
+      <span>Envíos registrados</span><strong>{{ summary.total }}</strong
+      ><small>Total disponible para seguimiento</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>En preparación</span><strong>{{ summary.planned + summary.loaded }}</strong
+      ><small>{{ summary.planned }} planificados · {{ summary.loaded }} cargados</small>
+    </article>
+    <article class="metric-card teal">
+      <span>En tránsito</span><strong>{{ summary.inTransit }}</strong
+      ><small>{{ summary.delivered }} entregados</small>
+    </article>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Buscar envíos</h2>
+        <p>Filtros por código, contenedor, puerto, país, naviera o estado.</p>
+      </div>
+    </div>
+    <form class="filters" (ngSubmit)="load(true)">
+      <label class="wide">
+        <span>Búsqueda</span>
+        <input
+          name="search"
+          [(ngModel)]="filters.search"
+          placeholder="Código, contenedor, destino o naviera"
+        />
+      </label>
+      <label>
+        <span>Estado</span>
+        <select name="estado" [(ngModel)]="filters.estado">
+          <option value="">Todos los estados</option>
+          <option value="PLANIFICADO">Planificado</option>
+          <option value="CARGADO">Cargado</option>
+          <option value="EN_TRANSITO">En tránsito</option>
+          <option value="ENTREGADO">Entregado</option>
+          <option value="CANCELADO">Cancelado</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Aplicar filtros</button>
+      </div>
+    </form>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="load()">Reintentar</button>
+  </p>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de envíos</h2>
+        <p>{{ pagination.total }} resultado(s)</p>
+      </div>
+      <button *ngIf="canCreate" type="button" class="btn-primary" (click)="onCreateEnvio()">
+        Nuevo envío
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="state">Cargando envíos...</div>
+    <div *ngIf="!isLoading" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Envío</th>
+            <th>Destino</th>
+            <th>Naviera</th>
+            <th>Contenedor</th>
+            <th>Salida</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let shipment of envios">
+            <td data-label="Envío">
+              <strong class="shipment-code">{{ shipment.codigoEnvio }}</strong>
+              <small>Origen: {{ shipment.puertoOrigen }}</small>
+            </td>
+            <td data-label="Destino">
+              <strong>{{ shipment.puertoDestino }}</strong
+              ><small>{{ shipment.paisDestino }}</small>
+            </td>
+            <td data-label="Naviera">{{ shipment.naviera || 'Sin asignar' }}</td>
+            <td data-label="Contenedor">{{ shipment.numeroContenedor || 'Sin asignar' }}</td>
+            <td data-label="Salida">
+              {{ shipment.fechaSalida ? (shipment.fechaSalida | date: 'dd/MM/yyyy') : 'Pendiente' }}
+            </td>
+            <td data-label="Estado">
+              <span [class]="getBadgeClass(shipment.estado)">{{
+                getStateLabel(shipment.estado)
+              }}</span>
+            </td>
+            <td data-label="Acciones">
+              <div class="row-actions">
+                <button type="button" (click)="onViewDetail(shipment.idEnvio)">Ver detalle</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="envios.length === 0">
+            <td colspan="7" class="state">No se encontraron envíos con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <nav *ngIf="pagination.totalPages > 1" class="pagination" aria-label="Paginación de envíos">
+      <button
+        type="button"
+        class="btn-ghost"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-ghost"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  </section>
+</main>

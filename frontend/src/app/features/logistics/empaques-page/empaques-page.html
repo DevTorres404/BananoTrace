@@ -1,0 +1,105 @@
+<main class="farms-page packages-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Empaque y logística</p>
+      <h1>Empaques</h1>
+      <p>Control de cajas desde su generación hasta la entrega.</p>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Resumen de empaques">
+    <article class="metric-card green">
+      <span>Cajas registradas</span><strong>{{ summary.total }}</strong
+      ><small>Total disponible para seguimiento</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Cajas disponibles</span><strong>{{ summary.disponibles }}</strong
+      ><small>Sin asignación a un envío</small>
+    </article>
+    <article class="metric-card teal">
+      <span>Cajas en operación</span><strong>{{ summary.asignadas + summary.enTransito }}</strong>
+      <small>{{ summary.asignadas }} asignadas · {{ summary.enTransito }} en tránsito</small>
+    </article>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Buscar empaques</h2>
+        <p>Filtre las cajas por su estado operativo.</p>
+      </div>
+    </div>
+    <form class="filters" (ngSubmit)="load()">
+      <label>
+        <span>Estado</span>
+        <select name="statusFilter" [(ngModel)]="statusFilter">
+          <option value="">Todos los estados</option>
+          <option value="DISPONIBLE">Disponible</option>
+          <option value="ASIGNADO">Asignado</option>
+          <option value="EN_TRANSITO">En tránsito</option>
+          <option value="ENTREGADO">Entregado</option>
+          <option value="RECHAZADO">Rechazado</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Aplicar filtros</button>
+      </div>
+    </form>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="load()">Reintentar</button>
+  </p>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de empaques</h2>
+        <p>{{ empaques.length }} resultado(s)</p>
+      </div>
+      <button *ngIf="canCreate" type="button" class="btn-primary" (click)="showCreateModal = true">
+        Nueva caja
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="state">Cargando empaques...</div>
+    <div *ngIf="!isLoading" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Caja</th>
+            <th>Lote</th>
+            <th>Fecha de empaque</th>
+            <th>Peso neto</th>
+            <th>Categoría</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of empaques">
+            <td data-label="Caja">
+              <strong class="package-code">{{ emp.codigoCaja }}</strong>
+            </td>
+            <td data-label="Lote">{{ emp.lote?.codigoLote || 'Sin lote' }}</td>
+            <td data-label="Fecha de empaque">{{ emp.fechaEmpaque | date: 'dd/MM/yyyy' }}</td>
+            <td data-label="Peso neto">{{ emp.pesoNetoKg }} kg</td>
+            <td data-label="Categoría">{{ emp.categoria || 'Sin categoría' }}</td>
+            <td data-label="Estado">
+              <span [class]="getBadgeClass(emp.estado)">{{ getStateLabel(emp.estado) }}</span>
+            </td>
+          </tr>
+          <tr *ngIf="empaques.length === 0">
+            <td colspan="6" class="state">No se encontraron empaques con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-empaque-form
+    *ngIf="showCreateModal"
+    (closed)="showCreateModal = false"
+    (saved)="onEmpaqueSaved()"
+  />
+</main>

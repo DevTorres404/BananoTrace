@@ -1,0 +1,130 @@
+<main class="farms-page quality-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Producción y calidad</p>
+      <h1>Control de calidad</h1>
+      <p>Historial de inspecciones vinculadas a los lotes productivos.</p>
+    </div>
+  </header>
+
+  <section class="metrics" *ngIf="summary" aria-label="Resumen de controles de calidad">
+    <article class="metric-card teal">
+      <span>Inspecciones registradas</span><strong>{{ summary.total }}</strong
+      ><small
+        >Rechazo promedio:
+        {{
+          summary.avgRejectionPct !== null
+            ? (summary.avgRejectionPct | number: '1.1-1') + '%'
+            : 'sin datos'
+        }}</small
+      >
+    </article>
+    <article class="metric-card green">
+      <span>Controles aprobados</span><strong>{{ summary.approved }}</strong
+      ><small>Lotes habilitados para continuar</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Requieren atención</span><strong>{{ summary.observed + summary.rejected }}</strong
+      ><small>{{ summary.observed }} observados · {{ summary.rejected }} rechazados</small>
+    </article>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Filtrar inspecciones</h2>
+        <p>Consulta por código de lote o resultado del control.</p>
+      </div>
+    </div>
+    <form class="filters quality-filters" (ngSubmit)="applyFilters()">
+      <label class="wide">
+        <span>Lote</span>
+        <input name="lot" type="text" placeholder="Código de lote" [(ngModel)]="lotCodeSearch" />
+      </label>
+      <label>
+        <span>Resultado</span>
+        <select name="result" [(ngModel)]="resultFilter">
+          <option value="">Todos</option>
+          <option value="APROBADO">Aprobado</option>
+          <option value="OBSERVADO">Observado</option>
+          <option value="RECHAZADO">Rechazado</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Aplicar filtros</button>
+      </div>
+    </form>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="load()">Reintentar</button>
+  </p>
+
+  <section class="panel quality-results">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de inspecciones</h2>
+        <p>{{ summary?.total || 0 }} registro(s)</p>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="state">Cargando inspecciones...</div>
+    <div *ngIf="!isLoading && controls.length > 0" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Lote</th>
+            <th>Fecha</th>
+            <th>Categoría</th>
+            <th>Calibre</th>
+            <th>Peso muestra</th>
+            <th>% Rechazo</th>
+            <th>Resultado</th>
+            <th>Inspector</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let control of controls">
+            <td data-label="Lote">
+              <strong>{{ control.codigoLote }}</strong>
+            </td>
+            <td data-label="Fecha">
+              {{ control.fechaControl | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
+            </td>
+            <td data-label="Categoría">{{ control.categoriaCalidad || '—' }}</td>
+            <td data-label="Calibre">
+              {{ control.calibreMm !== null ? (control.calibreMm | number: '1.1-1') + ' mm' : '—' }}
+            </td>
+            <td data-label="Peso muestra">
+              {{
+                control.pesoMuestraKg !== null
+                  ? (control.pesoMuestraKg | number: '1.2-2') + ' kg'
+                  : '—'
+              }}
+            </td>
+            <td data-label="% Rechazo">
+              <span
+                *ngIf="control.porcentajeRechazo !== null"
+                [class]="getPctClass(control.porcentajeRechazo)"
+              >
+                {{ control.porcentajeRechazo | number: '1.2-2' }}%
+              </span>
+              <span *ngIf="control.porcentajeRechazo === null">—</span>
+            </td>
+            <td data-label="Resultado">
+              <span [class]="getBadgeClass(control.resultado)">
+                {{ resultLabels[control.resultado] }}
+              </span>
+            </td>
+            <td data-label="Inspector">{{ control.inspector }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!isLoading && controls.length === 0 && !errorMessage" class="state">
+      No hay inspecciones para los filtros seleccionados.
+    </div>
+  </section>
+</main>

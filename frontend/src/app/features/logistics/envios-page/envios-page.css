@@ -1,0 +1,69 @@
+:host {
+  display: block;
+}
+
+.filters {
+  grid-template-columns: minmax(280px, 1.4fr) minmax(180px, 0.7fr) auto;
+}
+
+.filter-actions {
+  justify-content: flex-end;
+}
+
+.shipment-code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.28rem 0.58rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.badge-gray {
+  color: var(--color-text-secondary, #64756f);
+  background: var(--color-surface-strong, #edf3f0);
+}
+
+.badge-yellow {
+  color: #8a5b08;
+  background: #fff2c8;
+}
+
+.badge-blue {
+  color: #185b86;
+  background: #dceef9;
+}
+
+.badge-green {
+  color: #106342;
+  background: #def5e9;
+}
+
+.badge-red {
+  color: #a13831;
+  background: #fde6e3;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  color: var(--color-text-secondary, #64756f);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    justify-content: space-between;
+  }
+}

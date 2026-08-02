@@ -1,0 +1,204 @@
+<main class="farms-page events-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Trazabilidad operativa</p>
+      <h1>Eventos</h1>
+      <p>Historial cronológico de actividades registradas sobre lotes, cajas y envíos.</p>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Resumen de eventos">
+    <article class="metric-card green">
+      <span>Eventos registrados</span><strong>{{ summary.total }}</strong
+      ><small>Actividades dentro de la consulta actual</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Unidades trazables</span><strong>{{ summary.units }}</strong
+      ><small>Lotes, cajas o envíos relacionados</small>
+    </article>
+    <article class="metric-card teal">
+      <span>Documentos vinculados</span><strong>{{ summary.documents }}</strong
+      ><small>Respaldo documental de los eventos</small>
+    </article>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Filtrar eventos</h2>
+        <p>Consulta por código, tipo, responsable o rango de fechas.</p>
+      </div>
+    </div>
+    <form class="filters event-filters" (ngSubmit)="load()">
+      <label class="wide">
+        <span>Búsqueda</span>
+        <input
+          name="search"
+          [(ngModel)]="filters.search"
+          placeholder="Código, ubicación o descripción"
+        />
+      </label>
+      <label>
+        <span>Tipo de evento</span>
+        <select name="type" [(ngModel)]="filters.idTipoEvento">
+          <option [ngValue]="undefined">Todos</option>
+          <option *ngFor="let type of eventTypes" [ngValue]="type.idTipoEvento">
+            {{ type.nombre | titlecase }}
+          </option>
+        </select>
+      </label>
+      <label>
+        <span>Responsable</span>
+        <select name="user" [(ngModel)]="filters.idUsuario">
+          <option [ngValue]="undefined">Todos</option>
+          <option *ngFor="let user of users" [value]="user.idUsuario">{{ user.nombre }}</option>
+        </select>
+      </label>
+      <label><span>Desde</span><input type="date" name="from" [(ngModel)]="filters.desde" /></label>
+      <label><span>Hasta</span><input type="date" name="to" [(ngModel)]="filters.hasta" /></label>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Aplicar filtros</button>
+      </div>
+    </form>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="load(false)">Reintentar</button>
+  </p>
+
+  <section class="panel events-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Línea de tiempo</h2>
+        <p>{{ pagination.total }} evento(s) encontrado(s)</p>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="state">Cargando eventos...</div>
+    <div *ngIf="!isLoading && events.length" class="timeline-list">
+      <article *ngFor="let event of events" class="event-row">
+        <div class="event-marker" aria-hidden="true">{{ iconFor(event.tipoEvento.nombre) }}</div>
+        <div class="event-content">
+          <div class="event-heading">
+            <div>
+              <span class="event-type">{{ event.tipoEvento.nombre | titlecase }}</span>
+              <h3>{{ event.unidad.referencia }}</h3>
+            </div>
+            <time>{{ event.fechaEvento | date: 'dd/MM/yyyy HH:mm' }}</time>
+          </div>
+          <p>{{ event.descripcion || 'Sin descripción registrada.' }}</p>
+          <div class="event-meta">
+            <span>{{ event.unidad.tipo | titlecase }}</span>
+            <span>{{ event.fase.nombre }}</span>
+            <span>{{ event.usuario }}</span>
+            <span *ngIf="event.ubicacion">{{ event.ubicacion }}</span>
+            <span *ngIf="event.unidad.finca">{{ event.unidad.finca }}</span>
+          </div>
+
+          <dl *ngIf="(event.datosAdicionales | keyvalue).length" class="dynamic-data">
+            <div *ngFor="let item of event.datosAdicionales | keyvalue">
+              <dt>{{ item.key }}</dt>
+              <dd>{{ item.value }}</dd>
+            </div>
+          </dl>
+
+          <div class="documents" *ngIf="event.documentos.length">
+            <a
+              *ngFor="let document of event.documentos"
+              [href]="document.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ document.tipo }} · {{ document.nombre }}</a
+            >
+          </div>
+          <div class="event-actions">
+            <a *ngIf="event.unidad.idLote" [routerLink]="['/lotes', event.unidad.idLote]"
+              >Ver lote</a
+            >
+            <button *ngIf="canAttach(event)" type="button" (click)="openDocumentModal(event)">
+              Vincular documento
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div *ngIf="!isLoading && !events.length && !errorMessage" class="state">
+      No hay eventos que coincidan con los filtros.
+    </div>
+
+    <footer *ngIf="pagination.totalPages > 1" class="pagination" aria-label="Paginación">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
+  </section>
+
+  <div *ngIf="selectedEvent" class="modal-backdrop" (mousedown)="closeDocumentModal()">
+    <section
+      class="document-modal"
+      role="dialog"
+      aria-modal="true"
+      (mousedown)="$event.stopPropagation()"
+    >
+      <header>
+        <div>
+          <p class="eyebrow">Evento {{ selectedEvent.unidad.referencia }}</p>
+          <h2>Vincular documento</h2>
+        </div>
+        <button type="button" aria-label="Cerrar" (click)="closeDocumentModal()">×</button>
+      </header>
+      <form #documentForm="ngForm" (ngSubmit)="saveDocument()">
+        <label
+          ><span>Tipo *</span
+          ><select name="documentType" [(ngModel)]="documentModel.tipo" required>
+            <option value="" disabled>Seleccione un tipo</option>
+            <option *ngFor="let type of documentTypes" [value]="type.codigo">
+              {{ type.nombre }}
+            </option>
+          </select></label
+        >
+        <label
+          ><span>Nombre *</span
+          ><input name="documentName" [(ngModel)]="documentModel.nombre" maxlength="150" required
+        /></label>
+        <label
+          ><span>URL *</span
+          ><input
+            name="documentUrl"
+            [(ngModel)]="documentModel.url"
+            type="url"
+            placeholder="https://..."
+            required
+        /></label>
+        <p *ngIf="documentError" class="form-error">{{ documentError }}</p>
+        <footer>
+          <button type="button" class="btn-secondary" (click)="closeDocumentModal()">
+            Cancelar</button
+          ><button
+            type="submit"
+            class="btn-primary"
+            [disabled]="documentForm.invalid || isSavingDocument"
+          >
+            {{ isSavingDocument ? 'Guardando...' : 'Vincular' }}
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+</main>

@@ -13,7 +13,7 @@
         <label class="field full">
           <span>Finca *</span>
           <select name="farmId" [(ngModel)]="farmId" required [disabled]="isEditMode" autofocus>
-            <option value="" disabled>Seleccioná una finca</option>
+            <option value="" disabled>Seleccione una finca</option>
             <option *ngFor="let farm of farms" [value]="farm.idFinca">
               {{ farm.codigoFinca }} · {{ farm.nombre }}
             </option>
@@ -21,11 +21,31 @@
         </label>
         <label class="field">
           <span>Tipo de certificación *</span>
-          <input name="tipo" [(ngModel)]="model.tipoCertificacion" maxlength="80" required />
+          <select
+            name="tipo"
+            [(ngModel)]="model.tipoCertificacion"
+            required
+            [disabled]="optionsLoading"
+          >
+            <option value="" disabled>Seleccione un tipo</option>
+            <option *ngFor="let type of certificationTypes" [value]="type.codigo">
+              {{ type.nombre }}
+            </option>
+          </select>
         </label>
         <label class="field">
           <span>Entidad emisora *</span>
-          <input name="entidad" [(ngModel)]="model.entidadEmisora" maxlength="120" required />
+          <select
+            name="entidad"
+            [(ngModel)]="model.entidadEmisora"
+            required
+            [disabled]="optionsLoading"
+          >
+            <option value="" disabled>Seleccione una entidad</option>
+            <option *ngFor="let issuer of certificationIssuers" [value]="issuer.codigo">
+              {{ issuer.nombre }}
+            </option>
+          </select>
         </label>
         <label class="field full">
           <span>Número de certificado *</span>

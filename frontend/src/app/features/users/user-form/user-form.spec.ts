@@ -27,7 +27,7 @@ describe('UserForm modal', () => {
     estado: true,
     fechaCreacion: '2026-08-02T00:00:00.000Z',
     fechaActualizacion: null,
-    rol: { idRol: 2, nombre: 'PRODUCTOR', descripcion: null },
+    rol: { idRol: 2, nombre: 'SUPERVISOR_AGRICOLA', descripcion: null },
   };
 
   beforeEach(async () => {

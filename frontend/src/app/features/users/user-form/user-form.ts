@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { UserAccount, UserPayload, UserRole, UsersService } from '../users.service';
+import { ProducersService, Producer } from '../../producers/producers.service';
 
 @Component({
   selector: 'app-user-form',
@@ -31,12 +32,14 @@ export class UserForm implements OnInit, OnDestroy {
   @ViewChild('firstField') private firstField?: ElementRef<HTMLInputElement>;
 
   private readonly usersService = inject(UsersService);
+  private readonly producersService = inject(ProducersService);
   private readonly document = inject(DOCUMENT);
   private readonly cdr = inject(ChangeDetectorRef);
   private previousBodyOverflow = '';
 
   user: UserPayload = this.emptyUser();
   roles: UserRole[] = [];
+  producers: Producer[] = [];
   isLoadingData = true;
   isSaving = false;
   errorMessage = '';
@@ -76,11 +79,17 @@ export class UserForm implements OnInit, OnDestroy {
       apellidos: this.user.apellidos.trim(),
       correo: this.user.correo.trim().toLowerCase(),
       idRol: Number(this.user.idRol),
+      idProductor: this.user.idProductor || null,
     };
 
     if (this.user.clave) payload.clave = this.user.clave;
     if (!this.isEditMode && !payload.clave) {
       this.errorMessage = 'La contraseña es obligatoria.';
+      return;
+    }
+
+    if ((payload.idRol === 2 || payload.idRol === 6) && !payload.idProductor) {
+      this.errorMessage = 'Debe seleccionar un Productor Vinculado para los roles Supervisor y Gerente.';
       return;
     }
 
@@ -108,7 +117,11 @@ export class UserForm implements OnInit, OnDestroy {
   private loadForm(): void {
     const userRequest = this.userId ? this.usersService.getUser(this.userId) : of(null);
 
-    forkJoin({ roles: this.usersService.getRoles(), user: userRequest })
+    forkJoin({
+      roles: this.usersService.getRoles(),
+      producers: this.producersService.getProducers(),
+      user: userRequest,
+    })
       .pipe(
         finalize(() => {
           this.isLoadingData = false;
@@ -117,8 +130,9 @@ export class UserForm implements OnInit, OnDestroy {
         }),
       )
       .subscribe({
-        next: ({ roles, user }) => {
-          this.roles = roles;
+        next: ({ roles, producers, user }) => {
+          this.roles = roles.filter(r => r.idRol !== 1); // Excluir ADMINISTRADOR
+          this.producers = producers;
           if (user) this.populateForm(user);
         },
         error: (error) => {
@@ -129,8 +143,12 @@ export class UserForm implements OnInit, OnDestroy {
       });
   }
 
+  get isProducerRole(): boolean {
+    return Number(this.user.idRol) === 2 || Number(this.user.idRol) === 6;
+  }
+
   private emptyUser(): UserPayload {
-    return { nombres: '', apellidos: '', correo: '', clave: '', idRol: 0 };
+    return { nombres: '', apellidos: '', correo: '', clave: '', idRol: 0, idProductor: null };
   }
 
   private populateForm(user: UserAccount): void {
@@ -140,6 +158,7 @@ export class UserForm implements OnInit, OnDestroy {
       correo: user.correo,
       clave: '',
       idRol: user.rol.idRol,
+      idProductor: user.idProductor,
     };
   }
 }

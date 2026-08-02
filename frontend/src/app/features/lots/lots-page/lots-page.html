@@ -22,17 +22,6 @@
     </article>
   </section>
 
-  <section *ngIf="canManage" class="creation-callout" aria-label="Crear lote">
-    <div class="creation-copy">
-      <span class="creation-icon" aria-hidden="true">+</span>
-      <div>
-        <strong>Nuevo ciclo productivo</strong>
-        <small>El código trazable y el flujo se asignarán automáticamente.</small>
-      </div>
-    </div>
-    <button type="button" class="btn-primary" (click)="openModal()">Crear lote</button>
-  </section>
-
   <section class="panel filter-panel">
     <div class="section-heading">
       <div>
@@ -80,6 +69,9 @@
         <h2>Listado de lotes</h2>
         <p>{{ pagination.total }} registro(s)</p>
       </div>
+      <button *ngIf="canManage" type="button" class="btn-primary" (click)="openModal()">
+        Nuevo lote
+      </button>
     </div>
     <div *ngIf="isLoading" class="state">Cargando lotes...</div>
     <div *ngIf="!isLoading" class="table-scroll">
@@ -152,6 +144,7 @@
     [lot]="selectedLot"
     [farms]="farms"
     [states]="states"
+    [varieties]="varieties"
     (closed)="closeModal()"
     (saved)="onSaved()"
   />

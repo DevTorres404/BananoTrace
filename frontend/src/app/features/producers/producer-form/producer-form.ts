@@ -89,9 +89,9 @@ export class ProducerForm implements OnInit, OnDestroy {
     const payload: ProducerPayload = {
       identificacion: this.producer.identificacion.trim(),
       nombreRazonSocial: this.producer.nombreRazonSocial.trim(),
-      telefono: this.producer.telefono?.trim() || undefined,
-      correo: this.producer.correo?.trim().toLowerCase() || undefined,
-      direccion: this.producer.direccion?.trim() || undefined,
+      telefono: this.producer.telefono?.trim() || '',
+      correo: this.producer.correo?.trim().toLowerCase() || '',
+      direccion: this.producer.direccion?.trim() || '',
     };
     if (this.isAdmin) payload.idUsuarios = this.producer.idUsuarios ?? [];
 

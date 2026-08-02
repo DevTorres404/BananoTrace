@@ -14,7 +14,7 @@ import { Farm, FarmDashboard, FarmFilters, FarmsService } from '../farms.service
   standalone: true,
   imports: [CommonModule, FormsModule, FarmForm],
   templateUrl: './farms-page.html',
-  styleUrls: ['./farms-page.css'],
+  styleUrls: ['./farms-page.css', './farms-dashboard.css'],
 })
 export class FarmsPage implements OnInit {
   private readonly farmsService = inject(FarmsService);

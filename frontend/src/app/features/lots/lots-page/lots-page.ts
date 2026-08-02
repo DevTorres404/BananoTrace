@@ -12,6 +12,7 @@ import {
   LotFarmOption,
   LotFilters,
   LotState,
+  LotVarietyOption,
   LotsService,
 } from '../lots.service';
 
@@ -30,6 +31,7 @@ export class LotsPage implements OnInit {
   lots: Lot[] = [];
   farms: LotFarmOption[] = [];
   states: LotState[] = [];
+  varieties: LotVarietyOption[] = [];
   filters: LotFilters = { idFinca: '', estado: '', desde: '', hasta: '', page: 1, pageSize: 10 };
   pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
   summary = { totalLots: 0, activeLots: 0, totalPlants: 0 };
@@ -41,7 +43,7 @@ export class LotsPage implements OnInit {
 
   get canManage(): boolean {
     const role = this.authService.currentUser()?.idRol;
-    return role === ROLE_IDS.ADMINISTRADOR || role === ROLE_IDS.PRODUCTOR;
+    return role === ROLE_IDS.ADMINISTRADOR || role === ROLE_IDS.SUPERVISOR_AGRICOLA;
   }
 
   ngOnInit(): void {
@@ -67,6 +69,7 @@ export class LotsPage implements OnInit {
           this.summary = page.summary;
           this.farms = options.farms;
           this.states = options.states;
+          this.varieties = options.varieties;
         },
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudieron cargar los lotes.';

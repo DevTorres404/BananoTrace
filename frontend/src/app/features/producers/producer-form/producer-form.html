@@ -64,8 +64,8 @@
             name="telefono"
             type="tel"
             [(ngModel)]="producer.telefono"
+            required
             maxlength="20"
-            placeholder="Opcional"
           />
         </div>
 
@@ -76,9 +76,9 @@
             name="correo"
             type="email"
             [(ngModel)]="producer.correo"
+            required
             email
             maxlength="120"
-            placeholder="Opcional"
           />
         </div>
 
@@ -88,13 +88,13 @@
             id="direccion"
             name="direccion"
             [(ngModel)]="producer.direccion"
+            required
             rows="3"
-            placeholder="Opcional"
           ></textarea>
         </div>
 
         <div *ngIf="isAdmin" class="form-group full-width">
-          <label for="idUsuarios">Cuentas PRODUCTOR vinculadas</label>
+          <label for="idUsuarios">Cuentas de usuario vinculadas</label>
           <select
             id="idUsuarios"
             name="idUsuarios"
@@ -108,10 +108,10 @@
             </option>
           </select>
           <small *ngIf="assignableUsers.length > 0">
-            Podés vincular varias cuentas PRODUCTOR a la misma entidad de negocio.
+            Puede vincular varias cuentas (Supervisores o Gerentes) a la misma entidad de negocio.
           </small>
           <small *ngIf="assignableUsers.length === 0">
-            No hay cuentas PRODUCTOR disponibles. Crealas primero desde Usuarios.
+            No hay cuentas de usuario disponibles para vincular. Crealas primero desde Usuarios.
           </small>
         </div>
 

@@ -12,7 +12,13 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { Certification, CertificationPayload, Farm, FarmsService } from '../farms.service';
+import {
+  CatalogOption,
+  Certification,
+  CertificationPayload,
+  Farm,
+  FarmsService,
+} from '../farms.service';
 
 @Component({
   selector: 'app-certification-form',
@@ -37,6 +43,9 @@ export class CertificationForm implements OnInit, OnDestroy {
   model: CertificationPayload = this.emptyModel();
   isSaving = false;
   errorMessage = '';
+  certificationTypes: CatalogOption[] = [];
+  certificationIssuers: CatalogOption[] = [];
+  optionsLoading = true;
 
   get isEditMode(): boolean {
     return this.certification !== null;
@@ -47,6 +56,23 @@ export class CertificationForm implements OnInit, OnDestroy {
     this.document.body.style.overflow = 'hidden';
     this.farmId = this.initialFarmId ?? this.certification?.idFinca ?? '';
     if (this.certification) this.populate(this.certification);
+    this.farmsService
+      .getCertificationOptions()
+      .pipe(
+        finalize(() => {
+          this.optionsLoading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: ({ types, issuers }) => {
+          this.certificationTypes = types;
+          this.certificationIssuers = issuers;
+        },
+        error: () => {
+          this.errorMessage = 'No se pudieron cargar los catálogos de certificación.';
+        },
+      });
   }
 
   ngOnDestroy(): void {
@@ -112,8 +138,8 @@ export class CertificationForm implements OnInit, OnDestroy {
 
   private populate(certification: Certification): void {
     this.model = {
-      tipoCertificacion: certification.tipoCertificacion,
-      entidadEmisora: certification.entidadEmisora,
+      tipoCertificacion: certification.tipoCertificacionCodigo,
+      entidadEmisora: certification.entidadEmisoraCodigo,
       numeroCertificado: certification.numeroCertificado,
       fechaEmision: certification.fechaEmision.slice(0, 10),
       fechaVencimiento: certification.fechaVencimiento?.slice(0, 10) ?? null,

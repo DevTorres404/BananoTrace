@@ -22,15 +22,27 @@
     </article>
   </section>
 
-  <section class="creation-callout" aria-label="Crear finca">
-    <div class="creation-copy">
-      <span class="creation-icon" aria-hidden="true">+</span>
+  <section class="farm-dashboard panel" aria-labelledby="farm-dashboard-title">
+    <div class="section-heading">
       <div>
-        <strong>Nueva ubicación productiva</strong>
-        <small>Registro de una ubicación vinculada con su productor.</small>
+        <h2 id="farm-dashboard-title">Lotes activos por finca</h2>
+        <p>Resumen operativo de las fincas activas.</p>
       </div>
     </div>
-    <button type="button" class="btn-primary" (click)="openFarmModal()">Crear finca</button>
+    <div class="farm-summary-grid" *ngIf="dashboard.fincas.length > 0; else emptyDashboard">
+      <article class="farm-summary-card" *ngFor="let farm of dashboard.fincas">
+        <div>
+          <strong>{{ farm.nombre }}</strong>
+          <small>{{ farm.codigoFinca }} · {{ farm.productor.nombreRazonSocial }}</small>
+        </div>
+        <span class="farm-summary-count" [attr.aria-label]="farm.lotesActivos + ' lotes activos'">
+          {{ farm.lotesActivos }}
+        </span>
+      </article>
+    </div>
+    <ng-template #emptyDashboard>
+      <p class="state compact">No hay fincas activas para mostrar.</p>
+    </ng-template>
   </section>
 
   <section class="panel filter-panel">
@@ -46,9 +58,12 @@
         ><input name="search" [(ngModel)]="filters.search" placeholder="Código, finca o productor"
       /></label>
       <label><span>País</span><input name="pais" [(ngModel)]="filters.pais" /></label>
-      <label><span>Región</span><input name="region" [(ngModel)]="filters.region" /></label>
       <label
-        ><span>Ciudad / municipio</span><input name="localidad" [(ngModel)]="filters.localidad"
+        ><span>Región / provincia / estado</span><input name="region" [(ngModel)]="filters.region"
+      /></label>
+      <label
+        ><span>Localidad / cantón / municipio</span
+        ><input name="localidad" [(ngModel)]="filters.localidad"
       /></label>
       <label *ngIf="isAdmin"
         ><span>Productor</span
@@ -84,6 +99,7 @@
         <h2>Listado de fincas</h2>
         <p>{{ farms.length }} resultado(s)</p>
       </div>
+      <button type="button" class="btn-primary" (click)="openFarmModal()">Nueva finca</button>
     </div>
     <div *ngIf="isLoading" class="state">Cargando fincas...</div>
     <div *ngIf="!isLoading" class="table-scroll">

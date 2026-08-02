@@ -22,17 +22,6 @@
     </article>
   </section>
 
-  <section class="creation-callout" aria-label="Crear usuario">
-    <div class="creation-copy">
-      <span class="creation-icon" aria-hidden="true">+</span>
-      <div>
-        <strong>Nueva cuenta de usuario</strong>
-        <small>Asignación de rol y alcance operativo.</small>
-      </div>
-    </div>
-    <button type="button" class="btn-primary" (click)="openCreateModal()">Crear usuario</button>
-  </section>
-
   <section class="panel filter-panel">
     <div class="section-heading">
       <div>
@@ -80,6 +69,7 @@
         <h2>Listado de usuarios</h2>
         <p>{{ visibleUsers.length }} resultado(s)</p>
       </div>
+      <button type="button" class="btn-primary" (click)="openCreateModal()">Nuevo usuario</button>
     </div>
 
     <div *ngIf="isLoading" class="state">Cargando usuarios...</div>

@@ -19,20 +19,20 @@ export const routes: Routes = [
     redirectTo: 'usuarios',
     pathMatch: 'full',
     canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'usuarios/:id/editar',
     redirectTo: 'usuarios',
     canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'usuarios',
     loadComponent: () =>
       import('./features/users/users-list/users-list').then((module) => module.UsersList),
     canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'productores',
@@ -41,14 +41,14 @@ export const routes: Routes = [
         (module) => module.ProducersList,
       ),
     canActivate: producerGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA] },
   },
   {
     path: 'fincas',
     loadComponent: () =>
       import('./features/farms/farms-page/farms-page').then((module) => module.FarmsPage),
     canActivate: producerGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'certificaciones',
@@ -57,7 +57,7 @@ export const routes: Routes = [
         (module) => module.CertificationsPage,
       ),
     canActivate: producerGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'lotes/:id',
@@ -65,7 +65,7 @@ export const routes: Routes = [
       import('./features/lots/lot-detail/lot-detail').then((module) => module.LotDetail),
     canActivate: producerGuards,
     data: {
-      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA],
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
     },
   },
   {
@@ -74,7 +74,16 @@ export const routes: Routes = [
       import('./features/lots/lots-page/lots-page').then((module) => module.LotsPage),
     canActivate: producerGuards,
     data: {
-      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.PRODUCTOR, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA],
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
+    path: 'calidad',
+    loadComponent: () =>
+      import('./features/quality/quality-page/quality-page').then((module) => module.QualityPage),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.CALIDAD, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR],
     },
   },
   {
@@ -85,6 +94,67 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
     data: { title: 'Panel principal' },
+  },
+  {
+    path: 'empaque',
+    loadComponent: () =>
+      import('./features/logistics/empaques-page/empaques-page').then(
+        (module) => module.EmpaquesPage,
+      ),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CALIDAD, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
+    path: 'envios',
+    loadComponent: () =>
+      import('./features/logistics/envios-page/envios-page').then((module) => module.EnviosPage),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
+    path: 'envios/nuevo',
+    loadComponent: () =>
+      import('./features/logistics/envio-form/envio-form').then((module) => module.EnvioForm),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
+    path: 'envios/:id',
+    loadComponent: () =>
+      import('./features/logistics/envio-detail/envio-detail').then((module) => module.EnvioDetail),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
+    path: 'eventos',
+    loadComponent: () =>
+      import('./features/traceability/events-page/events-page').then((module) => module.EventsPage),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
+    path: 'blockchain',
+    loadComponent: () =>
+      import('./shared/feature-placeholder/feature-placeholder').then(
+        (module) => module.FeaturePlaceholder,
+      ),
+  },
+  {
+    path: 'consulta',
+    loadComponent: () =>
+      import('./shared/feature-placeholder/feature-placeholder').then(
+        (module) => module.FeaturePlaceholder,
+      ),
   },
   {
     path: '',

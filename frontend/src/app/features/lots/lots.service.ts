@@ -11,6 +11,12 @@ export interface LotFarmOption {
   nombre: string;
 }
 
+export interface LotVarietyOption {
+  idVariedad: number;
+  codigo: string;
+  nombre: string;
+}
+
 export interface Lot {
   idLote: string;
   idUnidad: string;
@@ -128,8 +134,16 @@ export class LotsService {
     return this.http.get<LotPage>(this.apiUrl, { params });
   }
 
-  getOptions(): Observable<{ states: LotState[]; farms: LotFarmOption[] }> {
-    return this.http.get<{ states: LotState[]; farms: LotFarmOption[] }>(`${this.apiUrl}/options`);
+  getOptions(): Observable<{
+    states: LotState[];
+    farms: LotFarmOption[];
+    varieties: LotVarietyOption[];
+  }> {
+    return this.http.get<{
+      states: LotState[];
+      farms: LotFarmOption[];
+      varieties: LotVarietyOption[];
+    }>(`${this.apiUrl}/options`);
   }
 
   getLot(id: string): Observable<LotDetail> {

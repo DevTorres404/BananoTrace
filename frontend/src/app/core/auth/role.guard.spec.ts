@@ -34,7 +34,7 @@ describe('roleGuard', () => {
   });
 
   it('redirects authenticated users without permission to the dashboard', () => {
-    localStorage.setItem('token', createToken({ idRol: 2, rol: 'PRODUCTOR' }));
+    localStorage.setItem('token', createToken({ idRol: 2, rol: 'SUPERVISOR_AGRICOLA' }));
     const route = { data: { roles: [1] } } as unknown as ActivatedRouteSnapshot;
 
     expect(TestBed.runInInjectionContext(() => roleGuard(route, state))).toBe(redirectTree);

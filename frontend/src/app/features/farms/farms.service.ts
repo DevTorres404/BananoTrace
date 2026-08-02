@@ -67,6 +67,8 @@ export interface Certification {
   idFinca: string;
   tipoCertificacion: string;
   entidadEmisora: string;
+  tipoCertificacionCodigo: string;
+  entidadEmisoraCodigo: string;
   numeroCertificado: string;
   fechaEmision: string;
   fechaVencimiento: string | null;
@@ -78,6 +80,16 @@ export interface Certification {
     nombre: string;
     productor: FarmProducer;
   };
+}
+
+export interface CatalogOption {
+  codigo: string;
+  nombre: string;
+}
+
+export interface CertificationOptions {
+  types: Array<CatalogOption & { idTipoCertificacion: number }>;
+  issuers: Array<CatalogOption & { idEntidadCertificadora: number; alcance: string | null }>;
 }
 
 export interface CertificationPayload {
@@ -125,6 +137,10 @@ export class FarmsService {
   getCertifications(farmId?: string): Observable<Certification[]> {
     const params = farmId ? new HttpParams().set('farmId', farmId) : undefined;
     return this.http.get<Certification[]>(`${this.apiUrl}/certifications`, { params });
+  }
+
+  getCertificationOptions(): Observable<CertificationOptions> {
+    return this.http.get<CertificationOptions>(`${this.apiUrl}/certification-options`);
   }
 
   createCertification(farmId: string, payload: CertificationPayload) {

@@ -10,7 +10,10 @@
       <div>
         <p class="eyebrow">Lote trazable</p>
         <h1>{{ currentLot.codigoLote }}</h1>
-        <p>{{ currentLot.variedadNombre || currentLot.variedad || '—' }} · {{ currentLot.finca.nombre }}</p>
+        <p>
+          {{ currentLot.variedadNombre || currentLot.variedad || '—' }} ·
+          {{ currentLot.finca.nombre }}
+        </p>
       </div>
       <div class="header-actions">
         <span class="status lot-status">{{ stateLabels[currentLot.estado] }}</span
@@ -130,13 +133,31 @@
                 placeholder="Resultado o evidencia de la fase"
               ></textarea>
             </label>
-            <button
-              type="submit"
-              class="btn-primary"
-              [disabled]="isAdvancing || (flow.faseActual.requiereAprobacion && !comment.trim())"
-            >
-              {{ isAdvancing ? 'Avanzando...' : 'Completar y avanzar fase' }}
-            </button>
+            <!-- 5.4 — Block indicator when lot is rejected -->
+            <div class="quality-block-notice" *ngIf="isAdvanceBlocked">
+              ⛔ {{ qualityStatus?.blockReason }}
+            </div>
+            <div class="advance-actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                *ngIf="currentEjecucionId && canRegisterQuality"
+                (click)="isQualityFormOpen = true"
+              >
+                🔬 Inspección de calidad
+              </button>
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="
+                  isAdvancing ||
+                  isAdvanceBlocked ||
+                  (flow.faseActual.requiereAprobacion && !comment.trim())
+                "
+              >
+                {{ isAdvancing ? 'Avanzando...' : 'Completar y avanzar fase' }}
+              </button>
+            </div>
           </form>
           <p *ngIf="flow.faseActual && !canAdvance" class="role-notice">
             La fase debe ser completada por el rol
@@ -156,6 +177,14 @@
           <h2>Línea de tiempo</h2>
           <p>Eventos de trazabilidad registrados sobre la unidad.</p>
         </div>
+        <button
+          *ngIf="currentEjecucionId"
+          type="button"
+          class="btn-secondary"
+          (click)="isEventFormOpen = true"
+        >
+          + Registrar evento
+        </button>
       </div>
       <ol class="timeline" *ngIf="currentLot.timeline.length > 0; else emptyTimeline">
         <li *ngFor="let event of currentLot.timeline">
@@ -183,6 +212,21 @@
       [states]="states"
       (closed)="isEditOpen = false"
       (saved)="onSaved()"
+    />
+    <app-event-form
+      *ngIf="isEventFormOpen && lot && currentEjecucionId"
+      [idUnidad]="lot.idUnidad"
+      [idEjecucion]="currentEjecucionId!"
+      (closed)="isEventFormOpen = false"
+      (saved)="onEventSaved()"
+    />
+    <app-quality-form
+      *ngIf="isQualityFormOpen && lot && currentEjecucionId"
+      [idEjecucion]="currentEjecucionId!"
+      [idLote]="lot.idLote"
+      [codigoLote]="lot.codigoLote"
+      (closed)="isQualityFormOpen = false"
+      (saved)="onQualitySaved()"
     />
   </ng-container>
 </main>

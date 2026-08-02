@@ -72,11 +72,26 @@
         <div class="form-group">
           <label for="idRol">Rol</label>
           <select id="idRol" name="idRol" [(ngModel)]="user.idRol" required>
-            <option [ngValue]="0" disabled>Seleccioná un rol</option>
+            <option [ngValue]="0" disabled>Seleccione un rol</option>
             <option *ngFor="let role of roles" [ngValue]="role.idRol">
               {{ role.nombre.replaceAll('_', ' ') }}
             </option>
           </select>
+        </div>
+
+        <div class="form-group" *ngIf="user.idRol !== 1">
+          <label for="idProductor">
+            Productor Vinculado
+            <span *ngIf="isProducerRole" class="required-asterisk">*</span>
+            <span *ngIf="!isProducerRole">(Opcional)</span>
+          </label>
+          <select id="idProductor" name="idProductor" [(ngModel)]="user.idProductor" [required]="isProducerRole">
+            <option [ngValue]="null">Ninguno (Admin Global)</option>
+            <option *ngFor="let producer of producers" [ngValue]="producer.idProductor">
+              {{ producer.nombreRazonSocial }}
+            </option>
+          </select>
+          <small *ngIf="isProducerRole">Obligatorio para el rol seleccionado.</small>
         </div>
 
         <div class="form-group">

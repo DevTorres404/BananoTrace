@@ -49,10 +49,16 @@
   background: rgb(255 197 0 / 12%);
 }
 
-.role-productor {
+.role-supervisor-agricola {
   color: var(--color-success, #067647);
   border-color: rgb(6 118 71 / 30%);
   background: rgb(6 118 71 / 8%);
+}
+
+.role-gerente-productor {
+  color: #7c3aed;
+  border-color: rgb(124 58 237 / 30%);
+  background: rgb(124 58 237 / 8%);
 }
 
 .role-calidad {

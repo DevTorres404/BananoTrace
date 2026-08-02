@@ -1,0 +1,72 @@
+.farm-dashboard .section-heading {
+  margin-bottom: 0.9rem;
+}
+
+.farm-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  gap: 0.75rem;
+}
+
+.farm-summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  min-width: 0;
+  border: 1px solid var(--color-border, #d7e5de);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: var(--color-surface-strong, #f4f8f6);
+}
+
+.farm-summary-card div {
+  min-width: 0;
+}
+
+.farm-summary-card strong,
+.farm-summary-card small {
+  display: block;
+}
+
+.farm-summary-card strong,
+.farm-summary-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.farm-summary-card small {
+  margin-top: 0.25rem;
+  color: var(--color-text-secondary, #64756f);
+  font-size: 0.75rem;
+}
+
+.farm-summary-count {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: 0 0 2.4rem;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #16825d, #1ba875);
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.state.compact {
+  margin: 0;
+  padding: 1rem;
+}
+
+.filters > .filter-actions {
+  grid-column: span 2;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 760px) {
+  .filters > .filter-actions {
+    grid-column: auto;
+  }
+}

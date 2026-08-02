@@ -1,0 +1,95 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel event-modal" #modalPanel>
+    <div class="modal-header">
+      <h2 class="modal-title">Registrar Evento</h2>
+      <button class="btn-icon" (click)="onClose()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <form class="modal-body" (ngSubmit)="onSubmit()" #form="ngForm">
+      <!-- Tipo de evento -->
+      <div class="field-group">
+        <label class="field-label" for="tipoEvento">Tipo de evento <span class="required">*</span></label>
+        <select
+          id="tipoEvento"
+          class="field-input"
+          name="idTipoEvento"
+          [(ngModel)]="model.idTipoEvento"
+          required
+        >
+          <option [ngValue]="null" disabled>Seleccioná un tipo...</option>
+          <option *ngFor="let t of eventTypes" [ngValue]="t.idTipoEvento">
+            {{ iconFor(t.nombre) }} {{ t.nombre | titlecase }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Fecha del evento -->
+      <div class="field-group">
+        <label class="field-label" for="fechaEvento">Fecha del evento <span class="required">*</span></label>
+        <input
+          id="fechaEvento"
+          class="field-input"
+          type="datetime-local"
+          name="fechaEvento"
+          [(ngModel)]="model.fechaEvento"
+          required
+        />
+      </div>
+
+      <!-- Ubicación -->
+      <div class="field-group">
+        <label class="field-label" for="ubicacion">Ubicación</label>
+        <input
+          id="ubicacion"
+          class="field-input"
+          type="text"
+          name="ubicacion"
+          placeholder="Ej. Lote norte, Empacadora central"
+          [(ngModel)]="model.ubicacion"
+          maxlength="150"
+        />
+      </div>
+
+      <!-- Descripción -->
+      <div class="field-group">
+        <label class="field-label" for="descripcion">Descripción</label>
+        <textarea
+          id="descripcion"
+          class="field-input field-textarea"
+          name="descripcion"
+          placeholder="Detalle adicional del evento..."
+          [(ngModel)]="model.descripcion"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Datos adicionales (JSONB dinámico) -->
+      <div class="field-group">
+        <label class="field-label">Datos adicionales (JSON)</label>
+        <p class="field-hint">Podés incluir datos específicos del tipo de evento en formato JSON.</p>
+        <textarea
+          id="datosAdicionales"
+          class="field-input field-textarea field-code"
+          name="datosAdicionales"
+          placeholder='{"dosis": "2 L/ha", "producto": "Urea"}'
+          [(ngModel)]="datosAdicionalesRaw"
+          rows="3"
+        ></textarea>
+        <p class="field-error" *ngIf="jsonError">{{ jsonError }}</p>
+      </div>
+
+      <!-- Error global -->
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="saving">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
+          <span *ngIf="saving" class="spinner"></span>
+          {{ saving ? 'Guardando...' : 'Registrar evento' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

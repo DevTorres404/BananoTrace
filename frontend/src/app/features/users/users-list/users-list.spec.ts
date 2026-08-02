@@ -49,7 +49,7 @@ describe('UsersList', () => {
         estado: true,
         fechaCreacion: '2026-01-01T00:00:00.000Z',
         fechaActualizacion: null,
-        rol: { idRol: 2, nombre: 'PRODUCTOR', descripcion: null },
+        rol: { idRol: 2, nombre: 'SUPERVISOR_AGRICOLA', descripcion: null },
       },
       {
         idUsuario: '2',
@@ -66,7 +66,7 @@ describe('UsersList', () => {
     ];
 
     component.searchTerm = 'ana';
-    component.roleFilter = 'PRODUCTOR';
+    component.roleFilter = 'SUPERVISOR_AGRICOLA';
     component.statusFilter = 'active';
 
     expect(component.visibleUsers.map((user) => user.idUsuario)).toEqual(['1']);

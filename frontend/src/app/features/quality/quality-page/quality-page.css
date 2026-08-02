@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.quality-filters {
+  grid-template-columns: minmax(240px, 2fr) minmax(180px, 1fr) auto;
+}
+
+.quality-filters .filter-actions {
+  justify-content: flex-end;
+}
+
+.quality-results {
+  overflow: hidden;
+}
+
+.badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.28rem 0.58rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.badge-approved {
+  color: #106342;
+  background: #def5e9;
+}
+
+.badge-observed {
+  color: #8a5c05;
+  background: #fff2c9;
+}
+
+.badge-rejected {
+  color: #a13831;
+  background: #fde6e3;
+}
+
+.pct-ok,
+.pct-warn,
+.pct-high {
+  font-weight: 800;
+}
+
+.pct-ok {
+  color: #16825d;
+}
+
+.pct-warn {
+  color: #b7790a;
+}
+
+.pct-high {
+  color: #b42318;
+}
+
+@media (max-width: 760px) {
+  .quality-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .quality-filters .filter-actions {
+    justify-content: stretch;
+  }
+
+  .quality-filters .filter-actions button {
+    flex: 1;
+  }
+}

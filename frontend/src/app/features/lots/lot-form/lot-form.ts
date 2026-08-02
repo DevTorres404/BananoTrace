@@ -18,6 +18,7 @@ import {
   LotFarmOption,
   LotPayload,
   LotState,
+  LotVarietyOption,
   LotsService,
 } from '../lots.service';
 
@@ -32,6 +33,7 @@ export class LotForm implements OnInit, OnDestroy {
   @Input() lot: Lot | null = null;
   @Input() farms: LotFarmOption[] = [];
   @Input() states: LotState[] = [];
+  @Input() varieties: LotVarietyOption[] = [];
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
 
