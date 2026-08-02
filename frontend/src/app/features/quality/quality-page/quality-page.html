@@ -126,5 +126,25 @@
     <div *ngIf="!isLoading && controls.length === 0 && !errorMessage" class="state">
       No hay inspecciones para los filtros seleccionados.
     </div>
+
+    <footer class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
   </section>
 </main>

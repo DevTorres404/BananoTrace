@@ -83,7 +83,7 @@ export async function seedFincas(prisma: PrismaClient, idProductor: bigint) {
   });
 
   const tipoCert = await prisma.tipoCertificacion.findFirst({
-    where: { nombre: 'Certificado fitosanitario' },
+    where: { nombre: 'Certificación fitosanitaria' },
   });
   const entidadCert = await prisma.entidadCertificadora.findFirst({
     where: { nombre: 'Agrocalidad Ecuador' },

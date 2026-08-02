@@ -74,11 +74,11 @@ export class QualityService {
   }
 
   getControls(
-    filters: { resultado?: QualityResult; search?: string } = {},
+    filters: { resultado?: QualityResult; search?: string; page?: number; pageSize?: number } = {},
   ): Observable<QualityPageResult> {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(filters)) {
-      if (value) params = params.set(key, value);
+      if (value !== undefined && value !== null) params = params.set(key, value);
     }
     return this.http.get<QualityPageResult>(this.apiUrl, { params });
   }

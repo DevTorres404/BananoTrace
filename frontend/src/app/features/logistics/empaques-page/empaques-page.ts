@@ -26,6 +26,7 @@ export class EmpaquesPage implements OnInit {
 
   showCreateModal = false;
   summary = { total: 0, disponibles: 0, asignadas: 0, enTransito: 0, entregadas: 0 };
+  pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
 
   get canCreate(): boolean {
     const role = this.authService.currentUser()?.idRol;
@@ -39,7 +40,8 @@ export class EmpaquesPage implements OnInit {
   load() {
     this.isLoading = true;
     this.errorMessage = '';
-    const filter = this.statusFilter ? { estado: this.statusFilter } : undefined;
+    const filter: any = { page: this.pagination.page, pageSize: this.pagination.pageSize };
+    if (this.statusFilter) filter.estado = this.statusFilter;
 
     this.logisticsService
       .getEmpaques(filter)
@@ -52,9 +54,8 @@ export class EmpaquesPage implements OnInit {
       .subscribe({
         next: (res) => {
           this.empaques = res.data;
-          if (!this.statusFilter) {
-            this.calculateSummary(res.data);
-          }
+          this.pagination = res.pagination;
+          this.summary = res.summary;
         },
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudieron cargar los empaques.';
@@ -70,14 +71,6 @@ export class EmpaquesPage implements OnInit {
   onEmpaqueSaved() {
     this.showCreateModal = false;
     this.load();
-  }
-
-  calculateSummary(data: Empaque[]) {
-    this.summary.total = data.length;
-    this.summary.disponibles = data.filter((e) => e.estado === 'DISPONIBLE').length;
-    this.summary.asignadas = data.filter((e) => e.estado === 'ASIGNADO').length;
-    this.summary.enTransito = data.filter((e) => e.estado === 'EN_TRANSITO').length;
-    this.summary.entregadas = data.filter((e) => e.estado === 'ENTREGADO').length;
   }
 
   getBadgeClass(estado: EstadoEmpaque): string {
@@ -99,5 +92,11 @@ export class EmpaquesPage implements OnInit {
 
   getStateLabel(estado: EstadoEmpaque): string {
     return estado === 'EN_TRANSITO' ? 'EN TRÁNSITO' : estado;
+  }
+
+  changePage(page: number) {
+    if (page < 1 || page > this.pagination.totalPages) return;
+    this.pagination.page = page;
+    this.load();
   }
 }

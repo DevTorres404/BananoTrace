@@ -83,6 +83,16 @@ export interface Paginated<T> {
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
+export interface EmpaquePage extends Paginated<Empaque> {
+  summary: {
+    total: number;
+    disponibles: number;
+    asignadas: number;
+    enTransito: number;
+    entregadas: number;
+  };
+}
+
 export interface EnvioFilters {
   search?: string;
   estado?: EstadoEnvio | '';
@@ -116,11 +126,15 @@ export class LogisticsService {
   getEmpaques(filters?: {
     idLote?: string;
     estado?: EstadoEmpaque;
-  }): Observable<Paginated<Empaque>> {
+    page?: number;
+    pageSize?: number;
+  }): Observable<EmpaquePage> {
     let params = new HttpParams();
     if (filters?.idLote) params = params.set('idLote', filters.idLote);
     if (filters?.estado) params = params.set('estado', filters.estado);
-    return this.http.get<Paginated<Empaque>>('/api/logistics/empaques', { params });
+    if (filters?.page) params = params.set('page', filters.page);
+    if (filters?.pageSize) params = params.set('pageSize', filters.pageSize);
+    return this.http.get<EmpaquePage>('/api/logistics/empaques', { params });
   }
 
   // ENVIOS

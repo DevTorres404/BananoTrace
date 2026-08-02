@@ -27,6 +27,7 @@ export class QualityPage implements OnInit {
   errorMessage = '';
   resultFilter: QualityResult | '' = '';
   lotCodeSearch = '';
+  pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
 
   readonly resultLabels = QUALITY_RESULT_LABELS;
 
@@ -41,6 +42,8 @@ export class QualityPage implements OnInit {
       .getControls({
         resultado: this.resultFilter || undefined,
         search: this.lotCodeSearch.trim() || undefined,
+        page: this.pagination.page,
+        pageSize: this.pagination.pageSize,
       })
       .pipe(
         finalize(() => {
@@ -49,9 +52,10 @@ export class QualityPage implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ data, summary }) => {
+        next: ({ data, summary, pagination }) => {
           this.controls = data;
           this.summary = summary;
+          this.pagination = pagination;
         },
         error: (err) => {
           this.errorMessage = err?.error?.message || 'No se pudo cargar el historial.';
@@ -60,12 +64,20 @@ export class QualityPage implements OnInit {
   }
 
   applyFilters(): void {
+    this.pagination.page = 1;
     this.load();
   }
 
   clearFilters(): void {
     this.lotCodeSearch = '';
     this.resultFilter = '';
+    this.pagination.page = 1;
+    this.load();
+  }
+
+  changePage(page: number): void {
+    if (page < 1 || page > this.pagination.totalPages) return;
+    this.pagination.page = page;
     this.load();
   }
 

@@ -56,7 +56,7 @@
     <div class="section-heading">
       <div>
         <h2>Listado de empaques</h2>
-        <p>{{ empaques.length }} resultado(s)</p>
+        <p>{{ pagination.total }} resultado(s)</p>
       </div>
       <button *ngIf="canCreate" type="button" class="btn-primary" (click)="showCreateModal = true">
         Nueva caja
@@ -82,7 +82,7 @@
               <strong class="package-code">{{ emp.codigoCaja }}</strong>
             </td>
             <td data-label="Lote">{{ emp.lote?.codigoLote || 'Sin lote' }}</td>
-            <td data-label="Fecha de empaque">{{ emp.fechaEmpaque | date: 'dd/MM/yyyy' }}</td>
+            <td data-label="Fecha de empaque">{{ emp.fechaEmpaque | date: 'dd/MM/yyyy' : 'UTC' }}</td>
             <td data-label="Peso neto">{{ emp.pesoNetoKg }} kg</td>
             <td data-label="Categoría">{{ emp.categoria || 'Sin categoría' }}</td>
             <td data-label="Estado">
@@ -95,6 +95,26 @@
         </tbody>
       </table>
     </div>
+
+    <footer class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
   </section>
 
   <app-empaque-form
