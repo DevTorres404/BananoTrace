@@ -1,0 +1,159 @@
+<main class="farms-page certifications-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Cumplimiento fitosanitario</p>
+      <h1>Certificaciones</h1>
+      <p>Gestioná la vigencia y el respaldo documental de cada finca.</p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="openModal()"
+        [disabled]="activeFarms.length === 0"
+      >
+        Nueva certificación
+      </button>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Resumen de certificaciones">
+    <article class="metric-card teal">
+      <span>Total registradas</span><strong>{{ certifications.length }}</strong
+      ><small>Documentos de todas las fincas</small>
+    </article>
+    <article class="metric-card green">
+      <span>Vigentes</span><strong>{{ validCount }}</strong
+      ><small>Dentro de su fecha de validez</small>
+    </article>
+    <article class="metric-card expired-card">
+      <span>Vencidas</span><strong>{{ expiredCount }}</strong
+      ><small>Requieren renovación</small>
+    </article>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Filtrar certificaciones</h2>
+        <p>Consultá documentos por finca o vigencia.</p>
+      </div>
+    </div>
+    <div class="certification-filters">
+      <label
+        ><span>Finca</span
+        ><select [(ngModel)]="selectedFarmId">
+          <option value="">Todas las fincas</option>
+          <option *ngFor="let farm of farms" [value]="farm.idFinca">
+            {{ farm.codigoFinca }} · {{ farm.nombre }}
+          </option>
+        </select></label
+      >
+      <label
+        ><span>Estado</span
+        ><select [(ngModel)]="statusFilter">
+          <option value="">Todos</option>
+          <option value="VIGENTE">Vigente</option>
+          <option value="VENCIDA">Vencida</option>
+          <option value="SIN_VENCIMIENTO">Sin vencimiento</option>
+        </select></label
+      >
+      <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="loadAll()">Reintentar</button>
+  </p>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de certificaciones</h2>
+        <p>{{ visibleCertifications.length }} resultado(s)</p>
+      </div>
+    </div>
+    <div *ngIf="isLoading" class="state">Cargando certificaciones...</div>
+    <div *ngIf="!isLoading" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Certificado</th>
+            <th>Finca</th>
+            <th>Entidad emisora</th>
+            <th>Emisión</th>
+            <th>Vencimiento</th>
+            <th>Estado</th>
+            <th>Documento</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let certification of visibleCertifications">
+            <td data-label="Certificado">
+              <strong>{{ certification.tipoCertificacion }}</strong
+              ><small>{{ certification.numeroCertificado }}</small>
+            </td>
+            <td data-label="Finca">
+              <strong>{{ certification.finca.nombre }}</strong
+              ><small>{{ certification.finca.codigoFinca }}</small>
+            </td>
+            <td data-label="Entidad">{{ certification.entidadEmisora }}</td>
+            <td data-label="Emisión">
+              {{ certification.fechaEmision | date: 'dd/MM/yyyy' : 'UTC' }}
+            </td>
+            <td data-label="Vencimiento">
+              {{
+                certification.fechaVencimiento
+                  ? (certification.fechaVencimiento | date: 'dd/MM/yyyy' : 'UTC')
+                  : 'Sin vencimiento'
+              }}
+            </td>
+            <td data-label="Estado">
+              <span class="status cert" [class.expired]="certification.estado === 'VENCIDA'">{{
+                certification.estado === 'SIN_VENCIMIENTO'
+                  ? 'Sin vencimiento'
+                  : (certification.estado | titlecase)
+              }}</span>
+            </td>
+            <td data-label="Documento">
+              <a
+                *ngIf="certification.documentoUrl; else noDocument"
+                [href]="certification.documentoUrl"
+                target="_blank"
+                rel="noopener"
+                >Ver documento</a
+              ><ng-template #noDocument>—</ng-template>
+            </td>
+            <td data-label="Acciones">
+              <div class="row-actions">
+                <button type="button" (click)="openModal(certification)">Editar</button>
+                <button
+                  type="button"
+                  class="danger"
+                  (click)="deleteCertification(certification)"
+                  [disabled]="busyId === certification.idCertificacion"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="visibleCertifications.length === 0">
+            <td colspan="8" class="state">
+              No hay certificaciones para los filtros seleccionados.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-certification-form
+    *ngIf="isModalOpen"
+    [certification]="selectedCertification"
+    [farms]="activeFarms"
+    (closed)="closeModal()"
+    (saved)="onSaved()"
+  />
+</main>

@@ -31,6 +31,7 @@ export class AuthService {
       email: user.correo,
       idRol: user.idRol,
       rol: user.rol.nombre,
+      idProductor: user.idProductor?.toString() ?? null,
     };
     const token = await this.jwtService.signAsync(payload);
 
@@ -43,6 +44,7 @@ export class AuthService {
         apellidos: user.apellidos,
         idRol: user.idRol,
         rol: user.rol.nombre,
+        idProductor: user.idProductor?.toString() ?? null,
       },
     };
   }

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import type { CreateUserInput } from '../users/users.service';
 import { AuthService } from './auth.service';
+import { ROLE_IDS } from './domain/role.constants';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
@@ -23,7 +24,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(1) // 1 = Administrador
+  @Roles(ROLE_IDS.ADMINISTRADOR)
   @Post('register')
   register(@Body() registerDto: CreateUserInput) {
     return this.authService.register(registerDto);

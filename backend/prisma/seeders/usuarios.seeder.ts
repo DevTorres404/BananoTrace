@@ -1,38 +1,93 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ROLE_IDS } from '../../src/auth/domain/role.constants';
 
-export async function seedUsuarios(prisma: PrismaClient) {
+export async function seedUsuarios(
+  prisma: PrismaClient,
+  idProductorCanonico: bigint,
+) {
   const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
   const passwordHash = await bcrypt.hash('admin123', saltRounds);
 
   const usuarios = [
-    { nombres: 'Super', apellidos: 'Admin', correo: 'admin@coil.com', idRol: 1 },
-    { nombres: 'Juan', apellidos: 'Pérez', correo: 'productor@coil.com', idRol: 2 },
-    { nombres: 'Luis', apellidos: 'Ramírez', correo: 'tecnico@coil.com', idRol: 3 },
-    { nombres: 'María', apellidos: 'Gómez', correo: 'inspector@coil.com', idRol: 4 },
-    { nombres: 'Carlos', apellidos: 'López', correo: 'empacador@coil.com', idRol: 5 },
-    { nombres: 'Pedro', apellidos: 'Suárez', correo: 'transportista@coil.com', idRol: 6 },
-    { nombres: 'Rosa', apellidos: 'Villacís', correo: 'exportador@coil.com', idRol: 7 },
-    { nombres: 'Ana', apellidos: 'Martínez', correo: 'logistica@coil.com', idRol: 8 },
-    { nombres: 'Diego', apellidos: 'Cevallos', correo: 'consultor@coil.com', idRol: 9 },
+    {
+      nombres: 'Super',
+      apellidos: 'Admin',
+      correo: 'admin@coil.com',
+      idRol: ROLE_IDS.ADMINISTRADOR,
+      idProductor: null,
+    },
+    {
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      correo: 'productor@coil.com',
+      idRol: ROLE_IDS.PRODUCTOR,
+      idProductor: idProductorCanonico,
+    },
+    {
+      nombres: 'María',
+      apellidos: 'Gómez',
+      correo: 'calidad@coil.com',
+      idRol: ROLE_IDS.CALIDAD,
+      idProductor: null,
+    },
+    {
+      nombres: 'Ana',
+      apellidos: 'Martínez',
+      correo: 'logistica@coil.com',
+      idRol: ROLE_IDS.LOGISTICA,
+      idProductor: null,
+    },
+    {
+      nombres: 'Diego',
+      apellidos: 'Cevallos',
+      correo: 'cliente@coil.com',
+      idRol: ROLE_IDS.CLIENTE,
+      idProductor: null,
+    },
   ];
 
-  for (const u of usuarios) {
-    await prisma.usuario.upsert({
-      where: { correo: u.correo },
-      update: {},
-      create: {
-        nombres: u.nombres,
-        apellidos: u.apellidos,
-        correo: u.correo,
-        claveHash: passwordHash,
-        idRol: u.idRol,
-        estado: true,
-      },
-    });
-  }
+  const correosCanonicos = usuarios.map((usuario) => usuario.correo);
 
-  console.log('✅ Usuarios iniciales creados.');
+  const usuariosEliminados = await prisma.$transaction(async (tx) => {
+    for (const user of usuarios) {
+      await tx.usuario.upsert({
+        where: { correo: user.correo },
+        update: {
+          nombres: user.nombres,
+          apellidos: user.apellidos,
+          idRol: user.idRol,
+          idProductor: user.idProductor,
+          claveHash: passwordHash,
+          estado: true,
+        },
+        create: {
+          ...user,
+          claveHash: passwordHash,
+          estado: true,
+        },
+      });
+    }
+
+    const { count } = await tx.usuario.deleteMany({
+      where: { correo: { notIn: correosCanonicos } },
+    });
+
+    const totalUsuarios = await tx.usuario.count();
+    if (totalUsuarios !== usuarios.length) {
+      throw new Error(
+        `El seed esperaba ${usuarios.length} usuarios canónicos y encontró ${totalUsuarios}.`,
+      );
+    }
+
+    return count;
+  });
+
+  console.log(
+    `✅ Un usuario canónico por rol; ${usuariosEliminados} cuentas adicionales eliminadas.`,
+  );
   console.log('--- Credenciales de prueba (contraseña: admin123) ---');
-  usuarios.forEach((u) => console.log(`   ${u.correo} → Rol ID ${u.idRol}`));
+  usuarios.forEach((user) =>
+    console.log(`   ${user.correo} → Rol ID ${user.idRol}`),
+  );
 }

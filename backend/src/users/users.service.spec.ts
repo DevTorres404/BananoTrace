@@ -9,6 +9,7 @@ describe('UsersService', () => {
     usuario: Record<string, jest.Mock>;
     rol: Record<string, jest.Mock>;
     rolMenu: Record<string, jest.Mock>;
+    productor: Record<string, jest.Mock>;
   };
 
   const publicUser = {
@@ -19,6 +20,8 @@ describe('UsersService', () => {
     estado: true,
     fechaCreacion: new Date('2026-01-01T00:00:00Z'),
     fechaActualizacion: null,
+    idProductor: null,
+    productor: null,
     rol: { idRol: 2, nombre: 'PRODUCTOR', descripcion: null },
   };
 
@@ -37,6 +40,9 @@ describe('UsersService', () => {
       },
       rolMenu: {
         findMany: jest.fn(),
+      },
+      productor: {
+        findUnique: jest.fn(),
       },
     };
 
@@ -134,6 +140,19 @@ describe('UsersService', () => {
       BadRequestException,
     );
     expect(prisma.usuario.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects producer links for accounts with another role', async () => {
+    prisma.usuario.findUnique.mockResolvedValue({
+      idUsuario: 7n,
+      idRol: 5,
+      idProductor: null,
+    });
+
+    await expect(
+      service.update('7', { idProductor: '3' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.productor.findUnique).not.toHaveBeenCalled();
   });
 
   it('rejects invalid identifiers instead of leaking a BigInt conversion error', async () => {

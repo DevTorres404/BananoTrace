@@ -19,13 +19,14 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": ["leaflet"],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"]
+            "styles": ["node_modules/leaflet/dist/leaflet.css", "src/styles.css"]
           },
           "configurations": {
             "production": {

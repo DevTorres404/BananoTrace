@@ -1,0 +1,257 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+}
+
+.modal-backdrop {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 1.25rem;
+  background: rgba(3, 19, 16, 0.58);
+  backdrop-filter: blur(5px);
+  animation: backdrop-in 160ms ease-out both;
+}
+
+.modal-panel {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow-y: auto;
+  padding: clamp(1.4rem, 4vw, 2rem);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.36);
+  animation: modal-in 190ms ease-out both;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.7rem;
+}
+
+.close-button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface-strong);
+  color: var(--color-text-secondary);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.close-button:hover:not(:disabled) {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h2 {
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2.15rem);
+}
+
+.subtitle {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-secondary);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.48rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+label {
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 0.82rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  outline: none;
+  background: var(--color-input);
+  color: var(--color-text-primary);
+  font-family: inherit;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+select option {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+select[multiple] {
+  min-height: 7.5rem;
+}
+
+select[multiple] option {
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+}
+
+.linked-account {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-strong);
+}
+
+.linked-account span {
+  color: var(--color-text-secondary);
+}
+
+small {
+  color: var(--color-text-secondary);
+  font-size: 0.74rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.8rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-cancel,
+.btn-submit {
+  padding: 0.8rem 1.1rem;
+  border-radius: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-strong);
+  color: var(--color-text-primary);
+}
+
+.btn-submit {
+  border: 0;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.error-msg,
+.loading-state {
+  margin-top: 1.15rem;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+}
+
+.error-msg {
+  border: 1px solid var(--color-error);
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.loading-state {
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .modal-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .modal-panel {
+    max-height: 92vh;
+    padding: 1.3rem 1rem;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancel,
+  .btn-submit {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .modal-panel {
+    animation: none;
+  }
+}

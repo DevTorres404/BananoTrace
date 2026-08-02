@@ -13,6 +13,12 @@ export interface UserAccount {
   nombres: string;
   apellidos: string;
   correo: string;
+  idProductor: string | null;
+  productor: {
+    idProductor: string;
+    identificacion: string;
+    nombreRazonSocial: string;
+  } | null;
   estado: boolean;
   fechaCreacion: string;
   fechaActualizacion: string | null;
@@ -24,6 +30,7 @@ export interface UserPayload {
   apellidos: string;
   correo: string;
   idRol: number;
+  idProductor?: string | null;
   clave?: string;
 }
 

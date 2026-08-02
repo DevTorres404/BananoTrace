@@ -1,0 +1,97 @@
+<main class="list-container">
+  <header class="header-actions">
+    <div>
+      <p class="eyebrow">Producción</p>
+      <h1>Productores</h1>
+      <p class="subtitle">Registrá y gestioná los productores de banano.</p>
+    </div>
+    <button *ngIf="isAdmin" type="button" class="btn-create" (click)="openCreateModal()">
+      <span aria-hidden="true">+</span>
+      Nuevo productor
+    </button>
+  </header>
+
+  <section class="glass-panel" aria-live="polite">
+    <div *ngIf="isLoading" class="loading-state">Cargando productores...</div>
+
+    <div *ngIf="errorMessage" class="error-msg">
+      <span>{{ errorMessage }}</span>
+      <button type="button" (click)="loadProducers()">Reintentar</button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!isLoading && !errorMessage">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Productor</th>
+            <th>Identificación</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Cuenta vinculada</th>
+            <th>Fincas</th>
+            <th class="actions-heading">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let producer of producers">
+            <td>
+              <div class="producer-cell">
+                <span class="avatar">{{ getInitials(producer.nombreRazonSocial) }}</span>
+                <div>
+                  <strong>{{ producer.nombreRazonSocial }}</strong>
+                  <small>ID {{ producer.idProductor }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge id-badge">{{ producer.identificacion }}</span>
+            </td>
+            <td>{{ producer.telefono || '—' }}</td>
+            <td>{{ producer.correo || '—' }}</td>
+            <td>
+              <div class="account-list" *ngIf="producer.usuarios.length > 0; else noAccount">
+                <span *ngFor="let user of producer.usuarios">
+                  {{ user.correo }}
+                </span>
+              </div>
+              <ng-template #noAccount>
+                <span class="unlinked-badge">Sin vincular</span>
+              </ng-template>
+            </td>
+            <td>
+              <span class="badge farms-badge">{{ producer.totalFincas }}</span>
+            </td>
+            <td class="actions-cell">
+              <button
+                type="button"
+                class="btn-icon btn-edit"
+                (click)="openEditModal(producer.idProductor)"
+              >
+                Editar
+              </button>
+              <button
+                *ngIf="isAdmin"
+                type="button"
+                class="btn-icon btn-delete"
+                [disabled]="deletingId === producer.idProductor"
+                (click)="deleteProducer(producer)"
+              >
+                {{ deletingId === producer.idProductor ? 'Eliminando...' : 'Eliminar' }}
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="producers.length === 0">
+            <td colspan="7" class="empty-state">No se encontraron productores.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-producer-form
+    *ngIf="isFormModalOpen"
+    [producerId]="modalProducerId"
+    (closed)="closeFormModal()"
+    (saved)="onProducerSaved()"
+  />
+</main>

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ROLE_IDS } from '../auth/domain/role.constants';
 import { PrismaService } from '../prisma/prisma.service';
 
 const publicUserSelect = {
@@ -13,6 +14,7 @@ const publicUserSelect = {
   nombres: true,
   apellidos: true,
   correo: true,
+  idProductor: true,
   estado: true,
   fechaCreacion: true,
   fechaActualizacion: true,
@@ -21,6 +23,13 @@ const publicUserSelect = {
       idRol: true,
       nombre: true,
       descripcion: true,
+    },
+  },
+  productor: {
+    select: {
+      idProductor: true,
+      identificacion: true,
+      nombreRazonSocial: true,
     },
   },
 } satisfies Prisma.UsuarioSelect;
@@ -34,6 +43,7 @@ export interface CreateUserInput {
   clave?: string;
   password?: string;
   idRol: number | string;
+  idProductor?: number | string | null;
 }
 
 export interface UpdateUserInput {
@@ -43,6 +53,7 @@ export interface UpdateUserInput {
   clave?: string;
   password?: string;
   idRol?: number | string;
+  idProductor?: number | string | null;
 }
 
 export interface NavigationItem {
@@ -69,6 +80,7 @@ export class UsersService {
     const apellidos = this.requireText(data.apellidos, 'apellidos');
     const correo = this.normalizeEmail(data.correo);
     const idRol = this.parseRoleId(data.idRol);
+    const idProductor = this.parseOptionalProducerId(data.idProductor);
     const password = data.clave ?? data.password;
 
     if (!password || password.length < 8) {
@@ -78,6 +90,7 @@ export class UsersService {
     }
 
     await this.ensureRoleExists(idRol);
+    await this.validateProducerLink(idRol, idProductor);
 
     const existingUser = await this.prisma.usuario.findUnique({
       where: { correo },
@@ -90,7 +103,7 @@ export class UsersService {
 
     try {
       const user = await this.prisma.usuario.create({
-        data: { nombres, apellidos, correo, claveHash, idRol },
+        data: { nombres, apellidos, correo, claveHash, idRol, idProductor },
         select: publicUserSelect,
       });
 
@@ -191,9 +204,14 @@ export class UsersService {
 
   async update(id: string, data: UpdateUserInput) {
     const idUsuario = this.parseUserId(id);
-    await this.ensureUserExists(idUsuario);
+    const currentUser = await this.prisma.usuario.findUnique({
+      where: { idUsuario },
+      select: { idUsuario: true, idRol: true, idProductor: true },
+    });
+    if (!currentUser) throw new NotFoundException('Usuario no encontrado');
 
     const updateData: Prisma.UsuarioUpdateInput = {};
+    let resultingRoleId = currentUser.idRol;
 
     if (data.nombres !== undefined)
       updateData.nombres = this.requireText(data.nombres, 'nombres');
@@ -215,6 +233,27 @@ export class UsersService {
       const idRol = this.parseRoleId(data.idRol);
       await this.ensureRoleExists(idRol);
       updateData.rol = { connect: { idRol } };
+      resultingRoleId = idRol;
+    }
+
+    const requestedProducerId =
+      data.idProductor !== undefined
+        ? this.parseOptionalProducerId(data.idProductor)
+        : (currentUser.idProductor ?? null);
+    if (data.idProductor !== undefined && requestedProducerId !== null) {
+      await this.validateProducerLink(resultingRoleId, requestedProducerId);
+    }
+    const resultingProducerId =
+      resultingRoleId === ROLE_IDS.PRODUCTOR ? requestedProducerId : null;
+
+    await this.validateProducerLink(resultingRoleId, resultingProducerId);
+    if (
+      data.idProductor !== undefined ||
+      resultingRoleId !== currentUser.idRol
+    ) {
+      updateData.productor = resultingProducerId
+        ? { connect: { idProductor: resultingProducerId } }
+        : { disconnect: true };
     }
 
     const password = data.clave ?? data.password;
@@ -262,7 +301,17 @@ export class UsersService {
   }
 
   private serializeUser(user: PublicUser) {
-    return { ...user, idUsuario: user.idUsuario.toString() };
+    return {
+      ...user,
+      idUsuario: user.idUsuario.toString(),
+      idProductor: user.idProductor?.toString() ?? null,
+      productor: user.productor
+        ? {
+            ...user.productor,
+            idProductor: user.productor.idProductor.toString(),
+          }
+        : null,
+    };
   }
 
   private async ensureUserExists(idUsuario: bigint) {
@@ -281,6 +330,26 @@ export class UsersService {
     if (!role) throw new BadRequestException('El rol seleccionado no existe');
   }
 
+  private async validateProducerLink(
+    idRol: number,
+    idProductor: bigint | null,
+  ): Promise<void> {
+    if (idProductor !== null && idRol !== ROLE_IDS.PRODUCTOR) {
+      throw new BadRequestException(
+        'Solo un usuario con rol PRODUCTOR puede vincularse a un productor',
+      );
+    }
+    if (idProductor === null) return;
+
+    const producer = await this.prisma.productor.findUnique({
+      where: { idProductor },
+      select: { idProductor: true },
+    });
+    if (!producer) {
+      throw new BadRequestException('El productor seleccionado no existe');
+    }
+  }
+
   private parseUserId(value: string): bigint {
     if (!/^\d+$/.test(value))
       throw new BadRequestException('Identificador de usuario inválido');
@@ -294,6 +363,19 @@ export class UsersService {
     const id = Number(value);
     if (!Number.isInteger(id) || id <= 0)
       throw new BadRequestException('Rol inválido');
+    return id;
+  }
+
+  private parseOptionalProducerId(
+    value: number | string | null | undefined,
+  ): bigint | null {
+    if (value === undefined || value === null || value === '') return null;
+    const normalized = String(value);
+    if (!/^\d+$/.test(normalized)) {
+      throw new BadRequestException('Productor inválido');
+    }
+    const id = BigInt(normalized);
+    if (id <= 0n) throw new BadRequestException('Productor inválido');
     return id;
   }
 

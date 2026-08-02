@@ -38,6 +38,7 @@ describe('AuthService', () => {
         apellidos: 'BananoTrace',
         idRol: 1,
         rol: 'ADMINISTRADOR',
+        idProductor: null,
       },
     };
 

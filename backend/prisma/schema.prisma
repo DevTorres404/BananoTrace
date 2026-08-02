@@ -136,6 +136,7 @@ model RolMenu {
 model Usuario {
   idUsuario          BigInt    @id @default(autoincrement()) @map("id_usuario")
   idRol              Int       @map("id_rol") @db.SmallInt
+  idProductor        BigInt?   @map("id_productor")
   nombres            String    @db.VarChar(80)
   apellidos          String    @db.VarChar(80)
   correo             String    @unique @db.VarChar(120)
@@ -145,12 +146,14 @@ model Usuario {
   fechaActualizacion DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
   rol               Rol                   @relation(fields: [idRol], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
+  productor         Productor?            @relation(fields: [idProductor], references: [idProductor], onDelete: SetNull, onUpdate: Cascade)
   eventos           EventoTrazabilidad[]
   controlesCalidad  ControlCalidad[]
   fasesAsignadas    FaseEjecucion[]
   transicionesFlujo TransicionEjecucion[]
 
   @@index([idRol])
+  @@index([idProductor])
   @@map("usuarios")
 }
 
@@ -211,7 +214,7 @@ model TransicionFase {
 model UnidadTrazable {
   idUnidad      BigInt             @id @default(autoincrement()) @map("id_unidad")
   tipo          TipoUnidadTrazable
-  codigo        String             @db.VarChar(255)
+  codigo        String             @default("") @db.VarChar(255)
   fechaRegistro DateTime           @default(now()) @map("fecha_registro") @db.Timestamptz(6)
 
   lote       LoteProduccion?
@@ -228,7 +231,7 @@ model UnidadTrazable {
 model FlujoInstancia {
   idInstancia   BigInt      @id @default(autoincrement()) @map("id_instancia")
   idFlujo       Int         @map("id_flujo") @db.SmallInt
-  codigo        String      @unique @db.VarChar(100)
+  codigo        String      @unique @default("") @db.VarChar(100)
   estado        EstadoFlujo @default(PENDIENTE)
   fechaInicio   DateTime?   @map("fecha_inicio") @db.Timestamptz(6)
   fechaFin      DateTime?   @map("fecha_fin") @db.Timestamptz(6)
@@ -314,7 +317,8 @@ model Productor {
   direccion          String?   @db.Text
   fechaActualizacion DateTime? @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
 
-  fincas Finca[]
+  fincas   Finca[]
+  usuarios Usuario[]
 
   @@map("productores")
 }
@@ -322,7 +326,7 @@ model Productor {
 model Finca {
   idFinca            BigInt    @id @default(autoincrement()) @map("id_finca")
   idProductor        BigInt    @map("id_productor")
-  codigoFinca        String    @unique @map("codigo_finca") @db.VarChar(30)
+  codigoFinca        String    @unique @default("") @map("codigo_finca") @db.VarChar(30)
   nombre             String    @db.VarChar(100)
   provincia          String    @db.VarChar(60)
   canton             String    @db.VarChar(60)
@@ -345,7 +349,7 @@ model LoteProduccion {
   idLote               BigInt     @id @default(autoincrement()) @map("id_lote")
   idUnidad             BigInt     @unique @map("id_unidad")
   idFinca              BigInt     @map("id_finca")
-  codigoLote           String     @unique @map("codigo_lote") @db.VarChar(40)
+  codigoLote           String     @unique @default("") @map("codigo_lote") @db.VarChar(40)
   variedad             String     @default("Cavendish") @db.VarChar(60)
   fechaSiembra         DateTime?  @map("fecha_siembra") @db.Date
   fechaEstimadaCosecha DateTime?  @map("fecha_estimada_cosecha") @db.Date
@@ -445,7 +449,7 @@ model Empaque {
   idUnidad     BigInt        @unique @map("id_unidad")
   idEjecucion  BigInt        @map("id_ejecucion")
   idLote       BigInt        @map("id_lote")
-  codigoCaja   String        @unique @map("codigo_caja") @db.VarChar(50)
+  codigoCaja   String        @unique @default("") @map("codigo_caja") @db.VarChar(50)
   fechaEmpaque DateTime      @default(now()) @map("fecha_empaque") @db.Timestamptz(6)
   pesoNetoKg   Decimal       @map("peso_neto_kg") @db.Decimal(8, 2)
   categoria    String?       @db.VarChar(30)
@@ -467,7 +471,7 @@ model Envio {
   idEnvio              BigInt      @id @default(autoincrement()) @map("id_envio")
   idUnidad             BigInt      @unique @map("id_unidad")
   idEjecucion          BigInt      @map("id_ejecucion")
-  codigoEnvio          String      @unique @map("codigo_envio") @db.VarChar(40)
+  codigoEnvio          String      @unique @default("") @map("codigo_envio") @db.VarChar(40)
   numeroContenedor     String?     @map("numero_contenedor") @db.VarChar(30)
   naviera              String?     @db.VarChar(100)
   puertoOrigen         String      @map("puerto_origen") @db.VarChar(100)

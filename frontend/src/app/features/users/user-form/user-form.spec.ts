@@ -18,6 +18,12 @@ describe('UserForm modal', () => {
     nombres: 'Ana',
     apellidos: 'Torres',
     correo: 'ana@coil.com',
+    idProductor: '4',
+    productor: {
+      idProductor: '4',
+      identificacion: '0912345678001',
+      nombreRazonSocial: 'Productor BananoTrace',
+    },
     estado: true,
     fechaCreacion: '2026-08-02T00:00:00.000Z',
     fechaActualizacion: null,

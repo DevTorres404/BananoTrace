@@ -26,6 +26,7 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/prisma ./prisma
+COPY --from=builder /usr/src/app/src ./src
 COPY --from=builder /usr/src/app/prisma.config.ts ./
 COPY --from=builder /usr/src/app/tsconfig.json ./
 

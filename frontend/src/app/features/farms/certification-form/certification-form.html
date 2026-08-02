@@ -1,0 +1,63 @@
+<div class="modal-backdrop" (mousedown)="onBackdropClick($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cert-title">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Control fitosanitario</p>
+        <h2 id="cert-title">{{ isEditMode ? 'Editar certificación' : 'Nueva certificación' }}</h2>
+      </div>
+      <button type="button" class="close-button" aria-label="Cerrar" (click)="close()">×</button>
+    </header>
+
+    <form #certForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <label class="field full">
+          <span>Finca *</span>
+          <select name="farmId" [(ngModel)]="farmId" required [disabled]="isEditMode" autofocus>
+            <option value="" disabled>Seleccioná una finca</option>
+            <option *ngFor="let farm of farms" [value]="farm.idFinca">
+              {{ farm.codigoFinca }} · {{ farm.nombre }}
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Tipo de certificación *</span>
+          <input name="tipo" [(ngModel)]="model.tipoCertificacion" maxlength="80" required />
+        </label>
+        <label class="field">
+          <span>Entidad emisora *</span>
+          <input name="entidad" [(ngModel)]="model.entidadEmisora" maxlength="120" required />
+        </label>
+        <label class="field full">
+          <span>Número de certificado *</span>
+          <input name="numero" [(ngModel)]="model.numeroCertificado" maxlength="80" required />
+        </label>
+        <label class="field">
+          <span>Fecha de emisión *</span>
+          <input name="emision" [(ngModel)]="model.fechaEmision" type="date" required />
+        </label>
+        <label class="field">
+          <span>Fecha de vencimiento</span>
+          <input name="vencimiento" [(ngModel)]="model.fechaVencimiento" type="date" />
+        </label>
+        <label class="field full">
+          <span>URL del documento</span>
+          <input
+            name="documento"
+            [(ngModel)]="model.documentoUrl"
+            type="url"
+            maxlength="500"
+            placeholder="https://..."
+          />
+        </label>
+      </div>
+
+      <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <footer class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="close()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="certForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : 'Guardar certificación' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

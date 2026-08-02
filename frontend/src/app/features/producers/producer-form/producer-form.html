@@ -1,0 +1,139 @@
+<div class="modal-backdrop" (mousedown)="onBackdropClick($event)">
+  <section
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="producer-modal-title"
+    [attr.aria-busy]="isLoadingData || isSaving"
+  >
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Producción</p>
+        <h2 id="producer-modal-title">{{ isEditMode ? 'Editar productor' : 'Nuevo productor' }}</h2>
+        <p class="subtitle">
+          {{
+            isEditMode
+              ? 'Actualizá los datos del productor.'
+              : 'Registrá un nuevo productor de banano.'
+          }}
+        </p>
+      </div>
+      <button
+        type="button"
+        class="close-button"
+        aria-label="Cerrar formulario"
+        [disabled]="isSaving"
+        (click)="close()"
+      >
+        ×
+      </button>
+    </header>
+
+    <div *ngIf="isLoadingData" class="loading-state">Cargando datos...</div>
+
+    <form *ngIf="!isLoadingData" (ngSubmit)="onSubmit()" #producerForm="ngForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="identificacion">Identificación</label>
+          <input
+            #firstField
+            id="identificacion"
+            name="identificacion"
+            [(ngModel)]="producer.identificacion"
+            required
+            maxlength="20"
+            placeholder="Cédula o RUC"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="nombreRazonSocial">Nombre / Razón Social</label>
+          <input
+            id="nombreRazonSocial"
+            name="nombreRazonSocial"
+            [(ngModel)]="producer.nombreRazonSocial"
+            required
+            maxlength="150"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="telefono">Teléfono</label>
+          <input
+            id="telefono"
+            name="telefono"
+            type="tel"
+            [(ngModel)]="producer.telefono"
+            maxlength="20"
+            placeholder="Opcional"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="correo">Correo electrónico</label>
+          <input
+            id="correo"
+            name="correo"
+            type="email"
+            [(ngModel)]="producer.correo"
+            email
+            maxlength="120"
+            placeholder="Opcional"
+          />
+        </div>
+
+        <div class="form-group full-width">
+          <label for="direccion">Dirección</label>
+          <textarea
+            id="direccion"
+            name="direccion"
+            [(ngModel)]="producer.direccion"
+            rows="3"
+            placeholder="Opcional"
+          ></textarea>
+        </div>
+
+        <div *ngIf="isAdmin" class="form-group full-width">
+          <label for="idUsuarios">Cuentas PRODUCTOR vinculadas</label>
+          <select
+            id="idUsuarios"
+            name="idUsuarios"
+            [(ngModel)]="producer.idUsuarios"
+            multiple
+            size="4"
+          >
+            <option *ngFor="let user of assignableUsers" [ngValue]="user.idUsuario">
+              {{ user.nombres }} {{ user.apellidos }} — {{ user.correo }}
+              {{ user.estado ? '' : '(inactiva)' }}
+            </option>
+          </select>
+          <small *ngIf="assignableUsers.length > 0">
+            Podés vincular varias cuentas PRODUCTOR a la misma entidad de negocio.
+          </small>
+          <small *ngIf="assignableUsers.length === 0">
+            No hay cuentas PRODUCTOR disponibles. Crealas primero desde Usuarios.
+          </small>
+        </div>
+
+        <div *ngIf="!isAdmin && linkedUsers.length > 0" class="form-group full-width">
+          <label>Cuenta vinculada</label>
+          <div class="linked-account" *ngFor="let user of linkedUsers">
+            <strong>{{ user.nombres }} {{ user.apellidos }}</strong>
+            <span>{{ user.correo }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-msg" role="alert">{{ errorMessage }}</div>
+
+      <footer class="actions">
+        <button type="button" class="btn-cancel" [disabled]="isSaving" (click)="close()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="producerForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : isEditMode ? 'Guardar cambios' : 'Crear productor' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

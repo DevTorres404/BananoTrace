@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -43,7 +44,10 @@ export class Login {
       next: (response) => {
         this.isLoading = false;
 
-        if (response.user.idRol === 1 || response.user.rol.toUpperCase() === 'ADMINISTRADOR') {
+        if (
+          response.user.idRol === ROLE_IDS.ADMINISTRADOR ||
+          response.user.rol.toUpperCase() === 'ADMINISTRADOR'
+        ) {
           this.router.navigate(['/usuarios']).then((success) => {
             if (!success) {
               this.errorMessage = 'Redirección falló. El sistema denegó el acceso.';

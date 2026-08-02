@@ -3,6 +3,7 @@ export interface JwtPayload {
   email: string;
   idRol: number;
   rol: string;
+  idProductor: string | null;
   exp?: number;
 }
 
@@ -20,7 +21,7 @@ export function decodeJwtPayload(token: string | null): JwtPayload | null {
     if (!payload.sub || !Number.isInteger(payload.idRol) || !payload.rol) return null;
     if (payload.exp && payload.exp * 1000 <= Date.now()) return null;
 
-    return payload;
+    return { ...payload, idProductor: payload.idProductor ?? null };
   } catch {
     return null;
   }

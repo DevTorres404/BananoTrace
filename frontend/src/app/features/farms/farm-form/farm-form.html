@@ -1,0 +1,103 @@
+<div class="modal-backdrop" (mousedown)="onBackdropClick($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="farm-title">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Gestión de fincas</p>
+        <h2 id="farm-title">{{ isEditMode ? 'Editar finca' : 'Nueva finca' }}</h2>
+      </div>
+      <button type="button" class="close-button" aria-label="Cerrar" (click)="close()">×</button>
+    </header>
+
+    <form #farmForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <label class="field full" *ngIf="isAdmin">
+          <span>Productor *</span>
+          <select name="idProductor" [(ngModel)]="model.idProductor" required autofocus>
+            <option value="" disabled>Seleccioná un productor</option>
+            <option *ngFor="let producer of producers" [value]="producer.idProductor">
+              {{ producer.nombreRazonSocial }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Código *</span>
+          <input name="codigoFinca" [(ngModel)]="model.codigoFinca" maxlength="30" required />
+        </label>
+        <label class="field">
+          <span>Nombre *</span>
+          <input name="nombre" [(ngModel)]="model.nombre" maxlength="100" required />
+        </label>
+        <label class="field">
+          <span>Provincia *</span>
+          <input name="provincia" [(ngModel)]="model.provincia" maxlength="60" required />
+        </label>
+        <label class="field">
+          <span>Cantón *</span>
+          <input name="canton" [(ngModel)]="model.canton" maxlength="60" required />
+        </label>
+        <label class="field full">
+          <span>Parroquia</span>
+          <input name="parroquia" [(ngModel)]="model.parroquia" maxlength="60" />
+        </label>
+        <label class="field">
+          <span>Área (hectáreas)</span>
+          <input
+            name="areaHectareas"
+            [(ngModel)]="model.areaHectareas"
+            type="number"
+            min="0.01"
+            step="0.01"
+          />
+        </label>
+        <label class="field">
+          <span>Estado</span>
+          <select name="estado" [(ngModel)]="model.estado">
+            <option [ngValue]="true">Activa</option>
+            <option [ngValue]="false">Inactiva</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Latitud</span>
+          <input
+            name="latitud"
+            [(ngModel)]="model.latitud"
+            (ngModelChange)="updateMapFromInputs()"
+            type="number"
+            min="-90"
+            max="90"
+            step="0.000001"
+          />
+        </label>
+        <label class="field">
+          <span>Longitud</span>
+          <input
+            name="longitud"
+            [(ngModel)]="model.longitud"
+            (ngModelChange)="updateMapFromInputs()"
+            type="number"
+            min="-180"
+            max="180"
+            step="0.000001"
+          />
+        </label>
+        <div class="map-field full">
+          <div class="map-copy">
+            <span>Vista previa de ubicación</span>
+            <small>Hacé clic en el mapa para completar o ajustar las coordenadas.</small>
+          </div>
+          <div #mapContainer class="map-preview" aria-label="Mapa de ubicación de la finca"></div>
+        </div>
+      </div>
+
+      <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+
+      <footer class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="close()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="farmForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : 'Guardar finca' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

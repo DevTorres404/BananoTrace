@@ -11,6 +11,7 @@ export interface AuthenticatedUser {
   apellidos: string;
   idRol: number;
   rol: string;
+  idProductor: string | null;
 }
 
 export interface LoginResponse {

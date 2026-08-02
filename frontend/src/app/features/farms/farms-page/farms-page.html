@@ -1,0 +1,151 @@
+<main class="farms-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Producción</p>
+      <h1>Fincas</h1>
+      <p>Administrá las ubicaciones productivas y sus lotes activos.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-primary" (click)="openFarmModal()">Nueva finca</button>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Resumen de fincas">
+    <article class="metric-card green">
+      <span>Fincas activas</span><strong>{{ dashboard.totalFincasActivas }}</strong
+      ><small>Ubicaciones operativas</small>
+    </article>
+    <article class="metric-card yellow">
+      <span>Lotes activos</span><strong>{{ dashboard.totalLotesActivos }}</strong
+      ><small>Estados distintos de cerrado</small>
+    </article>
+    <article class="metric-card teal">
+      <span>Georreferenciadas</span><strong>{{ farmsWithCoordinates }}</strong
+      ><small>Fincas visibles en el mapa</small>
+    </article>
+  </section>
+
+  <section class="panel filter-panel">
+    <div class="section-heading">
+      <div>
+        <h2>Buscar fincas</h2>
+        <p>Filtrá por ubicación, productor o estado operativo.</p>
+      </div>
+    </div>
+    <form class="filters" (ngSubmit)="applyFilters()">
+      <label class="wide"
+        ><span>Búsqueda</span
+        ><input name="search" [(ngModel)]="filters.search" placeholder="Código, finca o productor"
+      /></label>
+      <label
+        ><span>Provincia</span><input name="provincia" [(ngModel)]="filters.provincia"
+      /></label>
+      <label><span>Cantón</span><input name="canton" [(ngModel)]="filters.canton" /></label>
+      <label *ngIf="isAdmin"
+        ><span>Productor</span
+        ><select name="productor" [(ngModel)]="filters.idProductor">
+          <option value="">Todos</option>
+          <option *ngFor="let producer of producers" [value]="producer.idProductor">
+            {{ producer.nombreRazonSocial }}
+          </option>
+        </select></label
+      >
+      <label
+        ><span>Estado</span
+        ><select name="estado" [(ngModel)]="filters.estado">
+          <option value="">Todos</option>
+          <option value="true">Activa</option>
+          <option value="false">Inactiva</option>
+        </select></label
+      >
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Aplicar filtros</button>
+      </div>
+    </form>
+  </section>
+
+  <p *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }} <button type="button" (click)="loadAll()">Reintentar</button>
+  </p>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>Listado de fincas</h2>
+        <p>{{ farms.length }} resultado(s)</p>
+      </div>
+    </div>
+    <div *ngIf="isLoading" class="state">Cargando fincas...</div>
+    <div *ngIf="!isLoading" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Finca</th>
+            <th>Productor</th>
+            <th>Ubicación</th>
+            <th>Área</th>
+            <th>Coordenadas</th>
+            <th>Lotes activos</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let farm of farms">
+            <td data-label="Finca">
+              <strong>{{ farm.nombre }}</strong
+              ><small>{{ farm.codigoFinca }}</small>
+            </td>
+            <td data-label="Productor">{{ farm.productor.nombreRazonSocial }}</td>
+            <td data-label="Ubicación">
+              <strong>{{ farm.canton }}</strong
+              ><small
+                >{{ farm.provincia
+                }}<ng-container *ngIf="farm.parroquia"> · {{ farm.parroquia }}</ng-container></small
+              >
+            </td>
+            <td data-label="Área">
+              {{ farm.areaHectareas ? farm.areaHectareas + ' ha' : '—' }}
+            </td>
+            <td data-label="Coordenadas">
+              <span class="coordinates">{{ formatCoordinates(farm) }}</span>
+            </td>
+            <td data-label="Lotes activos">
+              <span class="count-badge">{{ farm.lotesActivos }}</span>
+            </td>
+            <td data-label="Estado">
+              <span class="status" [class.inactive]="!farm.estado">{{
+                farm.estado ? 'Activa' : 'Inactiva'
+              }}</span>
+            </td>
+            <td data-label="Acciones">
+              <div class="row-actions">
+                <button type="button" (click)="openFarmModal(farm)">Editar</button>
+                <button
+                  type="button"
+                  class="danger"
+                  (click)="toggleFarm(farm)"
+                  [disabled]="busyId === farm.idFinca"
+                >
+                  {{ farm.estado ? 'Desactivar' : 'Reactivar' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="farms.length === 0">
+            <td colspan="8" class="state">No se encontraron fincas con esos filtros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-farm-form
+    *ngIf="isFarmModalOpen"
+    [farm]="selectedFarm"
+    [producers]="producers"
+    (closed)="closeFarmModal()"
+    (saved)="onFarmSaved()"
+  />
+</main>
