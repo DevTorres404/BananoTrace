@@ -21,7 +21,7 @@ import type { UpdateProducerDto } from './dto/update-producer.dto';
 
 @Controller('producers')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
+@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR)
 export class ProducersController {
   constructor(private readonly producersService: ProducersService) {}
 

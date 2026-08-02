@@ -28,31 +28,31 @@ export class UsersController {
     return this.usersService.getNavigation(request.user.idRol);
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Get('roles')
   getRoles() {
     return this.usersService.getRoles();
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Get()
   getAllUsers() {
     return this.usersService.findAll();
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Get(':id')
   getUser(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Post()
   create(@Body() data: CreateUserInput) {
     return this.usersService.create(data);
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Patch(':id/status')
   setStatus(
     @Param('id') id: string,
@@ -65,13 +65,13 @@ export class UsersController {
     return this.usersService.setStatus(id, estado, request.user.sub);
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Patch(':id')
   update(@Param('id') id: string, @Body() data: UpdateUserInput) {
     return this.usersService.update(id, data);
   }
 
-  @Roles(ROLE_IDS.ADMINISTRADOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.usersService.remove(id, request.user.sub);

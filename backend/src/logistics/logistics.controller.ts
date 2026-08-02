@@ -30,13 +30,14 @@ export class LogisticsController {
     ROLE_IDS.CALIDAD,
     ROLE_IDS.LOGISTICA,
     ROLE_IDS.SUPERVISOR_AGRICOLA,
+    ROLE_IDS.GERENTE_PRODUCTOR,
   )
   options(@Req() request: AuthenticatedRequest) {
     return this.logisticsService.options(request.user);
   }
 
   @Post('empaques')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.CALIDAD)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.CALIDAD, ROLE_IDS.GERENTE_PRODUCTOR)
   createEmpaque(
     @Body() dto: CreateEmpaqueDto,
     @Req() request: AuthenticatedRequest,
@@ -50,13 +51,14 @@ export class LogisticsController {
     ROLE_IDS.CALIDAD,
     ROLE_IDS.LOGISTICA,
     ROLE_IDS.SUPERVISOR_AGRICOLA,
+    ROLE_IDS.GERENTE_PRODUCTOR,
   )
   findAllEmpaques(@Query() query: Record<string, string | undefined>) {
     return this.logisticsService.findAllEmpaques(query);
   }
 
   @Post('empaques/:id/advance')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR)
   advanceEmpaque(
     @Param('id') id: string,
     @Body() dto: AdvanceLogisticsDto,
@@ -66,7 +68,7 @@ export class LogisticsController {
   }
 
   @Post('envios')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR)
   createEnvio(
     @Body() dto: CreateEnvioDto,
     @Req() request: AuthenticatedRequest,
@@ -75,19 +77,19 @@ export class LogisticsController {
   }
 
   @Get('envios')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE, ROLE_IDS.GERENTE_PRODUCTOR)
   findAllEnvios(@Query() query: Record<string, string | undefined>) {
     return this.logisticsService.findAllEnvios(query);
   }
 
   @Get('envios/:id')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE, ROLE_IDS.GERENTE_PRODUCTOR)
   getEnvioById(@Param('id') id: string) {
     return this.logisticsService.getEnvioById(id);
   }
 
   @Post('envios/:id/advance')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR)
   advanceEnvio(
     @Param('id') id: string,
     @Body() dto: AdvanceLogisticsDto,
@@ -97,7 +99,7 @@ export class LogisticsController {
   }
 
   @Post('envios/:id/empaques')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR)
   assignEmpaques(
     @Param('id') id: string,
     @Body() dto: AssignEmpaquesDto,

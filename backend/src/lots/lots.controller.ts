@@ -26,12 +26,13 @@ import { LotsService } from './lots.service';
   ROLE_IDS.SUPERVISOR_AGRICOLA,
   ROLE_IDS.CALIDAD,
   ROLE_IDS.LOGISTICA,
+  ROLE_IDS.GERENTE_PRODUCTOR,
 )
 export class LotsController {
   constructor(private readonly lotsService: LotsService) {}
 
   @Post()
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR)
   create(@Body() dto: CreateLotDto, @Req() request: AuthenticatedRequest) {
     return this.lotsService.create(dto, request.user);
   }
@@ -55,7 +56,7 @@ export class LotsController {
   }
 
   @Patch(':id')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateLotDto,

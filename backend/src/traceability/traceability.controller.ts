@@ -24,6 +24,7 @@ import { TraceabilityService } from './traceability.service';
   ROLE_IDS.SUPERVISOR_AGRICOLA,
   ROLE_IDS.CALIDAD,
   ROLE_IDS.LOGISTICA,
+  ROLE_IDS.GERENTE_PRODUCTOR,
 )
 export class TraceabilityController {
   constructor(private readonly traceabilityService: TraceabilityService) {}

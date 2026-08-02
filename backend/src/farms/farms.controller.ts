@@ -23,7 +23,7 @@ import { FarmsService } from './farms.service';
 
 @Controller('farms')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA)
+@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR)
 export class FarmsController {
   constructor(private readonly farmsService: FarmsService) {}
 

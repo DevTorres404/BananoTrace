@@ -18,7 +18,7 @@ import { QualityService } from './quality.service';
 
 @Controller('quality')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.CALIDAD, ROLE_IDS.SUPERVISOR_AGRICOLA)
+@Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.CALIDAD, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR)
 export class QualityController {
   constructor(private readonly qualityService: QualityService) {}
 
