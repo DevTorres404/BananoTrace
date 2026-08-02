@@ -5,7 +5,6 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  /* Premium animated gradient using brand colors */
   background: linear-gradient(-45deg, var(--color-tertiary-dark), var(--color-primary-dark), var(--color-tertiary), var(--color-tertiary-dark));
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
@@ -21,16 +20,15 @@
 .glass-panel {
   position: relative;
   z-index: 1;
-  background: linear-gradient(135deg, rgba(11, 32, 82, 0.85) 0%, rgba(5, 10, 21, 0.95) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 197, 0, 0.4);
+  background: #ffffff;
+  border-top: 5px solid var(--color-primary);
   border-radius: 24px;
   padding: 3rem 2.5rem;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 197, 0, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   animation: floatIn 0.6s ease-out forwards;
+  color: var(--color-tertiary-dark); /* Ensure text is dark by default */
 }
 
 @keyframes floatIn {
@@ -38,6 +36,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -71,8 +70,13 @@
 }
 
 @keyframes floatBlob {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(50px, 50px) scale(1.1); }
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  100% {
+    transform: translate(50px, 50px) scale(1.1);
+  }
 }
 
 .logo-container {
@@ -85,7 +89,7 @@
   max-width: 280px;
   height: auto;
   margin: 0 auto;
-  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 15px rgba(255, 197, 0, 0.25));
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
 .login-form {
@@ -101,17 +105,17 @@
 }
 
 .form-group label {
-  color: var(--color-text-secondary);
+  color: #475569; /* Slate 600 */
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .form-group input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: #f8fafc; /* Very light slate */
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 0.875rem 1rem;
-  color: var(--color-text-primary);
+  color: #0f172a; /* Dark text */
   font-size: 1rem;
   outline: none;
   transition: all 0.3s ease;
@@ -119,8 +123,8 @@
 
 .form-group input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-success-bg);
-  background: var(--color-surface-hover);
+  box-shadow: 0 0 0 3px rgba(12, 147, 64, 0.15);
+  background: #ffffff;
 }
 
 .form-group input.invalid {
@@ -199,7 +203,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .footer-links {
@@ -208,14 +214,14 @@
 }
 
 .footer-links a {
-  color: var(--color-secondary);
+  color: var(--color-primary-dark);
   font-size: 0.875rem;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease, text-shadow 0.2s ease;
+  font-weight: 600;
+  transition: color 0.2s ease;
 }
 
 .footer-links a:hover {
-  color: var(--color-text-primary);
-  text-shadow: 0 0 8px rgba(255, 197, 0, 0.6);
+  color: var(--color-primary);
+  text-decoration: underline;
 }
