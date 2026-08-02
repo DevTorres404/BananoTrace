@@ -175,14 +175,16 @@ model Flujo {
 }
 
 model Fase {
-  idFase             Int     @id @default(autoincrement()) @map("id_fase") @db.SmallInt
-  idFlujo            Int     @map("id_flujo") @db.SmallInt
-  idRolResponsable   Int?    @map("id_rol_responsable") @db.SmallInt
-  codigo             String  @db.VarChar(50)
-  nombre             String  @db.VarChar(100)
-  orden              Int     @db.SmallInt
-  requiereAprobacion Boolean @default(false) @map("requiere_aprobacion")
-  activo             Boolean @default(true)
+  idFase             Int         @id @default(autoincrement()) @map("id_fase") @db.SmallInt
+  idFlujo            Int         @map("id_flujo") @db.SmallInt
+  idRolResponsable   Int?        @map("id_rol_responsable") @db.SmallInt
+  codigo             String      @db.VarChar(50)
+  nombre             String      @db.VarChar(100)
+  orden              Int         @db.SmallInt
+  requiereAprobacion Boolean     @default(false) @map("requiere_aprobacion")
+  estadoLoteInicio   EstadoLote? @map("estado_lote_inicio")
+  estadoLoteFin      EstadoLote? @map("estado_lote_fin")
+  activo             Boolean     @default(true)
 
   flujo               Flujo            @relation(fields: [idFlujo], references: [idFlujo], onDelete: Restrict, onUpdate: Cascade)
   rolResponsable      Rol?             @relation(fields: [idRolResponsable], references: [idRol], onDelete: Restrict, onUpdate: Cascade)
@@ -326,11 +328,12 @@ model Productor {
 model Finca {
   idFinca            BigInt    @id @default(autoincrement()) @map("id_finca")
   idProductor        BigInt    @map("id_productor")
-  codigoFinca        String    @unique @default("") @map("codigo_finca") @db.VarChar(30)
+  codigoFinca        String    @unique @default(dbgenerated()) @map("codigo_finca") @db.VarChar(30)
   nombre             String    @db.VarChar(100)
-  provincia          String    @db.VarChar(60)
-  canton             String    @db.VarChar(60)
-  parroquia          String?   @db.VarChar(60)
+  pais               String    @db.VarChar(80)
+  region             String    @db.VarChar(100)
+  localidad          String    @db.VarChar(100)
+  sublocalidad       String?   @db.VarChar(100)
   latitud            Decimal?  @db.Decimal(9, 6)
   longitud           Decimal?  @db.Decimal(9, 6)
   areaHectareas      Decimal?  @map("area_hectareas") @db.Decimal(10, 2)
@@ -349,7 +352,7 @@ model LoteProduccion {
   idLote               BigInt     @id @default(autoincrement()) @map("id_lote")
   idUnidad             BigInt     @unique @map("id_unidad")
   idFinca              BigInt     @map("id_finca")
-  codigoLote           String     @unique @default("") @map("codigo_lote") @db.VarChar(40)
+  codigoLote           String     @unique @default(dbgenerated()) @map("codigo_lote") @db.VarChar(40)
   variedad             String     @default("Cavendish") @db.VarChar(60)
   fechaSiembra         DateTime?  @map("fecha_siembra") @db.Date
   fechaEstimadaCosecha DateTime?  @map("fecha_estimada_cosecha") @db.Date
