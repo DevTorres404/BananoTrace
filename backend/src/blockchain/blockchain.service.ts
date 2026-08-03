@@ -4,8 +4,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   TransitionForChain,
   evaluarConfirmacion,
+  hashPayload,
   registrarBloque,
   verificarBloques,
+  verificarEncadenamiento,
 } from './blockchain-chain';
 
 @Injectable()
@@ -42,8 +44,38 @@ export class BlockchainService {
     return { integra, bloques: bloques.length, errores };
   }
 
-  async listarCadena(idInstancia: bigint) {
+  /**
+   * Verificación "ligera" para contextos públicos (ficha de trazabilidad): lee solo las
+   * columnas de vínculo (indice/hashDatos/hashAnterior) y el payload del último bloque,
+   * en vez de cargar todos los payloads de la cadena. Detecta huecos, encadenamiento roto
+   * y alteración del último bloque. La verificación forense completa queda en
+   * `verificarCadena` para el panel administrativo.
+   */
+  async verificarCadenaLigera(idInstancia: bigint) {
     const bloques = await this.prisma.registroBlockchain.findMany({
+      where: { idInstancia },
+      orderBy: { indice: 'asc' },
+      select: { indice: true, hashDatos: true, hashAnterior: true },
+    });
+    const { errores } = verificarEncadenamiento(bloques);
+
+    const ultimo = await this.prisma.registroBlockchain.findFirst({
+      where: { idInstancia },
+      orderBy: { indice: 'desc' },
+      select: { indice: true, hashDatos: true, payloadCanonico: true },
+    });
+    if (ultimo && hashPayload(ultimo.payloadCanonico) !== ultimo.hashDatos) {
+      errores.push({
+        indice: ultimo.indice,
+        motivo:
+          'El payload del último bloque no coincide con su hash (posible alteración)',
+      });
+    }
+
+    return { integra: errores.length === 0, bloques: bloques.length, errores };
+  }
+
+  async listarCadena(idInstancia: bigint) {    const bloques = await this.prisma.registroBlockchain.findMany({
       where: { idInstancia },
       orderBy: { indice: 'asc' },
     });

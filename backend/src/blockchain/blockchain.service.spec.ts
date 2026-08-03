@@ -118,6 +118,51 @@ describe('BlockchainService', () => {
     });
   });
 
+  describe('verificarCadenaLigera', () => {
+    it('returns integra:true for a healthy linked chain without loading payloads', async () => {
+      prisma.registroBlockchain.findMany.mockResolvedValue([
+        { indice: 0, hashDatos: 'a'.repeat(64), hashAnterior: null },
+        { indice: 1, hashDatos: 'b'.repeat(64), hashAnterior: 'a'.repeat(64) },
+      ]);
+      prisma.registroBlockchain.findFirst.mockResolvedValue({
+        indice: 1,
+        hashDatos: sha256(canonicalJson({ indice: 1 })),
+        payloadCanonico: canonicalJson({ indice: 1 }),
+      });
+
+      const result = await service.verificarCadenaLigera(5n);
+
+      expect(prisma.registroBlockchain.findMany).toHaveBeenCalledWith({
+        where: { idInstancia: 5n },
+        orderBy: { indice: 'asc' },
+        select: { indice: true, hashDatos: true, hashAnterior: true },
+      });
+      expect(prisma.registroBlockchain.findFirst).toHaveBeenCalledWith({
+        where: { idInstancia: 5n },
+        orderBy: { indice: 'desc' },
+        select: { indice: true, hashDatos: true, payloadCanonico: true },
+      });
+      expect(result).toEqual({ integra: true, bloques: 2, errores: [] });
+    });
+
+    it('detects a broken link and a tampered last payload', async () => {
+      prisma.registroBlockchain.findMany.mockResolvedValue([
+        { indice: 0, hashDatos: 'a'.repeat(64), hashAnterior: null },
+        { indice: 1, hashDatos: 'b'.repeat(64), hashAnterior: 'x'.repeat(64) },
+      ]);
+      prisma.registroBlockchain.findFirst.mockResolvedValue({
+        indice: 1,
+        hashDatos: sha256(canonicalJson({ indice: 1 })),
+        payloadCanonico: canonicalJson({ indice: 'tampered' }),
+      });
+
+      const result = await service.verificarCadenaLigera(5n);
+
+      expect(result.integra).toBe(false);
+      expect(result.errores.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
   describe('confirmarPendientes', () => {
     it('confirms a valid pending genesis block', async () => {
       const payload = canonicalJson({ indice: 0 });

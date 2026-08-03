@@ -339,6 +339,10 @@
   .brand-row {
     justify-content: space-between;
   }
+
+  .sidebar-footer .theme-button {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

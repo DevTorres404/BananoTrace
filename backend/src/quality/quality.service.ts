@@ -167,13 +167,20 @@ export class QualityService {
 
     // 5.3 — Calculate rejection percentage automatically
     let porcentajeRechazo: Prisma.Decimal | null = null;
-    if (
-      pesoMuestraKg !== null &&
-      pesoRechazadoKg !== null &&
-      pesoMuestraKg > 0
-    ) {
-      const pct = (pesoRechazadoKg / pesoMuestraKg) * 100;
-      porcentajeRechazo = new Prisma.Decimal(pct.toFixed(2));
+    if (pesoMuestraKg !== null && pesoMuestraKg > 0) {
+      if (pesoRechazadoKg !== null) {
+        if (pesoRechazadoKg > pesoMuestraKg) {
+          throw new BadRequestException('El peso rechazado no puede ser mayor al peso de la muestra');
+        }
+        const pct = (pesoRechazadoKg / pesoMuestraKg) * 100;
+        porcentajeRechazo = new Prisma.Decimal(pct.toFixed(2));
+      }
+    } else if (pesoRechazadoKg !== null && pesoRechazadoKg > 0) {
+      throw new BadRequestException('Debe indicar un peso de muestra mayor a 0 si hay peso rechazado');
+    }
+
+    if ((resultado === 'OBSERVADO' || resultado === 'RECHAZADO') && !idCategoriaCalidad) {
+      throw new BadRequestException('Debe seleccionar una categoría de calidad para resultados observados o rechazados');
     }
 
     const control = await this.prisma.controlCalidad.create({

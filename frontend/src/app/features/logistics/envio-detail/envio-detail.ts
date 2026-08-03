@@ -73,8 +73,8 @@ import { finalize } from 'rxjs/operators';
               <h3>Cajas Asignadas ({{ envio.empaques?.length || 0 }})</h3>
               <button
                 class="btn btn-outline btn-sm"
-                (click)="showAssignModal = true"
-                *ngIf="envio.estado === 'PLANIFICADO' || envio.estado === 'CARGADO'"
+                (click)="openAssignModal()"
+                *ngIf="canAssignPackages"
               >
                 + Asignar Cajas
               </button>
@@ -491,7 +491,6 @@ export class EnvioDetail implements OnInit {
       .subscribe({
         next: (envio) => {
           this.envio = envio;
-          this.loadDisponibles();
         },
       });
   }
@@ -513,6 +512,20 @@ export class EnvioDetail implements OnInit {
       default:
         return 'badge badge-gray';
     }
+  }
+
+  get canAssignPackages(): boolean {
+    return (
+      this.canManage && (this.envio?.estado === 'PLANIFICADO' || this.envio?.estado === 'CARGADO')
+    );
+  }
+
+  openAssignModal() {
+    if (!this.canAssignPackages) return;
+    this.selectedEmpaques = [];
+    this.assignError = '';
+    this.showAssignModal = true;
+    this.loadDisponibles();
   }
 
   loadDisponibles() {
@@ -581,7 +594,6 @@ export class EnvioDetail implements OnInit {
       .subscribe({
         next: (envio) => {
           this.envio = envio;
-          this.loadDisponibles();
         },
         error: (error) => {
           this.actionError = error?.error?.message || 'No se pudo avanzar el envío';

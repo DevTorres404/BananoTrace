@@ -68,6 +68,7 @@ describe('UserForm modal', () => {
       correo: ' ANA@COIL.COM ',
       clave: 'password123',
       idRol: 2,
+      idProductor: '4',
     };
 
     component.onSubmit();
@@ -78,6 +79,7 @@ describe('UserForm modal', () => {
       correo: 'ana@coil.com',
       clave: 'password123',
       idRol: 2,
+      idProductor: '4',
     });
     expect(savedSpy).toHaveBeenCalledWith(account);
   });

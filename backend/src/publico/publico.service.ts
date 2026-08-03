@@ -54,6 +54,11 @@ export class PublicoService {
 
     const unidad = await this.prisma.unidadTrazable.findFirst({
       where: { codigo },
+      // La unicidad es [tipo, codigo], así que un mismo código puede existir en varios
+      // tipos (lote/caja/envío). Con este orden determinista (LOTE primero según la
+      // definición del enum) la consulta pública prefiere siempre el lote, que es el caso
+      // que generan los códigos QR.
+      orderBy: { tipo: 'asc' as const },
       select: unidadPublicaSelect,
     });
     if (!unidad) throw new NotFoundException('Código no encontrado');
@@ -86,7 +91,8 @@ export class PublicoService {
   }
 
   private async resumenIntegridad(idInstancia: bigint) {
-    const { integra, bloques } = await this.blockchainService.verificarCadena(idInstancia);
+    const { integra, bloques } =
+      await this.blockchainService.verificarCadenaLigera(idInstancia);
     return { verificable: true, integra, bloques };
   }
 

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { LotsService } from '../../lots/lots.service';
 import { TraceabilityService } from '../traceability.service';
 
@@ -48,21 +48,19 @@ export class LotTimelinePage implements OnInit {
     this.errorMessage = '';
     this.lotsService
       .getLot(this.lotId)
-      .pipe(finalize(() => this.finishLoading()))
-      .subscribe({
-        next: (lot) => {
+      .pipe(
+        switchMap((lot) => {
           this.lotCode = lot.codigoLote;
-          this.traceabilityService.getTimeline(lot.idUnidad).subscribe({
-            next: (timeline) => {
-              this.events = timeline;
-            },
-            error: () => {
-              this.errorMessage = 'No se pudo cargar la línea de tiempo del lote.';
-            },
-          });
+          return this.traceabilityService.getTimeline(lot.idUnidad);
+        }),
+        finalize(() => this.finishLoading())
+      )
+      .subscribe({
+        next: (timeline) => {
+          this.events = timeline;
         },
         error: () => {
-          this.errorMessage = 'No se pudo cargar la información del lote.';
+          this.errorMessage = 'No se pudo cargar la línea de tiempo del lote.';
         },
       });
   }

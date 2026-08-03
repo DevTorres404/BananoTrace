@@ -2,18 +2,11 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 
-export type TipoQr = 'corporativo' | 'publico';
-
 @Injectable()
 export class QrService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async generar(idLoteRaw: string, tipo: string) {
-    if (tipo !== 'corporativo' && tipo !== 'publico') {
-      throw new BadRequestException(
-        "El tipo de QR debe ser 'corporativo' o 'publico'",
-      );
-    }
+  async generar(idLoteRaw: string) {
     const idLote = this.parseId(idLoteRaw);
     const lote = await this.prisma.loteProduccion.findUnique({
       where: { idLote },
@@ -25,13 +18,10 @@ export class QrService {
       /\/$/,
       '',
     );
-    const url =
-      tipo === 'corporativo'
-        ? `${frontendUrl}/lotes/${idLote.toString()}`
-        : `${frontendUrl}/consulta?codigo=${encodeURIComponent(lote.codigoLote)}`;
-    const qrDataUri = await QRCode.toDataURL(url);
+    const url = `${frontendUrl}/trace/${encodeURIComponent(lote.codigoLote)}`;
+    const qrDataUri = await QRCode.toDataURL(url, { width: 600, margin: 2 });
 
-    return { url, qrDataUri, tipo, codigo: lote.codigoLote };
+    return { url, qrDataUri, codigo: lote.codigoLote };
   }
 
   private parseId(raw: string): bigint {

@@ -7,8 +7,28 @@
     </div>
   </header>
 
-  <section class="panel" *ngIf="estado === 'sin-codigo'">
+  <section class="panel" *ngIf="estado === 'sin-codigo' && !scanning">
     <p class="state">Escaneá un código QR de BananoTrace para ver la ficha de trazabilidad.</p>
+    <div style="text-align: center; margin-top: 1rem;">
+      <button type="button" class="btn-primary" (click)="startScanner()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 0.5rem;">
+          <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Habilitar cámara para escanear
+      </button>
+    </div>
+  </section>
+
+  <section class="panel" [hidden]="!scanning">
+    <div class="section-heading">
+      <div>
+        <h2>Escáner QR</h2>
+        <p>Apuntá la cámara al código QR.</p>
+      </div>
+      <button type="button" class="btn-ghost" (click)="onScanSuccess('')" *ngIf="scanning">Cancelar</button>
+    </div>
+    <div id="reader" style="width: 100%; max-width: 500px; margin: 0 auto; overflow: hidden; border-radius: 8px;"></div>
   </section>
 
   <section class="panel" *ngIf="estado === 'cargando'">
@@ -26,7 +46,10 @@
           <p class="eyebrow">{{ tipoLabels[r.tipo] }}</p>
           <h2>{{ r.codigo }}</h2>
         </div>
-        <span class="status" *ngIf="r.estado">{{ r.estado }}</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span class="status" *ngIf="r.estado">{{ r.estado }}</span>
+          <button type="button" class="btn-secondary" (click)="startScanner()">Escanear otro QR</button>
+        </div>
       </div>
       <dl class="data-grid" *ngIf="r.finca">
         <div>

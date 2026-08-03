@@ -77,13 +77,13 @@ export class LogisticsController {
   }
 
   @Get('envios')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE, ROLE_IDS.GERENTE_PRODUCTOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR)
   findAllEnvios(@Query() query: Record<string, string | undefined>) {
     return this.logisticsService.findAllEnvios(query);
   }
 
   @Get('envios/:id')
-  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.CLIENTE, ROLE_IDS.GERENTE_PRODUCTOR)
+  @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR)
   getEnvioById(@Param('id') id: string) {
     return this.logisticsService.getEnvioById(id);
   }

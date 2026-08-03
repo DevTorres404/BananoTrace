@@ -476,7 +476,7 @@ export class FarmsService {
         actor.idRol === ROLE_IDS.SUPERVISOR_AGRICOLA &&
         actor.idProductor !== idProductor.toString()
       ) {
-        throw new ForbiddenException('No tenés acceso a ese productor');
+        throw new ForbiddenException('No tiene acceso a ese productor');
       }
       filters.push({ idProductor });
     }
@@ -514,7 +514,7 @@ export class FarmsService {
         this.parseId(String(requested), 'productor') !== idProductor
       ) {
         throw new ForbiddenException(
-          'No podés crear fincas para otro productor',
+          'No puede crear fincas para otro productor',
         );
       }
     } else if (actor.idRol === ROLE_IDS.ADMINISTRADOR) {
@@ -523,7 +523,7 @@ export class FarmsService {
       }
       idProductor = this.parseId(String(requested), 'productor');
     } else {
-      throw new ForbiddenException('No tenés acceso a fincas');
+      throw new ForbiddenException('No tiene acceso a fincas');
     }
 
     const producer = await this.prisma.productor.findUnique({

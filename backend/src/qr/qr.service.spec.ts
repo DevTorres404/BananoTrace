@@ -23,14 +23,8 @@ describe('QrService', () => {
     jest.clearAllMocks();
   });
 
-  it('rejects a tipo other than corporativo/publico', async () => {
-    await expect(service.generar('8', 'otro')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
-  });
-
   it('rejects a non-numeric lot id', async () => {
-    await expect(service.generar('abc', 'publico')).rejects.toBeInstanceOf(
+    await expect(service.generar('abc')).rejects.toBeInstanceOf(
       BadRequestException,
     );
   });
@@ -38,36 +32,37 @@ describe('QrService', () => {
   it('throws NotFoundException when the lot does not exist', async () => {
     prisma.loteProduccion.findUnique.mockResolvedValue(null);
 
-    await expect(service.generar('8', 'publico')).rejects.toBeInstanceOf(
+    await expect(service.generar('8')).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });
 
-  it('builds a public QR pointing to the consulta page with the lot code', async () => {
+  it('builds a QR pointing to the public trace page with the lot code', async () => {
     prisma.loteProduccion.findUnique.mockResolvedValue({
       codigoLote: 'BAN-2026-001',
     });
 
-    const result = await service.generar('8', 'publico');
+    const result = await service.generar('8');
 
     expect(result).toEqual({
-      url: 'https://app.bananotrace.test/consulta?codigo=BAN-2026-001',
+      url: 'https://app.bananotrace.test/trace/BAN-2026-001',
       qrDataUri: 'data:image/png;base64,fake',
-      tipo: 'publico',
       codigo: 'BAN-2026-001',
     });
     expect(QRCode.toDataURL).toHaveBeenCalledWith(
-      'https://app.bananotrace.test/consulta?codigo=BAN-2026-001',
+      'https://app.bananotrace.test/trace/BAN-2026-001',
+      { width: 600, margin: 2 }
     );
   });
 
-  it('builds a corporate QR pointing to the internal lot detail route', async () => {
+  it('normalizes a trailing slash in FRONTEND_URL', async () => {
     prisma.loteProduccion.findUnique.mockResolvedValue({
       codigoLote: 'BAN-2026-001',
     });
+    process.env.FRONTEND_URL = 'https://app.bananotrace.test/';
 
-    const result = await service.generar('8', 'corporativo');
+    const result = await service.generar('8');
 
-    expect(result.url).toBe('https://app.bananotrace.test/lotes/8');
+    expect(result.url).toBe('https://app.bananotrace.test/trace/BAN-2026-001');
   });
 });

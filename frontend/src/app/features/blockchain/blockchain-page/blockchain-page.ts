@@ -45,7 +45,9 @@ export class BlockchainPage implements OnInit {
     this.errorMessage = '';
     forkJoin({
       bloques: this.blockchainService.getChain(idInstancia),
-      verification: this.blockchainService.verifyChain(idInstancia),
+      verification: this.blockchainService.verifyChain(idInstancia).pipe(
+        catchError(() => of(null))
+      ),
     })
       .pipe(
         finalize(() => {

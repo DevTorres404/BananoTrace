@@ -322,7 +322,7 @@ export class UsersService {
     const idActor = this.parseUserId(actorId);
 
     if (!estado && idUsuario === idActor) {
-      throw new BadRequestException('No podés desactivar tu propio usuario');
+      throw new BadRequestException('No puede desactivar su propio usuario');
     }
 
     await this.ensureUserExists(idUsuario);

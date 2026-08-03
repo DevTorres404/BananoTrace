@@ -265,7 +265,7 @@ export class ProducersService {
         ? { idProductor: this.parseId(actor.idProductor) }
         : { idProductor: { equals: -1n } };
     }
-    throw new ForbiddenException('No tenés acceso a productores');
+    throw new ForbiddenException('No tiene acceso a productores');
   }
 
   private async ensureAccessible(

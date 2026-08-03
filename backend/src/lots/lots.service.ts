@@ -660,7 +660,7 @@ export class LotsService {
     ) {
       return {};
     }
-    throw new ForbiddenException('No tenés acceso a lotes');
+    throw new ForbiddenException('No tiene acceso a lotes');
   }
 
   private buildFarmScope(actor: LotActor): Prisma.FincaWhereInput {
@@ -683,7 +683,7 @@ export class LotsService {
     ) {
       return {};
     }
-    throw new ForbiddenException('No tenés acceso a fincas');
+    throw new ForbiddenException('No tiene acceso a fincas');
   }
 
   private async findAccessibleLot(idLote: bigint, actor: LotActor) {

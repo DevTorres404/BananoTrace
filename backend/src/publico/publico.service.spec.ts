@@ -5,12 +5,15 @@ import { PublicoService } from './publico.service';
 
 describe('PublicoService', () => {
   let prisma: any;
-  let blockchainService: { verificarCadena: jest.Mock };
+  let blockchainService: {
+    verificarCadena: jest.Mock;
+    verificarCadenaLigera: jest.Mock;
+  };
   let service: PublicoService;
 
   beforeEach(() => {
     prisma = { unidadTrazable: { findFirst: jest.fn() } };
-    blockchainService = { verificarCadena: jest.fn() };
+    blockchainService = { verificarCadena: jest.fn(), verificarCadenaLigera: jest.fn() };
     service = new PublicoService(
       prisma as PrismaService,
       blockchainService as unknown as BlockchainService,
@@ -57,7 +60,7 @@ describe('PublicoService', () => {
           },
         ],
       });
-      blockchainService.verificarCadena.mockResolvedValue({
+      blockchainService.verificarCadenaLigera.mockResolvedValue({
         integra: true,
         bloques: 4,
         errores: [],
@@ -65,7 +68,7 @@ describe('PublicoService', () => {
 
       const result = await service.consultarPorCodigo('BAN-2026-001');
 
-      expect(blockchainService.verificarCadena).toHaveBeenCalledWith(12n);
+      expect(blockchainService.verificarCadenaLigera).toHaveBeenCalledWith(12n);
       expect(result).toEqual({
         tipo: 'LOTE',
         codigo: 'BAN-2026-001',
@@ -100,13 +103,13 @@ describe('PublicoService', () => {
         integra: null,
         bloques: 0,
       });
-      expect(blockchainService.verificarCadena).not.toHaveBeenCalled();
+      expect(blockchainService.verificarCadenaLigera).not.toHaveBeenCalled();
     });
   });
 
   describe('verificacionResumen', () => {
     it('returns only integra/bloques, hiding hashes and error detail', async () => {
-      blockchainService.verificarCadena.mockResolvedValue({
+      blockchainService.verificarCadenaLigera.mockResolvedValue({
         integra: false,
         bloques: 3,
         errores: [{ indice: 1, motivo: 'alterado' }],

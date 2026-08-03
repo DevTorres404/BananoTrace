@@ -22,6 +22,13 @@ export interface ChainError {
   motivo: string;
 }
 
+/** Filas de vínculo (sin payload) usadas por la verificación ligera de encadenamiento. */
+export interface ChainLinkRow {
+  indice: number;
+  hashDatos: string;
+  hashAnterior: string | null;
+}
+
 /** Serializa `value` en JSON con las claves de cada objeto ordenadas alfabéticamente, para que el hash sea determinista sin importar el orden de inserción de las propiedades. */
 export function canonicalJson(value: unknown): string {
   return JSON.stringify(sortKeysDeep(value));
@@ -55,7 +62,7 @@ function buildPayload(
   });
 }
 
-function hashPayload(payload: string): string {
+export function hashPayload(payload: string): string {
   return createHash('sha256').update(payload).digest('hex');
 }
 
@@ -131,6 +138,39 @@ export function verificarBloques(bloques: ChainBlockRow[]): {
       errores.push({
         indice: bloque.indice,
         motivo: 'El payload no coincide con el hash almacenado (posible alteración)',
+      });
+    }
+    previous = bloque;
+  }
+
+  return { integra: errores.length === 0, errores };
+}
+
+/**
+ * Valida la secuencia de índices y el encadenamiento de hashes usando solo las columnas
+ * de vínculo (sin payloads). Es la verificación "ligera": detecta huecos, índices fuera
+ * de secuencia y encadenamiento roto, pero no recomputa cada payload. El payload del
+ * último bloque se verifica aparte para anclar la cadena.
+ */
+export function verificarEncadenamiento(bloques: ChainLinkRow[]): {
+  integra: boolean;
+  errores: ChainError[];
+} {
+  const errores: ChainError[] = [];
+  let previous: ChainLinkRow | null = null;
+
+  for (const [position, bloque] of bloques.entries()) {
+    if (bloque.indice !== position) {
+      errores.push({
+        indice: bloque.indice,
+        motivo: `Índice fuera de secuencia (esperado ${position})`,
+      });
+    }
+    const expectedPrevious = previous?.hashDatos ?? null;
+    if (bloque.hashAnterior !== expectedPrevious) {
+      errores.push({
+        indice: bloque.indice,
+        motivo: 'El hash anterior no coincide con el bloque previo',
       });
     }
     previous = bloque;

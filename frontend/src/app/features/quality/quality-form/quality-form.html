@@ -13,21 +13,21 @@
 
     <form class="modal-body" (ngSubmit)="onSubmit()" #form="ngForm">
       <!-- Resultado -->
-      <div class="field-group">
-        <label class="field-label">Resultado <span class="required">*</span></label>
-        <div class="result-selector">
-          <button
-            *ngFor="let r of results"
-            type="button"
-            class="result-option"
-            [class.selected]="model.resultado === r.value"
-            [class.approved]="r.value === 'APROBADO'"
-            [class.observed]="r.value === 'OBSERVADO'"
-            [class.rejected]="r.value === 'RECHAZADO'"
-            (click)="model.resultado = r.value"
+      <div class="form-row">
+        <div class="field-group">
+          <label class="field-label" for="resultado">Resultado</label>
+          <select
+            id="resultado"
+            class="field-input"
+            name="resultado"
+            [(ngModel)]="model.resultado"
+            required
           >
-            {{ r.icon }} {{ r.label }}
-          </button>
+            <option [ngValue]="undefined" disabled>Seleccione un resultado</option>
+            <option *ngFor="let r of results" [value]="r.value">
+              {{ r.label }}
+            </option>
+          </select>
         </div>
       </div>
 

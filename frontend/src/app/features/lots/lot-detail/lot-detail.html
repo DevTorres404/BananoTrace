@@ -21,17 +21,9 @@
           type="button"
           class="btn-secondary"
           [disabled]="isGeneratingQr"
-          (click)="generarQr('corporativo')"
+          (click)="generarQr()"
         >
-          QR corporativo
-        </button>
-        <button
-          type="button"
-          class="btn-secondary"
-          [disabled]="isGeneratingQr"
-          (click)="generarQr('publico')"
-        >
-          QR público
+          Generar QR
         </button>
         <button *ngIf="canManage" type="button" class="btn-secondary" (click)="isEditOpen = true">
           Editar lote
@@ -43,25 +35,36 @@
       {{ qrError }} <button type="button" (click)="closeQr()">Cerrar</button>
     </p>
 
-    <section class="panel qr-panel" *ngIf="qrResult">
-      <div class="section-heading">
-        <div>
-          <h2>QR {{ qrResult.tipo === 'corporativo' ? 'corporativo' : 'público' }}</h2>
-          <p>{{ qrResult.url }}</p>
+    <div class="modal-backdrop" *ngIf="qrResult" (click)="closeQr()">
+      <div class="modal-panel qr-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Código QR</p>
+            <h2 class="modal-title">Lote {{ currentLot.codigoLote }}</h2>
+          </div>
+          <button class="btn-icon" (click)="closeQr()" aria-label="Cerrar">✕</button>
         </div>
-        <button type="button" class="btn-ghost" (click)="closeQr()">Cerrar</button>
+        <div class="modal-body qr-modal-body" style="text-align: center;">
+          <p class="qr-url" style="word-break: break-all;">{{ qrResult.url }}</p>
+          <div class="qr-preview" style="justify-content: center; margin: 2rem 0;">
+            <img [src]="qrResult.qrDataUri" alt="Código QR" width="220" height="220" />
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 1rem; display: flex;">
+          <a
+            class="btn-secondary"
+            [href]="qrResult.qrDataUri"
+            [download]="'qr-' + qrResult.codigo + '.png'"
+            style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 6px;"
+          >
+            Descargar PNG
+          </a>
+          <button type="button" class="btn-primary" (click)="descargarQrPdf()">
+            Descargar PDF
+          </button>
+        </div>
       </div>
-      <div class="qr-preview">
-        <img [src]="qrResult.qrDataUri" [alt]="'Código QR ' + qrResult.tipo" width="220" height="220" />
-        <a
-          class="btn-primary"
-          [href]="qrResult.qrDataUri"
-          [download]="'qr-' + qrResult.codigo + '-' + qrResult.tipo + '.png'"
-        >
-          Descargar PNG
-        </a>
-      </div>
-    </section>
+    </div>
 
     <section class="detail-grid">
       <article class="panel info-panel">
@@ -192,7 +195,7 @@
                 *ngIf="currentEjecucionId && canRegisterQuality"
                 (click)="isQualityFormOpen = true"
               >
-                🔬 Inspección de calidad
+                Inspección de calidad
               </button>
               <button
                 type="submit"
@@ -273,6 +276,7 @@
       [lot]="currentLot"
       [farms]="farms"
       [states]="states"
+      [varieties]="varieties"
       (closed)="isEditOpen = false"
       (saved)="onSaved()"
     />

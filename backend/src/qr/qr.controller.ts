@@ -18,7 +18,7 @@ export class QrController {
   constructor(private readonly qrService: QrService) {}
 
   @Get('lotes/:id')
-  generar(@Param('id') id: string, @Query('tipo') tipo: string) {
-    return this.qrService.generar(id, tipo);
+  generar(@Param('id') id: string) {
+    return this.qrService.generar(id);
   }
 }

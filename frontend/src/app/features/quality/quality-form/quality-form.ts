@@ -23,7 +23,6 @@ import {
 interface ResultOption {
   value: QualityResult;
   label: string;
-  icon: string;
 }
 
 @Component({
@@ -52,9 +51,9 @@ export class QualityForm implements OnInit {
   categoriesLoading = true;
 
   readonly results: ResultOption[] = [
-    { value: 'APROBADO', label: 'Aprobado', icon: '✅' },
-    { value: 'OBSERVADO', label: 'Observado', icon: '⚠️' },
-    { value: 'RECHAZADO', label: 'Rechazado', icon: '❌' },
+    { value: 'APROBADO', label: 'Aprobado' },
+    { value: 'OBSERVADO', label: 'Observado' },
+    { value: 'RECHAZADO', label: 'Rechazado' },
   ];
 
   ngOnInit(): void {
@@ -92,6 +91,25 @@ export class QualityForm implements OnInit {
 
   onSubmit(): void {
     if (this.saving || !this.model.resultado) return;
+
+    // Frontend validations
+    if ((this.model.resultado === 'OBSERVADO' || this.model.resultado === 'RECHAZADO') && !this.model.categoriaCalidad) {
+      this.errorMessage = 'Debe seleccionar una categoría de calidad para resultados observados o rechazados.';
+      return;
+    }
+
+    const muestra = Number(this.model.pesoMuestraKg || 0);
+    const rechazado = Number(this.model.pesoRechazadoKg || 0);
+
+    if (rechazado > 0 && muestra <= 0) {
+      this.errorMessage = 'Debe indicar un peso de muestra mayor a 0 si hay peso rechazado.';
+      return;
+    }
+
+    if (rechazado > muestra) {
+      this.errorMessage = 'El peso rechazado no puede ser mayor al peso de la muestra.';
+      return;
+    }
 
     const payload: QualityControlPayload = {
       idEjecucion: this.idEjecucion,
