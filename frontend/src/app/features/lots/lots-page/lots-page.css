@@ -29,15 +29,6 @@
   color: var(--color-primary);
   background: var(--color-primary-soft);
 }
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding-top: 1rem;
-  color: var(--color-text-secondary);
-  font-size: 0.84rem;
-}
 @media (max-width: 1050px) {
   .lot-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));

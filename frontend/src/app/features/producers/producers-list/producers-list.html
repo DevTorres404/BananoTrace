@@ -9,15 +9,15 @@
 
   <section class="metrics" aria-label="Resumen de productores">
     <article class="metric-card teal">
-      <span>Total de productores</span><strong>{{ producers.length }}</strong
+      <span>Total de productores</span><strong>{{ pagination.total }}</strong
       ><small>Entidades de negocio registradas</small>
     </article>
     <article class="metric-card green">
-      <span>Con cuenta vinculada</span><strong>{{ linkedProducers }}</strong
+      <span>Con cuenta vinculada (página)</span><strong>{{ linkedProducers }}</strong
       ><small>Productores con acceso al sistema</small>
     </article>
     <article class="metric-card yellow">
-      <span>Fincas asociadas</span><strong>{{ totalFarms }}</strong
+      <span>Fincas asociadas (página)</span><strong>{{ totalFarms }}</strong
       ><small>Ubicaciones productivas registradas</small>
     </article>
   </section>
@@ -29,25 +29,34 @@
         <p>Búsqueda por nombre, identificación o correo, con filtro de vinculación.</p>
       </div>
     </div>
-    <div class="producer-filters">
+    <form class="producer-filters" (ngSubmit)="applyFilters()">
       <label
         ><span>Búsqueda</span
         ><input
           type="search"
-          [(ngModel)]="searchTerm"
+          name="search"
+          [(ngModel)]="filters.search"
           placeholder="Nombre, identificación o correo"
           aria-label="Buscar productores"
       /></label>
       <label
         ><span>Cuenta vinculada</span
-        ><select [(ngModel)]="accountFilter" aria-label="Filtrar por cuenta vinculada">
+        ><select
+          name="vinculado"
+          [(ngModel)]="filters.vinculado"
+          (ngModelChange)="applyFilters()"
+          aria-label="Filtrar por cuenta vinculada"
+        >
           <option value="">Todos</option>
-          <option value="linked">Con cuenta</option>
-          <option value="unlinked">Sin cuenta</option>
+          <option value="true">Con cuenta</option>
+          <option value="false">Sin cuenta</option>
         </select></label
       >
-      <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar filtros</button>
-    </div>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Buscar</button>
+      </div>
+    </form>
   </section>
 
   <p *ngIf="errorMessage" class="error-banner">
@@ -58,7 +67,7 @@
     <div class="section-heading">
       <div>
         <h2>Listado de productores</h2>
-        <p>{{ visibleProducers.length }} resultado(s)</p>
+        <p>{{ pagination.total }} resultado(s)</p>
       </div>
       <button *ngIf="isAdmin" type="button" class="btn-primary" (click)="openCreateModal()">
         Nuevo productor
@@ -81,7 +90,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let producer of visibleProducers">
+          <tr *ngFor="let producer of producers">
             <td data-label="Productor">
               <div class="producer-cell">
                 <span class="avatar">{{ getInitials(producer.nombreRazonSocial) }}</span>
@@ -120,12 +129,31 @@
               </div>
             </td>
           </tr>
-          <tr *ngIf="visibleProducers.length === 0">
+          <tr *ngIf="producers.length === 0">
             <td colspan="7" class="state">No se encontraron productores con esos filtros.</td>
           </tr>
         </tbody>
       </table>
     </div>
+    <footer class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
   </section>
 
   <app-producer-form

@@ -36,6 +36,7 @@ describe('ProducersService', () => {
     prisma = {
       productor: {
         findMany: jest.fn(),
+        count: jest.fn(),
         findFirst: jest.fn(),
         findUnique: jest.fn(),
         findUniqueOrThrow: jest.fn(),
@@ -50,28 +51,84 @@ describe('ProducersService', () => {
       finca: { count: jest.fn() },
       $transaction: jest.fn(),
     };
-    prisma.$transaction.mockImplementation(
-      (callback: (tx: typeof prisma) => unknown) => callback(prisma),
+    prisma.$transaction.mockImplementation((input: unknown) =>
+      Array.isArray(input)
+        ? Promise.all(input)
+        : (input as (tx: typeof prisma) => unknown)(prisma),
     );
     service = new ProducersService(prisma as unknown as PrismaService);
   });
 
-  it('scopes a PRODUCTOR account to its linked business entity', async () => {
+  it('scopes and paginates the list for a PRODUCTOR account', async () => {
     prisma.productor.findMany.mockResolvedValue([producerRow]);
+    prisma.productor.count.mockResolvedValue(1);
 
-    const result = await service.findAll({
+    const result = await service.findAll({}, {
       idRol: ROLE_IDS.SUPERVISOR_AGRICOLA,
       idProductor: '5',
     });
 
     expect(prisma.productor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { idProductor: 5n } }),
+      expect.objectContaining({
+        where: { AND: [{ idProductor: 5n }] },
+        skip: 0,
+        take: 20,
+      }),
     );
-    expect(result[0]).toEqual(
+    expect(result.data[0]).toEqual(
       expect.objectContaining({
         idProductor: '5',
         totalUsuarios: 1,
         usuarios: [expect.objectContaining({ idUsuario: '7' })],
+      }),
+    );
+    expect(result.pagination).toEqual({
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1,
+    });
+  });
+
+  it('filters by linked/unlinked account when listing producers', async () => {
+    prisma.productor.findMany.mockResolvedValue([]);
+    prisma.productor.count.mockResolvedValue(0);
+
+    await service.findAll(
+      { vinculado: 'true' },
+      { idRol: ROLE_IDS.ADMINISTRADOR, idProductor: null },
+    );
+
+    expect(prisma.productor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{}, { usuarios: { some: {} } }] },
+      }),
+    );
+  });
+
+  it('applies a search filter across name, id and email when listing producers', async () => {
+    prisma.productor.findMany.mockResolvedValue([]);
+    prisma.productor.count.mockResolvedValue(0);
+
+    await service.findAll(
+      { search: 'banano' },
+      { idRol: ROLE_IDS.ADMINISTRADOR, idProductor: null },
+    );
+
+    expect(prisma.productor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            {},
+            {
+              OR: [
+                { nombreRazonSocial: { contains: 'banano', mode: 'insensitive' } },
+                { identificacion: { contains: 'banano', mode: 'insensitive' } },
+                { correo: { contains: 'banano', mode: 'insensitive' } },
+              ],
+            },
+          ],
+        },
       }),
     );
   });

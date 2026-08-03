@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -36,8 +37,8 @@ export class UsersController {
 
   @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)
   @Get()
-  getAllUsers() {
-    return this.usersService.findAll();
+  getAllUsers(@Query() query: Record<string, string | undefined>) {
+    return this.usersService.findAll(query);
   }
 
   @Roles(ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR)

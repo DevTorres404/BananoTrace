@@ -9,15 +9,15 @@
 
   <section class="metrics" aria-label="Resumen de usuarios">
     <article class="metric-card teal">
-      <span>Total de usuarios</span><strong>{{ users.length }}</strong
+      <span>Total de usuarios</span><strong>{{ pagination.total }}</strong
       ><small>Cuentas registradas en el sistema</small>
     </article>
     <article class="metric-card green">
-      <span>Usuarios activos</span><strong>{{ activeUsers }}</strong
+      <span>Activos en esta página</span><strong>{{ activeUsers }}</strong
       ><small>Con acceso operativo habilitado</small>
     </article>
     <article class="metric-card yellow">
-      <span>Vinculados a productor</span><strong>{{ linkedUsers }}</strong
+      <span>Vinculados en esta página</span><strong>{{ linkedUsers }}</strong
       ><small>Cuentas con alcance productivo</small>
     </article>
   </section>
@@ -29,45 +29,59 @@
         <p>Búsqueda por nombre o correo, con filtros de rol y estado.</p>
       </div>
     </div>
-    <div class="user-filters">
+    <form class="user-filters" (ngSubmit)="applyFilters()">
       <label
         ><span>Búsqueda</span
         ><input
           type="search"
-          [(ngModel)]="searchTerm"
+          name="search"
+          [(ngModel)]="filters.search"
           placeholder="Nombre o correo"
           aria-label="Buscar usuarios"
       /></label>
       <label
         ><span>Rol</span
-        ><select [(ngModel)]="roleFilter" aria-label="Filtrar por rol">
+        ><select
+          name="idRol"
+          [(ngModel)]="filters.idRol"
+          (ngModelChange)="applyFilters()"
+          aria-label="Filtrar por rol"
+        >
           <option value="">Todos</option>
-          <option *ngFor="let role of roleOptions" [value]="role">
-            {{ role.replaceAll('_', ' ') }}
+          <option *ngFor="let role of roles" [value]="role.idRol">
+            {{ role.nombre.replaceAll('_', ' ') }}
           </option>
         </select></label
       >
       <label
         ><span>Estado</span
-        ><select [(ngModel)]="statusFilter" aria-label="Filtrar por estado">
+        ><select
+          name="estado"
+          [(ngModel)]="filters.estado"
+          (ngModelChange)="applyFilters()"
+          aria-label="Filtrar por estado"
+        >
           <option value="">Todos</option>
-          <option value="active">Activo</option>
-          <option value="inactive">Inactivo</option>
+          <option value="true">Activo</option>
+          <option value="false">Inactivo</option>
         </select></label
       >
-      <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar filtros</button>
-    </div>
+      <div class="filter-actions">
+        <button type="button" class="btn-ghost" (click)="clearFilters()">Limpiar</button>
+        <button type="submit" class="btn-primary">Buscar</button>
+      </div>
+    </form>
   </section>
 
   <p *ngIf="errorMessage" class="error-banner">
-    {{ errorMessage }} <button type="button" (click)="loadUsers()">Reintentar</button>
+    {{ errorMessage }} <button type="button" (click)="loadInitial()">Reintentar</button>
   </p>
 
   <section class="panel" aria-live="polite">
     <div class="section-heading">
       <div>
         <h2>Listado de usuarios</h2>
-        <p>{{ visibleUsers.length }} resultado(s)</p>
+        <p>{{ pagination.total }} resultado(s)</p>
       </div>
       <button type="button" class="btn-primary" (click)="openCreateModal()">Nuevo usuario</button>
     </div>
@@ -86,7 +100,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of visibleUsers">
+          <tr *ngFor="let user of users">
             <td data-label="Usuario">
               <div class="user-cell">
                 <span class="avatar"
@@ -129,12 +143,31 @@
               </div>
             </td>
           </tr>
-          <tr *ngIf="visibleUsers.length === 0">
+          <tr *ngIf="users.length === 0">
             <td colspan="5" class="state">No se encontraron usuarios con esos filtros.</td>
           </tr>
         </tbody>
       </table>
     </div>
+    <footer class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
   </section>
 
   <app-user-form

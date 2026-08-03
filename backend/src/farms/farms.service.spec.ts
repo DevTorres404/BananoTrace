@@ -10,6 +10,7 @@ describe('FarmsService', () => {
     finca: Record<string, jest.Mock>;
     productor: Record<string, jest.Mock>;
     certificacion: Record<string, jest.Mock>;
+    $transaction: jest.Mock;
   };
 
   const farmRow = {
@@ -48,6 +49,7 @@ describe('FarmsService', () => {
       finca: {
         create: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         findFirst: jest.fn(),
         update: jest.fn(),
       },
@@ -59,12 +61,16 @@ describe('FarmsService', () => {
         update: jest.fn(),
         delete: jest.fn(),
       },
+      $transaction: jest.fn((input: unknown) =>
+        Array.isArray(input) ? Promise.all(input) : input,
+      ),
     };
     service = new FarmsService(prisma as unknown as PrismaService);
   });
 
-  it('scopes and filters the farm list for a PRODUCTOR account', async () => {
+  it('scopes, filters and paginates the farm list for a PRODUCTOR account', async () => {
     prisma.finca.findMany.mockResolvedValue([farmRow]);
+    prisma.finca.count.mockResolvedValue(1);
 
     const result = await service.findAll(
       { pais: 'Ecuador', region: 'Ríos', localidad: 'Quevedo', estado: 'true' },
@@ -82,15 +88,23 @@ describe('FarmsService', () => {
             { estado: true },
           ]),
         },
+        skip: 0,
+        take: 20,
       }),
     );
-    expect(result[0]).toEqual(
+    expect(result.data[0]).toEqual(
       expect.objectContaining({
         idFinca: '10',
         areaHectareas: '18.5',
         lotesActivos: 2,
       }),
     );
+    expect(result.pagination).toEqual({
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1,
+    });
   });
 
   it('prevents a PRODUCTOR account from creating a farm for another producer', async () => {

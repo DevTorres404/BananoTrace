@@ -10,6 +10,7 @@ describe('UsersService', () => {
     rol: Record<string, jest.Mock>;
     rolMenu: Record<string, jest.Mock>;
     productor: Record<string, jest.Mock>;
+    $transaction: jest.Mock;
   };
 
   const publicUser = {
@@ -31,6 +32,7 @@ describe('UsersService', () => {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
       },
@@ -44,6 +46,9 @@ describe('UsersService', () => {
       productor: {
         findUnique: jest.fn(),
       },
+      $transaction: jest.fn((input: unknown) =>
+        Array.isArray(input) ? Promise.all(input) : input,
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -53,16 +58,45 @@ describe('UsersService', () => {
     service = module.get(UsersService);
   });
 
-  it('returns public users with string identifiers and never selects password hashes', async () => {
+  it('returns a paginated page of public users and never selects password hashes', async () => {
     prisma.usuario.findMany.mockResolvedValue([publicUser]);
+    prisma.usuario.count.mockResolvedValue(1);
 
-    await expect(service.findAll()).resolves.toEqual([
-      { ...publicUser, idUsuario: '7' },
-    ]);
+    const result = await service.findAll({});
+
+    expect(result).toEqual({
+      data: [{ ...publicUser, idUsuario: '7' }],
+      pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+    });
     const findManyCalls = prisma.usuario.findMany.mock
       .calls as unknown as Array<[{ select: Record<string, boolean> }]>;
     const select = findManyCalls[0][0].select;
     expect(select.claveHash).toBeUndefined();
+  });
+
+  it('filters users by search term, role and status', async () => {
+    prisma.usuario.findMany.mockResolvedValue([]);
+    prisma.usuario.count.mockResolvedValue(0);
+
+    await service.findAll({ search: 'ana', idRol: '2', estado: 'false' });
+
+    expect(prisma.usuario.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              OR: [
+                { nombres: { contains: 'ana', mode: 'insensitive' } },
+                { apellidos: { contains: 'ana', mode: 'insensitive' } },
+                { correo: { contains: 'ana', mode: 'insensitive' } },
+              ],
+            },
+            { idRol: 2 },
+            { estado: false },
+          ],
+        },
+      }),
+    );
   });
 
   it('normalizes role identifiers when updating a user', async () => {

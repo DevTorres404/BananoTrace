@@ -97,18 +97,36 @@ export class FarmsService {
   }
 
   async findAll(query: Record<string, string | undefined>, actor: FarmActor) {
+    const page = Math.max(1, Number.parseInt(query.page ?? '1', 10) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
+    );
     const where = await this.buildFilters(query, actor);
-    const farms = await this.prisma.finca.findMany({
-      where,
-      select: farmSelect,
-      orderBy: [
-        { estado: 'desc' },
-        { pais: 'asc' },
-        { region: 'asc' },
-        { nombre: 'asc' },
-      ],
-    });
-    return farms.map((farm) => this.serializeFarm(farm));
+    const [farms, total] = await this.prisma.$transaction([
+      this.prisma.finca.findMany({
+        where,
+        select: farmSelect,
+        orderBy: [
+          { estado: 'desc' },
+          { pais: 'asc' },
+          { region: 'asc' },
+          { nombre: 'asc' },
+        ],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.finca.count({ where }),
+    ]);
+    return {
+      data: farms.map((farm) => this.serializeFarm(farm)),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      },
+    };
   }
 
   async dashboard(actor: FarmActor) {

@@ -31,7 +31,7 @@ describe('FarmsService', () => {
         !candidate.params.has('localidad'),
     );
     expect(request.request.method).toBe('GET');
-    request.flush([]);
+    request.flush({ data: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 } });
   });
 
   it('loads the farm dashboard', () => {

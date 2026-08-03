@@ -17,8 +17,8 @@
       ><small>Estados distintos de cerrado</small>
     </article>
     <article class="metric-card teal">
-      <span>Georreferenciadas</span><strong>{{ farmsWithCoordinates }}</strong
-      ><small>Fincas visibles en el mapa</small>
+      <span>Georreferenciadas (página)</span><strong>{{ farmsWithCoordinates }}</strong
+      ><small>Fincas visibles en el mapa en esta página</small>
     </article>
   </section>
 
@@ -97,7 +97,7 @@
     <div class="section-heading">
       <div>
         <h2>Listado de fincas</h2>
-        <p>{{ farms.length }} resultado(s)</p>
+        <p>{{ pagination.total }} resultado(s)</p>
       </div>
       <button type="button" class="btn-primary" (click)="openFarmModal()">Nueva finca</button>
     </div>
@@ -166,6 +166,25 @@
         </tbody>
       </table>
     </div>
+    <footer class="pagination" *ngIf="pagination.totalPages > 1">
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === 1"
+        (click)="changePage(pagination.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagination.page }} de {{ pagination.totalPages }}</span>
+      <button
+        type="button"
+        class="btn-secondary"
+        [disabled]="pagination.page === pagination.totalPages"
+        (click)="changePage(pagination.page + 1)"
+      >
+        Siguiente
+      </button>
+    </footer>
   </section>
 
   <app-farm-form

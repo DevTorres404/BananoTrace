@@ -181,13 +181,51 @@ export class UsersService {
     return buildTree(null);
   }
 
-  async findAll() {
-    const users = await this.prisma.usuario.findMany({
-      select: publicUserSelect,
-      orderBy: [{ estado: 'desc' }, { apellidos: 'asc' }, { nombres: 'asc' }],
-    });
+  async findAll(query: Record<string, string | undefined>) {
+    const page = Math.max(1, Number.parseInt(query.page ?? '1', 10) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
+    );
+    const filters: Prisma.UsuarioWhereInput[] = [];
+    const search = query.search?.trim();
+    if (search) {
+      filters.push({
+        OR: [
+          { nombres: { contains: search, mode: 'insensitive' } },
+          { apellidos: { contains: search, mode: 'insensitive' } },
+          { correo: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+    if (query.idRol) {
+      filters.push({ idRol: this.parseRoleId(query.idRol) });
+    }
+    if (query.estado === 'true' || query.estado === 'false') {
+      filters.push({ estado: query.estado === 'true' });
+    }
+    const where: Prisma.UsuarioWhereInput = filters.length > 0 ? { AND: filters } : {};
 
-    return users.map((user) => this.serializeUser(user));
+    const [users, total] = await this.prisma.$transaction([
+      this.prisma.usuario.findMany({
+        where,
+        select: publicUserSelect,
+        orderBy: [{ estado: 'desc' }, { apellidos: 'asc' }, { nombres: 'asc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.usuario.count({ where }),
+    ]);
+
+    return {
+      data: users.map((user) => this.serializeUser(user)),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      },
+    };
   }
 
   async findOne(id: string) {
