@@ -1,0 +1,84 @@
+<main class="farms-page consulta-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Consulta pública</p>
+      <h1>Trazabilidad BananoTrace</h1>
+      <p>Ficha pública de origen y estado, generada a partir del código escaneado.</p>
+    </div>
+  </header>
+
+  <section class="panel" *ngIf="estado === 'sin-codigo'">
+    <p class="state">Escaneá un código QR de BananoTrace para ver la ficha de trazabilidad.</p>
+  </section>
+
+  <section class="panel" *ngIf="estado === 'cargando'">
+    <p class="state">Buscando "{{ codigo }}"...</p>
+  </section>
+
+  <section class="panel" *ngIf="estado === 'no-encontrado'">
+    <p class="state">No se encontró información para el código "{{ codigo }}".</p>
+  </section>
+
+  <ng-container *ngIf="estado === 'encontrado' && resultado as r">
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">{{ tipoLabels[r.tipo] }}</p>
+          <h2>{{ r.codigo }}</h2>
+        </div>
+        <span class="status" *ngIf="r.estado">{{ r.estado }}</span>
+      </div>
+      <dl class="data-grid" *ngIf="r.finca">
+        <div>
+          <dt>Finca de origen</dt>
+          <dd>{{ r.finca.nombre }}</dd>
+        </div>
+        <div>
+          <dt>Ubicación</dt>
+          <dd>{{ r.finca.region }}, {{ r.finca.pais }}</dd>
+        </div>
+        <div *ngIf="r.fechaSiembra">
+          <dt>Fecha de siembra</dt>
+          <dd>{{ r.fechaSiembra | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+        </div>
+        <div *ngIf="r.fechaCosecha">
+          <dt>Fecha de cosecha</dt>
+          <dd>{{ r.fechaCosecha | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel" *ngIf="r.timeline.length > 0">
+      <div class="section-heading">
+        <div>
+          <h2>Línea de tiempo</h2>
+          <p>Fases del proceso de trazabilidad</p>
+        </div>
+      </div>
+      <ol class="timeline">
+        <li *ngFor="let item of r.timeline">
+          <span class="timeline-dot"></span>
+          <div>
+            <time *ngIf="item.fecha">{{ item.fecha | date: 'dd/MM/yyyy' : 'UTC' }}</time>
+            <strong>{{ item.fase }}</strong>
+            <small>{{ item.estado }}</small>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="panel">
+      <div class="integrity-banner" [class.integra]="r.integridadBlockchain.integra === true" [class.alterada]="r.integridadBlockchain.integra === false">
+        <ng-container [ngSwitch]="r.integridadBlockchain.verificable">
+          <strong *ngSwitchCase="true">
+            {{ r.integridadBlockchain.integra ? '✅ Evidencia blockchain íntegra' : '❌ Evidencia blockchain alterada' }}
+          </strong>
+          <strong *ngSwitchCase="false">— Sin evidencia blockchain verificable</strong>
+        </ng-container>
+        <span *ngIf="r.integridadBlockchain.verificable">
+          {{ r.integridadBlockchain.bloques }} bloque(s) registrados
+        </span>
+      </div>
+    </section>
+  </ng-container>
+</main>

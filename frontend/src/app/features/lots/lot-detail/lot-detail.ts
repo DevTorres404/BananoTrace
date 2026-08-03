@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth';
 import { QualityForm } from '../../quality/quality-form/quality-form';
 import { LotQualityStatus, QualityService } from '../../quality/quality.service';
 import { EventForm } from '../../traceability/event-form/event-form';
+import { QrResult, QrService, TipoQr } from '../../qr/qr.service';
 import { LotForm } from '../lot-form/lot-form';
 import {
   LOT_STATE_LABELS,
@@ -27,6 +28,7 @@ import {
 export class LotDetail implements OnInit {
   private readonly lotsService = inject(LotsService);
   private readonly qualityService = inject(QualityService);
+  private readonly qrService = inject(QrService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -41,6 +43,9 @@ export class LotDetail implements OnInit {
   isEventFormOpen = false;
   isQualityFormOpen = false;
   qualityStatus: LotQualityStatus | null = null;
+  qrResult: QrResult | null = null;
+  isGeneratingQr = false;
+  qrError = '';
   errorMessage = '';
   readonly stateLabels = LOT_STATE_LABELS;
   readonly roleLabels: Record<number, string> = {
@@ -153,5 +158,31 @@ export class LotDetail implements OnInit {
       this.lot?.flujo?.faseActual?.codigo === 'CALIDAD' &&
       (role === ROLE_IDS.ADMINISTRADOR || role === ROLE_IDS.CALIDAD)
     );
+  }
+
+  generarQr(tipo: TipoQr): void {
+    if (!this.lot) return;
+    this.isGeneratingQr = true;
+    this.qrError = '';
+    this.qrResult = null;
+    this.qrService
+      .generar(this.lot.idLote, tipo)
+      .pipe(
+        finalize(() => {
+          this.isGeneratingQr = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (result) => (this.qrResult = result),
+        error: (error) => {
+          this.qrError = error.error?.message ?? 'No se pudo generar el código QR.';
+        },
+      });
+  }
+
+  closeQr(): void {
+    this.qrResult = null;
+    this.qrError = '';
   }
 }
