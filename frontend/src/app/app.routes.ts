@@ -162,8 +162,8 @@ export const routes: Routes = [
   {
     path: 'consulta',
     loadComponent: () =>
-      import('./shared/feature-placeholder/feature-placeholder').then(
-        (module) => module.FeaturePlaceholder,
+      import('./features/publico/consulta-page/consulta-page').then(
+        (module) => module.ConsultaPage,
       ),
   },
   {
