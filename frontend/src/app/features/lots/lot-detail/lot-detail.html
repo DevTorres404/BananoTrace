@@ -16,12 +16,52 @@
         </p>
       </div>
       <div class="header-actions">
-        <span class="status lot-status">{{ stateLabels[currentLot.estado] }}</span
-        ><button *ngIf="canManage" type="button" class="btn-secondary" (click)="isEditOpen = true">
+        <span class="status lot-status">{{ stateLabels[currentLot.estado] }}</span>
+        <button
+          type="button"
+          class="btn-secondary"
+          [disabled]="isGeneratingQr"
+          (click)="generarQr('corporativo')"
+        >
+          QR corporativo
+        </button>
+        <button
+          type="button"
+          class="btn-secondary"
+          [disabled]="isGeneratingQr"
+          (click)="generarQr('publico')"
+        >
+          QR público
+        </button>
+        <button *ngIf="canManage" type="button" class="btn-secondary" (click)="isEditOpen = true">
           Editar lote
         </button>
       </div>
     </header>
+
+    <p *ngIf="qrError" class="error-banner">
+      {{ qrError }} <button type="button" (click)="closeQr()">Cerrar</button>
+    </p>
+
+    <section class="panel qr-panel" *ngIf="qrResult">
+      <div class="section-heading">
+        <div>
+          <h2>QR {{ qrResult.tipo === 'corporativo' ? 'corporativo' : 'público' }}</h2>
+          <p>{{ qrResult.url }}</p>
+        </div>
+        <button type="button" class="btn-ghost" (click)="closeQr()">Cerrar</button>
+      </div>
+      <div class="qr-preview">
+        <img [src]="qrResult.qrDataUri" [alt]="'Código QR ' + qrResult.tipo" width="220" height="220" />
+        <a
+          class="btn-primary"
+          [href]="qrResult.qrDataUri"
+          [download]="'qr-' + qrResult.codigo + '-' + qrResult.tipo + '.png'"
+        >
+          Descargar PNG
+        </a>
+      </div>
+    </section>
 
     <section class="detail-grid">
       <article class="panel info-panel">

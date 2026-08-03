@@ -1,0 +1,48 @@
+.timeline {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 0.75rem;
+}
+.timeline-dot {
+  width: 11px;
+  height: 11px;
+  margin-top: 0.35rem;
+  border: 3px solid var(--color-surface, #fff);
+  border-radius: 50%;
+  background: var(--color-primary, #16825d);
+  box-shadow: 0 0 0 2px var(--color-primary, #16825d);
+}
+.timeline li div {
+  display: grid;
+  gap: 0.2rem;
+}
+.timeline time,
+.timeline small {
+  color: var(--color-text-secondary, #64756f);
+  font-size: 0.74rem;
+}
+.integrity-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  background: var(--color-surface-strong, #f4f8f6);
+}
+.integrity-banner.integra {
+  color: #106342;
+  background: #def5e9;
+}
+.integrity-banner.alterada {
+  color: #9f2d2d;
+  background: #fff0ef;
+}
