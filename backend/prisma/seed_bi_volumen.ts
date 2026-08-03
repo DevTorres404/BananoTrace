@@ -51,7 +51,6 @@ const PROB_RETRY_CALIDAD = 0.7;
 const PROB_RETRY_CALIDAD_3 = 0.35;
 const PROB_RETRY_EMPAQUE = 0.3;
 const PROB_RETRY_LOGISTICA = 0.3;
-const PROB_RETRY_EMP_FLOW = 0.35;
 const PROB_RETRY_ENVIO_FLOW = 0.4;
 const PROB_ENVIO_EMPACADO = 0.55;
 
@@ -714,6 +713,79 @@ function transicionesDePasos(
   return transiciones;
 }
 
+// ---------------------------------------------------------------------------
+// Cajas y envíos: solo las ejecuciones COMPLETADAS/RECHAZADAS llevan historia
+// (transición + bloque). La ejecución ACTIVA (EN_PROCESO) no lleva transición
+// ni bloque propios: los genera la app cuando avanza la fase.
+// ---------------------------------------------------------------------------
+function ejecucionesDePasos(instancia: InstanciaPlan, pasos: PasoPlan[]): EjecucionPlan[] {
+  return pasos.map(
+    (paso): EjecucionPlan => ({
+      instancia,
+      idFase: paso.idFase,
+      idResponsable: paso.idResponsable,
+      numeroIntento: paso.numeroIntento,
+      estado: paso.estadoFinal,
+      datosAdicionales: paso.datosAdicionales,
+      fechaInicio: paso.fechaInicio,
+      fechaFin: paso.fechaFin,
+      fechaRegistro: paso.fechaInicio,
+    }),
+  );
+}
+
+function transicionesDeEmpaque(
+  rng: () => number,
+  instancia: InstanciaPlan,
+  ejecuciones: EjecucionPlan[],
+): TransicionPlan[] {
+  const crear = (
+    ejecucion: EjecucionPlan,
+    estadoAnterior: EstadoFlujo | null,
+    estadoNuevo: EstadoFlujo,
+    fecha: Date,
+    comentario: string,
+    datos: Prisma.InputJsonValue,
+  ): TransicionPlan => ({
+    instancia,
+    ejecucion,
+    estadoAnterior,
+    estadoNuevo,
+    idUsuario: ejecucion.idResponsable ?? BigInt(1),
+    comentario,
+    datosAdicionales: datos,
+    fechaTransicion: fecha,
+  });
+
+  const transiciones: TransicionPlan[] = [];
+  ejecuciones.forEach((ejecucion, i) => {
+    if (
+      ejecucion.estado === EstadoFlujo.EN_PROCESO ||
+      ejecucion.estado === EstadoFlujo.PENDIENTE
+    ) {
+      return;
+    }
+    const esTerminal = i === ejecuciones.length - 1;
+    const siguiente = ejecuciones[i + 1];
+    transiciones.push(
+      crear(
+        ejecucion,
+        esTerminal ? null : EstadoFlujo.EN_PROCESO,
+        ejecucion.estado,
+        conHoraLaboral(rng, ejecucion.fechaFin ?? siguiente?.fechaInicio ?? ejecucion.fechaInicio),
+        ejecucion.estado === EstadoFlujo.RECHAZADO
+          ? 'Fase rechazada, se reabre un nuevo intento (seed)'
+          : esTerminal
+            ? 'Finalización de flujo (seed)'
+            : 'Avance de flujo (seed)',
+        { motivo: 'Avance de caja o envío', responsable: 'Jefe de logística' },
+      ),
+    );
+  });
+
+  return transiciones;
+}
+
 function estadoInstancia(etapa: Etapa): EstadoFlujo {
   if (etapa === 'EXPORTADO' || etapa === 'CERRADO') return EstadoFlujo.COMPLETADO;
   return EstadoFlujo.EN_PROCESO;
@@ -1236,12 +1308,7 @@ function planearLote(
     const instanciaCaja: InstanciaPlan = {
       codigo: `FLW-BIG-E-${codigoCaja}`,
       idFlujo: ctx.idFlujoEmpaque,
-      estado:
-        etapa === 'CERRADO'
-          ? EstadoFlujo.COMPLETADO
-          : etapa === 'EXPORTADO'
-            ? EstadoFlujo.COMPLETADO
-            : EstadoFlujo.EN_PROCESO,
+      estado: etapa === 'CERRADO' ? EstadoFlujo.COMPLETADO : EstadoFlujo.EN_PROCESO,
       fechaInicio: cronograma.fechaEmpaque!,
       fechaRegistro: cronograma.fechaEmpaque!,
     };
@@ -1251,7 +1318,8 @@ function planearLote(
     const nPasosCaja = etapa === 'CERRADO' ? 4 : etapa === 'EXPORTADO' ? 3 : 1;
     for (let s = 0; s < nPasosCaja; s++) {
       const esUltimo = s === nPasosCaja - 1;
-      const fechaFin = esUltimo ? cronograma.fechaEntrega ?? cronograma.fechaTransito : null;
+      const esTerminal = etapa === 'CERRADO';
+      const fechaFin = esUltimo && esTerminal ? cronograma.fechaEntrega ?? cronograma.fechaTransito : null;
       pasosCaja.push(
         ...intentosFase(rng, {
           idFase:
@@ -1265,19 +1333,24 @@ function planearLote(
           idResponsable: idUsuarioLogistica,
           fechaInicio: cronograma.fechaEmpaque!,
           fechaFin,
-          estadoFinal: esUltimo ? EstadoFlujo.COMPLETADO : EstadoFlujo.COMPLETADO,
-          probRetry: esUltimo && etapa === 'CERRADO' ? 0 : esUltimo ? PROB_RETRY_EMP_FLOW : 0,
+          estadoFinal: esUltimo
+            ? esTerminal
+              ? EstadoFlujo.COMPLETADO
+              : EstadoFlujo.EN_PROCESO
+            : EstadoFlujo.COMPLETADO,
+          probRetry: 0,
           probRetryExtra: 0,
           datos: { actividad: 'Avance de caja', responsable: 'Jefe de logística' },
         }),
       );
     }
 
-    const transicionesCaja = transicionesDePasos(rng, instanciaCaja, pasosCaja);
+    const ejecucionesCaja = ejecucionesDePasos(instanciaCaja, pasosCaja);
+    const transicionesCaja = transicionesDeEmpaque(rng, instanciaCaja, ejecucionesCaja);
     const caja: CajaPlan = {
       unidad: unidadCaja,
       instancia: instanciaCaja,
-      ejecuciones: transicionesCaja.map((t) => t.ejecucion),
+      ejecuciones: ejecucionesCaja,
       transiciones: transicionesCaja,
       empaqueEjecucion: ejecucionEmpaque!,
       empaqueDatos: {
@@ -1320,17 +1393,18 @@ function planearLote(
     const instanciaEnvio: InstanciaPlan = {
       codigo: `FLW-BIG-S-${codigoEnvio}`,
       idFlujo: ctx.idFlujoEnvio,
-      estado: etapa === 'CERRADO' ? EstadoFlujo.COMPLETADO : etapa === 'EXPORTADO' ? EstadoFlujo.COMPLETADO : EstadoFlujo.EN_PROCESO,
+      estado: etapa === 'CERRADO' ? EstadoFlujo.COMPLETADO : EstadoFlujo.EN_PROCESO,
       fechaInicio: cronograma.fechaSalida,
       fechaRegistro: cronograma.fechaSalida,
     };
 
     const estadosEnvio: EstadoEnvio[] = [EstadoEnvio.PLANIFICADO, EstadoEnvio.CARGADO, EstadoEnvio.EN_TRANSITO, EstadoEnvio.ENTREGADO];
     const nPasosEnvio = etapa === 'CERRADO' ? 4 : etapa === 'EXPORTADO' ? 3 : 1;
+    const esEnvioTerminal = etapa === 'CERRADO';
     const pasosEnvio: PasoPlan[] = [];
     for (let s = 0; s < nPasosEnvio; s++) {
       const esUltimo = s === nPasosEnvio - 1;
-      const fechaFin = esUltimo ? cronograma.fechaEntrega ?? cronograma.fechaTransito : null;
+      const fechaFin = esUltimo && esEnvioTerminal ? cronograma.fechaEntrega ?? cronograma.fechaTransito : null;
       pasosEnvio.push(
         ...intentosFase(rng, {
           idFase:
@@ -1344,15 +1418,20 @@ function planearLote(
           idResponsable: idUsuarioLogistica,
           fechaInicio: cronograma.fechaSalida,
           fechaFin,
-          estadoFinal: EstadoFlujo.COMPLETADO,
-          probRetry: esUltimo ? PROB_RETRY_ENVIO_FLOW : 0,
+          estadoFinal: esUltimo
+            ? esEnvioTerminal
+              ? EstadoFlujo.COMPLETADO
+              : EstadoFlujo.EN_PROCESO
+            : EstadoFlujo.COMPLETADO,
+          probRetry: esUltimo && esEnvioTerminal ? PROB_RETRY_ENVIO_FLOW : 0,
           probRetryExtra: 0,
           datos: { actividad: 'Avance de envío', responsable: 'Jefe de logística' },
         }),
       );
     }
 
-    const transicionesEnvio = transicionesDePasos(rng, instanciaEnvio, pasosEnvio);
+    const ejecucionesEnvio = ejecucionesDePasos(instanciaEnvio, pasosEnvio);
+    const transicionesEnvio = transicionesDeEmpaque(rng, instanciaEnvio, ejecucionesEnvio);
     const ejecucionLogistica = plan.ejecuciones.find((e) => e.idFase === ctx.fasesMain.LOGISTICA);
     const fechaEstimadaLlegada =
       etapa === 'CERRADO' && cronograma.fechaEntrega
@@ -1362,7 +1441,7 @@ function planearLote(
     const envio: EnvioPlan = {
       unidad: unidadEnvio,
       instancia: instanciaEnvio,
-      ejecuciones: transicionesEnvio.map((t) => t.ejecucion),
+      ejecuciones: ejecucionesEnvio,
       transiciones: transicionesEnvio,
       logisticaEjecucion: ejecucionLogistica!,
       envioDatos: {

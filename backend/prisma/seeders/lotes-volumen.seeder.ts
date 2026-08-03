@@ -6,6 +6,7 @@ import {
   Prisma,
   PrismaClient,
   ResultadoControl,
+  RolUnidadFlujo,
   TipoUnidadTrazable,
 } from '@prisma/client';
 import { registrarBloque } from '../../src/blockchain/blockchain-chain';
@@ -279,16 +280,19 @@ async function abrirFlujoUnidad(
     primeraFase: FaseSimple | FaseLote;
     fecha: Date;
     datosAdicionales?: Prisma.InputJsonValue;
+    idResponsable?: bigint;
+    estadoInstancia?: EstadoFlujo;
   },
 ): Promise<FlujoUnidadResult> {
   const instancia = await tx.flujoInstancia.create({
     data: {
       idFlujo: params.idFlujo,
       codigo: params.codigoInstancia,
+      estado: params.estadoInstancia ?? EstadoFlujo.PENDIENTE,
       fechaInicio: params.fecha,
       fechaRegistro: params.fecha,
       unidades: {
-        create: { idUnidad: params.idUnidad },
+        create: { idUnidad: params.idUnidad, rol: RolUnidadFlujo.PRINCIPAL },
       },
     },
     select: { idInstancia: true },
@@ -299,6 +303,7 @@ async function abrirFlujoUnidad(
       idFlujo: params.idFlujo,
       idFase: params.primeraFase.idFase,
       estado: EstadoFlujo.EN_PROCESO,
+      idResponsable: params.idResponsable,
       fechaInicio: params.fecha,
       fechaRegistro: params.fecha,
       datosAdicionales: params.datosAdicionales ?? {},
@@ -434,36 +439,16 @@ async function avanzarUnidadFlujo(
 ): Promise<{ nuevaEjecucionId: bigint; codigo: string }> {
   const { idInstancia, faseActualExecId, siguienteFase } = params;
 
-  if (!siguienteFase) {
-    const transicion = await tx.transicionEjecucion.create({
-      data: {
-        idEjecucion: faseActualExecId,
-        idUsuario: params.idUsuario,
-        estadoAnterior: EstadoFlujo.EN_PROCESO,
-        estadoNuevo: EstadoFlujo.COMPLETADO,
-        comentario: 'Finalización de flujo (seed)',
-        fechaTransicion: params.fecha,
-        datosAdicionales: params.datosAdicionales ?? {},
-      },
-    });
-    await registrarBloque(tx, { idInstancia, transicion });
-    await tx.faseEjecucion.update({
-      where: { idEjecucion: faseActualExecId },
-      data: {
-        estado: EstadoFlujo.COMPLETADO,
-        fechaFin: params.fecha,
-      },
-    });
-    return { nuevaEjecucionId: faseActualExecId, codigo: '' };
-  }
-
+  // Cierre de la fase actual: única historia que deja este avance.
   const transicion = await tx.transicionEjecucion.create({
     data: {
       idEjecucion: faseActualExecId,
       idUsuario: params.idUsuario,
       estadoAnterior: EstadoFlujo.EN_PROCESO,
       estadoNuevo: EstadoFlujo.COMPLETADO,
-      comentario: 'Avance de flujo (seed)',
+      comentario: siguienteFase
+        ? 'Avance de flujo (seed)'
+        : 'Finalización de flujo (seed)',
       fechaTransicion: params.fecha,
       datosAdicionales: params.datosAdicionales ?? {},
     },
@@ -476,31 +461,68 @@ async function avanzarUnidadFlujo(
       fechaFin: params.fecha,
     },
   });
+
+  if (!siguienteFase) {
+    return { nuevaEjecucionId: faseActualExecId, codigo: '' };
+  }
+
+  if (params.esTerminal) {
+    // Fase terminal: la ejecución queda COMPLETADO con su transición y bloque,
+    // y la instancia pasa a COMPLETADO (igual que la app al llegar al estado final).
+    const faseTerminal = await tx.faseEjecucion.create({
+      data: {
+        idInstancia,
+        idFlujo: params.idFlujo,
+        idFase: siguienteFase.idFase,
+        estado: EstadoFlujo.COMPLETADO,
+        idResponsable: params.idUsuario,
+        fechaInicio: params.fechaInicio ?? params.fecha,
+        fechaRegistro: params.fechaInicio ?? params.fecha,
+        fechaFin: params.fecha,
+        datosAdicionales: params.datosAdicionales ?? {},
+      },
+    });
+    const transTerminal = await tx.transicionEjecucion.create({
+      data: {
+        idEjecucion: faseTerminal.idEjecucion,
+        idUsuario: params.idUsuario,
+        estadoAnterior: null,
+        estadoNuevo: EstadoFlujo.COMPLETADO,
+        comentario: 'Finalización de flujo (seed)',
+        fechaTransicion: params.fecha,
+        datosAdicionales: params.datosAdicionales ?? {},
+      },
+    });
+    await registrarBloque(tx, { idInstancia, transicion: transTerminal });
+    await tx.flujoInstancia.update({
+      where: { idInstancia },
+      data: { estado: EstadoFlujo.COMPLETADO, fechaFin: params.fecha },
+    });
+    return {
+      nuevaEjecucionId: faseTerminal.idEjecucion,
+      codigo: siguienteFase.codigo,
+    };
+  }
+
+  // Fase siguiente activa: NO lleva transición ni bloque propios; los genera la
+  // app cuando la fase se avanza de verdad.
   const faseNueva = await tx.faseEjecucion.create({
     data: {
       idInstancia,
       idFlujo: params.idFlujo,
       idFase: siguienteFase.idFase,
       estado: EstadoFlujo.EN_PROCESO,
+      idResponsable: params.idUsuario,
       fechaInicio: params.fechaInicio ?? params.fecha,
       fechaRegistro: params.fechaInicio ?? params.fecha,
       datosAdicionales: params.datosAdicionales ?? {},
     },
   });
-  const transInicio = await tx.transicionEjecucion.create({
-    data: {
-      idEjecucion: faseNueva.idEjecucion,
-      idUsuario: params.idUsuario,
-      estadoAnterior: EstadoFlujo.PENDIENTE,
-      estadoNuevo: EstadoFlujo.EN_PROCESO,
-      comentario: 'Inicio de fase (seed)',
-      fechaTransicion: params.fechaInicio ?? params.fecha,
-      datosAdicionales: params.datosAdicionales ?? {},
-    },
-  });
-  await registrarBloque(tx, { idInstancia, transicion: transInicio });
 
-  return { nuevaEjecucionId: faseNueva.idEjecucion, codigo: siguienteFase.codigo };
+  return {
+    nuevaEjecucionId: faseNueva.idEjecucion,
+    codigo: siguienteFase.codigo,
+  };
 }
 
 async function crearDocumentos(
@@ -979,6 +1001,8 @@ async function crearLoteVolumen(
       codigoInstancia: `FLW-${unidadEmpaque.codigo}`,
       primeraFase: ctx.fasesEmpaque[0],
       fecha: cronograma.fechaEmpaque!,
+      idResponsable: idUsuarioLogistica,
+      estadoInstancia: EstadoFlujo.EN_PROCESO,
       datosAdicionales: {
         linea: `Línea ${enteroEntre(rng, 1, 4)}`,
         operador: `Cuadrilla ${enteroEntre(rng, 1, 8)}`,
@@ -1087,6 +1111,8 @@ async function crearLoteVolumen(
     codigoInstancia: `FLW-${unidadEnvio.codigo}`,
     primeraFase: ctx.fasesEnvio[0],
     fecha: cronograma.fechaSalida!,
+    idResponsable: idUsuarioLogistica,
+    estadoInstancia: EstadoFlujo.EN_PROCESO,
     datosAdicionales: {
       terminal: 'Puerto Bolívar',
       contenedor: numeroContenedor,
@@ -1301,58 +1327,20 @@ export async function seedLotesVolumen(
     fases: { select: { idFase: true, codigo: true }, orderBy: { orden: 'asc' } },
   } as const;
 
-  let flujoEmpaque = await prisma.flujo.findFirst({
-    where: { codigo: 'TRAZABILIDAD_BANANO_EMPAQUE' },
+  const flujoEmpaque = await prisma.flujo.findFirst({
+    where: { codigo: 'EMPAQUE_FLUJO', activo: true },
     select: SELECT_FLUJO_FASES,
   });
   if (!flujoEmpaque) {
-    await prisma.flujo.create({
-      data: {
-        codigo: 'TRAZABILIDAD_BANANO_EMPAQUE',
-        version: 1,
-        nombre: 'Flujo de empaque de banano',
-        descripcion: 'Flujo de empaque de banano',
-        fases: {
-          create: [
-            { codigo: 'DISPONIBLE', nombre: 'Disponible', orden: 1 },
-            { codigo: 'ASIGNADO', nombre: 'Asignado', orden: 2 },
-            { codigo: 'EN_TRANSITO', nombre: 'En tránsito', orden: 3 },
-            { codigo: 'ENTREGADO', nombre: 'Entregado', orden: 4 },
-          ],
-        },
-      },
-    });
-    flujoEmpaque = await prisma.flujo.findFirst({
-      where: { codigo: 'TRAZABILIDAD_BANANO_EMPAQUE' },
-      select: SELECT_FLUJO_FASES,
-    });
+    throw new Error('Flujo EMPAQUE_FLUJO no encontrado');
   }
 
-  let flujoEnvio = await prisma.flujo.findFirst({
-    where: { codigo: 'TRAZABILIDAD_BANANO_ENVIO' },
+  const flujoEnvio = await prisma.flujo.findFirst({
+    where: { codigo: 'ENVIO_FLUJO', activo: true },
     select: SELECT_FLUJO_FASES,
   });
   if (!flujoEnvio) {
-    await prisma.flujo.create({
-      data: {
-        codigo: 'TRAZABILIDAD_BANANO_ENVIO',
-        version: 1,
-        nombre: 'Flujo de envío marítimo',
-        descripcion: 'Flujo de envío marítimo',
-        fases: {
-          create: [
-            { codigo: 'PLANIFICADO', nombre: 'Planificado', orden: 1 },
-            { codigo: 'CARGADO', nombre: 'Cargado', orden: 2 },
-            { codigo: 'EN_TRANSITO', nombre: 'En tránsito', orden: 3 },
-            { codigo: 'ENTREGADO', nombre: 'Entregado', orden: 4 },
-          ],
-        },
-      },
-    });
-    flujoEnvio = await prisma.flujo.findFirst({
-      where: { codigo: 'TRAZABILIDAD_BANANO_ENVIO' },
-      select: SELECT_FLUJO_FASES,
-    });
+    throw new Error('Flujo ENVIO_FLUJO no encontrado');
   }
 
   const tiposEventoMap = new Map<string, number>(

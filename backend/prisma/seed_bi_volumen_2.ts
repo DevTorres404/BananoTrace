@@ -494,12 +494,8 @@ function intentosFase(
   return pasos;
 }
 
-function transicionesDePasos(
-  rng: () => number,
-  instancia: InstanciaPlan,
-  pasos: PasoPlan[],
-): TransicionPlan[] {
-  const ejecuciones = pasos.map(
+function ejecucionesDePasos(instancia: InstanciaPlan, pasos: PasoPlan[]): EjecucionPlan[] {
+  return pasos.map(
     (paso): EjecucionPlan => ({
       instancia,
       idFase: paso.idFase,
@@ -512,7 +508,14 @@ function transicionesDePasos(
       fechaRegistro: paso.fechaInicio,
     }),
   );
+}
 
+function transicionesDePasos(
+  rng: () => number,
+  instancia: InstanciaPlan,
+  pasos: PasoPlan[],
+  ejecuciones: EjecucionPlan[] = ejecucionesDePasos(instancia, pasos),
+): TransicionPlan[] {
   const crear = (
     ejecucion: EjecucionPlan,
     estadoAnterior: EstadoFlujo | null,
@@ -531,19 +534,26 @@ function transicionesDePasos(
     fechaTransicion: fecha,
   });
 
+  // La ejecución ACTIVA (EN_PROCESO/PENDIENTE) no lleva transición ni bloque:
+  // los genera la app cuando avanza la fase. Solo la historia completada
+  // (COMPLETADO/RECHAZADO) lleva transiciones y bloques.
   const transiciones: TransicionPlan[] = [];
   pasos.forEach((paso, i) => {
+    const esActiva =
+      paso.estadoFinal === EstadoFlujo.EN_PROCESO || paso.estadoFinal === EstadoFlujo.PENDIENTE;
     if (i === 0) {
-      transiciones.push(
-        crear(
-          ejecuciones[0],
-          null,
-          EstadoFlujo.EN_PROCESO,
-          conHoraLaboral(rng, paso.fechaInicio),
-          'Inicio automático del flujo al crear la unidad (seed)',
-          { motivo: 'Registro inicial', responsable: 'Supervisor agrícola' },
-        ),
-      );
+      if (!esActiva) {
+        transiciones.push(
+          crear(
+            ejecuciones[0],
+            null,
+            EstadoFlujo.EN_PROCESO,
+            conHoraLaboral(rng, paso.fechaInicio),
+            'Inicio automático del flujo al crear la unidad (seed)',
+            { motivo: 'Registro inicial', responsable: 'Supervisor agrícola' },
+          ),
+        );
+      }
     } else {
       const anterior = pasos[i - 1];
       transiciones.push(
@@ -558,16 +568,18 @@ function transicionesDePasos(
           { motivo: 'Avance de flujo', responsable: 'Supervisor agrícola' },
         ),
       );
-      transiciones.push(
-        crear(
-          ejecuciones[i],
-          EstadoFlujo.PENDIENTE,
-          EstadoFlujo.EN_PROCESO,
-          conHoraLaboral(rng, paso.fechaInicio),
-          'Inicio de fase (seed)',
-          { motivo: 'Inicio de fase', responsable: 'Supervisor agrícola' },
-        ),
-      );
+      if (!esActiva) {
+        transiciones.push(
+          crear(
+            ejecuciones[i],
+            EstadoFlujo.PENDIENTE,
+            EstadoFlujo.EN_PROCESO,
+            conHoraLaboral(rng, paso.fechaInicio),
+            'Inicio de fase (seed)',
+            { motivo: 'Inicio de fase', responsable: 'Supervisor agrícola' },
+          ),
+        );
+      }
     }
   });
 
@@ -880,6 +892,7 @@ function planearCajaEnvio(
   const pasosCaja: PasoPlan[] = [];
   for (let s = 0; s < nPasosCaja; s++) {
     const esUltimo = s === nPasosCaja - 1;
+    const esTerminal = nPasosCaja === 4;
     const fechaInicioPaso =
       s === 0
         ? fechaEmpaque
@@ -901,8 +914,8 @@ function planearCajaEnvio(
         idResponsable: idUsuarioLogistica,
         fechaInicio: fechaInicioPaso,
         fechaFin: fechaFinPaso,
-        estadoFinal: EstadoFlujo.COMPLETADO,
-        probRetry: esUltimo ? PROB_RETRY_EMP_FLOW : 0,
+        estadoFinal: esUltimo && !esTerminal ? EstadoFlujo.EN_PROCESO : EstadoFlujo.COMPLETADO,
+        probRetry: esUltimo && esTerminal ? PROB_RETRY_EMP_FLOW : 0,
         probRetryExtra: 0,
         datos: { actividad: 'Avance de caja', responsable: 'Jefe de logística' },
       }),
@@ -916,12 +929,13 @@ function planearCajaEnvio(
     fechaInicio: fechaEmpaque,
     fechaRegistro: fechaEmpaque,
   };
-  const transicionesCaja = transicionesDePasos(rng, instanciaCaja, pasosCaja);
+  const ejecucionesCaja = ejecucionesDePasos(instanciaCaja, pasosCaja);
+  const transicionesCaja = transicionesDePasos(rng, instanciaCaja, pasosCaja, ejecucionesCaja);
 
   const caja: CajaPlan = {
     unidad: { tipo: TipoUnidadTrazable.EMPAQUE, codigo: codigoCaja, fechaRegistro: fechaEmpaque },
     instancia: instanciaCaja,
-    ejecuciones: transicionesCaja.map((t) => t.ejecucion),
+    ejecuciones: ejecucionesCaja,
     transiciones: transicionesCaja,
     idEjecucionEmpaque: lote.idEjecucionFase3,
     idLote: lote.idLote,
@@ -946,6 +960,7 @@ function planearCajaEnvio(
   const pasosEnvio: PasoPlan[] = [];
   for (let s = 0; s < nPasosEnvio; s++) {
     const esUltimo = s === nPasosEnvio - 1;
+    const esTerminal = nPasosEnvio === 4 || estadoEnvio === EstadoEnvio.CANCELADO;
     const fechaInicioPaso =
       s === 0
         ? fechaSalida
@@ -969,8 +984,8 @@ function planearCajaEnvio(
         idResponsable: idUsuarioLogistica,
         fechaInicio: fechaInicioPaso,
         fechaFin: fechaFinPaso,
-        estadoFinal: EstadoFlujo.COMPLETADO,
-        probRetry: esUltimo ? PROB_RETRY_ENVIO_FLOW : 0,
+        estadoFinal: esUltimo && !esTerminal ? EstadoFlujo.EN_PROCESO : EstadoFlujo.COMPLETADO,
+        probRetry: esUltimo && esTerminal ? PROB_RETRY_ENVIO_FLOW : 0,
         probRetryExtra: 0,
         datos: { actividad: 'Avance de envío', responsable: 'Jefe de logística' },
       }),
@@ -984,14 +999,15 @@ function planearCajaEnvio(
     fechaInicio: fechaSalida,
     fechaRegistro: fechaSalida,
   };
-  const transicionesEnvio = transicionesDePasos(rng, instanciaEnvio, pasosEnvio);
+  const ejecucionesEnvio = ejecucionesDePasos(instanciaEnvio, pasosEnvio);
+  const transicionesEnvio = transicionesDePasos(rng, instanciaEnvio, pasosEnvio, ejecucionesEnvio);
 
   const numeroCont = numeroContenedor(rng, anioSalida, usadosContenedores);
 
   const envio: EnvioPlan = {
     unidad: { tipo: TipoUnidadTrazable.ENVIO, codigo: codigoEnvio, fechaRegistro: fechaSalida },
     instancia: instanciaEnvio,
-    ejecuciones: transicionesEnvio.map((t) => t.ejecucion),
+    ejecuciones: ejecucionesEnvio,
     transiciones: transicionesEnvio,
     fase4,
     envioDatos: {
