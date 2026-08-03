@@ -16,6 +16,10 @@ import { seedRolMenus } from './seeders/rol-menus.seeder';
 import { seedFlujos } from './seeders/flujos.seeder';
 import { seedProductores } from './seeders/productores.seeder';
 import { seedFincas } from './seeders/fincas.seeder';
+import { seedProductoresFincasVolumen } from './seeders/productores-fincas-volumen.seeder';
+import { seedUsuariosVolumen } from './seeders/usuarios-volumen.seeder';
+import { seedCertificacionesVolumen } from './seeders/certificaciones-volumen.seeder';
+import { seedLotesVolumen } from './seeders/lotes-volumen.seeder';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
@@ -72,6 +76,12 @@ async function main() {
 
   // 3. Depende de roles + menus
   await seedRolMenus(prisma);
+
+  // 4. Volumen: datos masivos para ejercitar paginación y demostrar M7 (blockchain)
+  const productoresVolumen = await seedProductoresFincasVolumen(prisma);
+  const usuariosVolumen = await seedUsuariosVolumen(prisma, productoresVolumen);
+  await seedCertificacionesVolumen(prisma, productoresVolumen);
+  await seedLotesVolumen(prisma, productoresVolumen, usuariosVolumen);
 
   console.log('\n🌱 Seed finalizado exitosamente.');
 }
