@@ -15,6 +15,7 @@ import {
 } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/domain/authenticated-user';
 import { ROLE_IDS } from '../auth/domain/role.constants';
+import { BlockchainService } from '../blockchain/blockchain.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AdvanceLotDto } from './dto/advance-lot.dto';
 import type { CreateLotDto } from './dto/create-lot.dto';
@@ -57,7 +58,10 @@ type LotActor = Pick<AuthenticatedUser, 'sub' | 'idRol' | 'idProductor'>;
 
 @Injectable()
 export class LotsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly blockchainService: BlockchainService,
+  ) {}
 
   async create(dto: CreateLotDto, actor: LotActor) {
     const idFinca = this.parseId(String(dto.idFinca ?? ''), 'finca');
@@ -162,7 +166,7 @@ export class LotsService {
         },
         select: { idEjecucion: true },
       });
-      await tx.transicionEjecucion.create({
+      const transicion = await tx.transicionEjecucion.create({
         data: {
           idEjecucion: execution.idEjecucion,
           idUsuario,
@@ -170,6 +174,10 @@ export class LotsService {
           estadoNuevo: EstadoFlujo.EN_PROCESO,
           comentario: 'Inicio automático del flujo al crear el lote',
         },
+      });
+      await this.blockchainService.crearBloque(tx, {
+        idInstancia: instance.idInstancia,
+        transicion,
       });
 
       if (fechaSiembra) {
@@ -538,7 +546,7 @@ export class LotsService {
         where: { idEjecucion: current.idEjecucion },
         data: { estado: EstadoFlujo.COMPLETADO, fechaFin: finishedAt },
       });
-      await tx.transicionEjecucion.create({
+      const transicionActual = await tx.transicionEjecucion.create({
         data: {
           idEjecucion: current.idEjecucion,
           idUsuario,
@@ -546,6 +554,10 @@ export class LotsService {
           estadoNuevo: EstadoFlujo.COMPLETADO,
           comentario: comment,
         },
+      });
+      await this.blockchainService.crearBloque(tx, {
+        idInstancia: instanceLink.idInstancia,
+        transicion: transicionActual,
       });
 
       if (next) {
@@ -561,7 +573,7 @@ export class LotsService {
           },
           select: { idEjecucion: true },
         });
-        await tx.transicionEjecucion.create({
+        const transicionSiguiente = await tx.transicionEjecucion.create({
           data: {
             idEjecucion: nextExecution.idEjecucion,
             idUsuario,
@@ -569,6 +581,10 @@ export class LotsService {
             estadoNuevo: EstadoFlujo.EN_PROCESO,
             comentario: `Inicio desde la fase ${current.fase.nombre}`,
           },
+        });
+        await this.blockchainService.crearBloque(tx, {
+          idInstancia: instanceLink.idInstancia,
+          transicion: transicionSiguiente,
         });
         if (next.estadoLoteInicio) {
           await tx.loteProduccion.update({
