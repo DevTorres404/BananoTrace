@@ -292,6 +292,20 @@ td a {
   text-align: center;
   color: var(--color-text-secondary, #65766f);
 }
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  color: var(--color-text-secondary, #65766f);
+  font-size: 0.84rem;
+}
+@media (max-width: 640px) {
+  .pagination {
+    justify-content: space-between;
+  }
+}
 .certifications-panel {
   scroll-margin-top: 1rem;
 }

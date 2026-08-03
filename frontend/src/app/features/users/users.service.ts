@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -34,13 +34,30 @@ export interface UserPayload {
   clave?: string;
 }
 
+export interface UserFilters {
+  search?: string;
+  idRol?: number | string;
+  estado?: '' | 'true' | 'false';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UserPage {
+  data: UserAccount[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/users';
 
-  getUsers(): Observable<UserAccount[]> {
-    return this.http.get<UserAccount[]>(this.apiUrl);
+  getUsers(filters: UserFilters = {}): Observable<UserPage> {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== '') params = params.set(key, String(value));
+    }
+    return this.http.get<UserPage>(this.apiUrl, { params });
   }
 
   getUser(id: string): Observable<UserAccount> {

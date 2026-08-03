@@ -5,7 +5,7 @@ import { finalize } from 'rxjs';
 import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../../../core/services/auth';
 import { ProducerForm } from '../producer-form/producer-form';
-import { Producer, ProducersService } from '../producers.service';
+import { Producer, ProducerFilters, ProducersService } from '../producers.service';
 
 @Component({
   selector: 'app-producers-list',
@@ -20,31 +20,16 @@ export class ProducersList implements OnInit {
   private readonly authService = inject(AuthService);
 
   producers: Producer[] = [];
+  pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
+  filters: ProducerFilters = { search: '', vinculado: '', page: 1, pageSize: 10 };
   isLoading = true;
   deletingId: string | null = null;
   modalProducerId: string | null = null;
   isFormModalOpen = false;
   errorMessage = '';
-  searchTerm = '';
-  accountFilter: '' | 'linked' | 'unlinked' = '';
 
   get isAdmin(): boolean {
     return this.authService.currentUser()?.idRol === ROLE_IDS.ADMINISTRADOR;
-  }
-
-  get visibleProducers(): Producer[] {
-    const search = this.searchTerm.trim().toLowerCase();
-    return this.producers.filter(
-      (producer) =>
-        (!search ||
-          `${producer.nombreRazonSocial} ${producer.identificacion} ${producer.correo ?? ''}`
-            .toLowerCase()
-            .includes(search)) &&
-        (!this.accountFilter ||
-          (this.accountFilter === 'linked'
-            ? producer.usuarios.length > 0
-            : producer.usuarios.length === 0)),
-    );
   }
 
   get linkedProducers(): number {
@@ -63,7 +48,7 @@ export class ProducersList implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.producersService
-      .getProducers()
+      .getProducers(this.filters)
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -71,11 +56,25 @@ export class ProducersList implements OnInit {
         }),
       )
       .subscribe({
-        next: (producers) => (this.producers = producers),
+        next: (page) => {
+          this.producers = page.data;
+          this.pagination = page.pagination;
+        },
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudo cargar la lista de productores.';
         },
       });
+  }
+
+  applyFilters(resetPage = true): void {
+    if (resetPage) this.filters.page = 1;
+    this.loadProducers();
+  }
+
+  changePage(page: number): void {
+    if (page < 1 || page > this.pagination.totalPages) return;
+    this.filters.page = page;
+    this.applyFilters(false);
   }
 
   openCreateModal(): void {
@@ -99,8 +98,8 @@ export class ProducersList implements OnInit {
   }
 
   clearFilters(): void {
-    this.searchTerm = '';
-    this.accountFilter = '';
+    this.filters = { search: '', vinculado: '', page: 1, pageSize: 10 };
+    this.applyFilters(false);
   }
 
   deleteProducer(producer: Producer): void {
@@ -116,9 +115,7 @@ export class ProducersList implements OnInit {
         }),
       )
       .subscribe({
-        next: () => {
-          this.producers = this.producers.filter((p) => p.idProductor !== producer.idProductor);
-        },
+        next: () => this.loadProducers(),
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudo eliminar el productor.';
         },

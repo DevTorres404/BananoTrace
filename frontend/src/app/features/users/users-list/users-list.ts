@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { UserForm } from '../user-form/user-form';
-import { UserAccount, UsersService } from '../users.service';
+import { UserAccount, UserFilters, UserRole, UsersService } from '../users.service';
 
 @Component({
   selector: 'app-users-list',
@@ -17,25 +17,14 @@ export class UsersList implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   users: UserAccount[] = [];
+  roles: UserRole[] = [];
+  pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
+  filters: UserFilters = { search: '', idRol: '', estado: '', page: 1, pageSize: 10 };
   isLoading = true;
   updatingUserId: string | null = null;
   modalUserId: string | null = null;
   isUserModalOpen = false;
   errorMessage = '';
-  searchTerm = '';
-  roleFilter = '';
-  statusFilter: '' | 'active' | 'inactive' = '';
-
-  get visibleUsers(): UserAccount[] {
-    const search = this.searchTerm.trim().toLowerCase();
-    return this.users.filter(
-      (user) =>
-        (!search ||
-          `${user.nombres} ${user.apellidos} ${user.correo}`.toLowerCase().includes(search)) &&
-        (!this.roleFilter || user.rol.nombre === this.roleFilter) &&
-        (!this.statusFilter || user.estado === (this.statusFilter === 'active')),
-    );
-  }
 
   get activeUsers(): number {
     return this.users.filter((user) => user.estado).length;
@@ -45,19 +34,17 @@ export class UsersList implements OnInit {
     return this.users.filter((user) => user.idProductor !== null).length;
   }
 
-  get roleOptions(): string[] {
-    return [...new Set(this.users.map((user) => user.rol.nombre))].sort();
-  }
-
   ngOnInit(): void {
-    this.loadUsers();
+    this.loadInitial();
   }
 
-  loadUsers(): void {
+  loadInitial(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    this.usersService
-      .getUsers()
+    forkJoin({
+      page: this.usersService.getUsers(this.filters),
+      roles: this.usersService.getRoles(),
+    })
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -65,11 +52,44 @@ export class UsersList implements OnInit {
         }),
       )
       .subscribe({
-        next: (users) => (this.users = users),
+        next: ({ page, roles }) => {
+          this.users = page.data;
+          this.pagination = page.pagination;
+          this.roles = roles;
+        },
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudo cargar la lista de usuarios.';
         },
       });
+  }
+
+  applyFilters(resetPage = true): void {
+    if (resetPage) this.filters.page = 1;
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.usersService
+      .getUsers(this.filters)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: (page) => {
+          this.users = page.data;
+          this.pagination = page.pagination;
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message ?? 'No se pudieron aplicar los filtros.';
+        },
+      });
+  }
+
+  changePage(page: number): void {
+    if (page < 1 || page > this.pagination.totalPages) return;
+    this.filters.page = page;
+    this.applyFilters(false);
   }
 
   toggleStatus(user: UserAccount): void {
@@ -113,13 +133,12 @@ export class UsersList implements OnInit {
 
   onUserSaved(): void {
     this.closeUserModal();
-    this.loadUsers();
+    this.loadInitial();
   }
 
   clearFilters(): void {
-    this.searchTerm = '';
-    this.roleFilter = '';
-    this.statusFilter = '';
+    this.filters = { search: '', idRol: '', estado: '', page: 1, pageSize: 10 };
+    this.applyFilters(false);
   }
 
   getRoleClass(roleName: string): string {

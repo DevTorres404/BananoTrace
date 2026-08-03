@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../../../core/services/auth';
 import { Producer, ProducersService } from '../../producers/producers.service';
 import { FarmForm } from '../farm-form/farm-form';
 import { Farm, FarmDashboard, FarmFilters, FarmsService } from '../farms.service';
+
+const PRODUCER_PICKER_PAGE_SIZE = 100;
 
 @Component({
   selector: 'app-farms-page',
@@ -37,7 +39,10 @@ export class FarmsPage implements OnInit {
     localidad: '',
     idProductor: '',
     estado: '',
+    page: 1,
+    pageSize: 10,
   };
+  pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
   isLoading = true;
   busyId: string | null = null;
   errorMessage = '';
@@ -62,7 +67,11 @@ export class FarmsPage implements OnInit {
     forkJoin({
       farms: this.farmsService.getFarms(this.filters),
       dashboard: this.farmsService.getDashboard(),
-      producers: this.isAdmin ? this.producersService.getProducers() : of([] as Producer[]),
+      producers: this.isAdmin
+        ? this.producersService
+            .getProducers({ pageSize: PRODUCER_PICKER_PAGE_SIZE })
+            .pipe(map((page) => page.data))
+        : of([] as Producer[]),
     })
       .pipe(
         finalize(() => {
@@ -72,7 +81,8 @@ export class FarmsPage implements OnInit {
       )
       .subscribe({
         next: ({ farms, dashboard, producers }) => {
-          this.farms = farms;
+          this.farms = farms.data;
+          this.pagination = farms.pagination;
           this.dashboard = dashboard;
           this.producers = producers;
         },
@@ -82,7 +92,8 @@ export class FarmsPage implements OnInit {
       });
   }
 
-  applyFilters(): void {
+  applyFilters(resetPage = true): void {
+    if (resetPage) this.filters.page = 1;
     this.isLoading = true;
     this.errorMessage = '';
     this.farmsService
@@ -94,11 +105,20 @@ export class FarmsPage implements OnInit {
         }),
       )
       .subscribe({
-        next: (farms) => (this.farms = farms),
+        next: (page) => {
+          this.farms = page.data;
+          this.pagination = page.pagination;
+        },
         error: (error) => {
           this.errorMessage = error.error?.message ?? 'No se pudieron aplicar los filtros.';
         },
       });
+  }
+
+  changePage(page: number): void {
+    if (page < 1 || page > this.pagination.totalPages) return;
+    this.filters.page = page;
+    this.applyFilters(false);
   }
 
   clearFilters(): void {
@@ -109,8 +129,10 @@ export class FarmsPage implements OnInit {
       localidad: '',
       idProductor: '',
       estado: '',
+      page: 1,
+      pageSize: 10,
     };
-    this.applyFilters();
+    this.applyFilters(false);
   }
 
   openFarmModal(farm: Farm | null = null): void {

@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, finalize } from 'rxjs';
+import { forkJoin } from 'rxjs';
+import { finalize, map } from 'rxjs/operators';
 import { CertificationForm } from '../certification-form/certification-form';
 import { Certification, Farm, FarmsService } from '../farms.service';
+
+const FARM_PICKER_PAGE_SIZE = 100;
 
 @Component({
   selector: 'app-certifications-page',
@@ -55,7 +58,9 @@ export class CertificationsPage implements OnInit {
     this.errorMessage = '';
     forkJoin({
       certifications: this.farmsService.getCertifications(),
-      farms: this.farmsService.getFarms(),
+      farms: this.farmsService
+        .getFarms({ pageSize: FARM_PICKER_PAGE_SIZE })
+        .pipe(map((page) => page.data)),
     })
       .pipe(
         finalize(() => {

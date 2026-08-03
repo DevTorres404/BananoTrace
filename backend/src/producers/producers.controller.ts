@@ -38,8 +38,11 @@ export class ProducersController {
   }
 
   @Get()
-  findAll(@Req() request: AuthenticatedRequest) {
-    return this.producersService.findAll(request.user);
+  findAll(
+    @Query() query: Record<string, string | undefined>,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.producersService.findAll(query, request.user);
   }
 
   @Get(':id')
