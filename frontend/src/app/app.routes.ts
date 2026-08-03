@@ -145,9 +145,19 @@ export const routes: Routes = [
   {
     path: 'blockchain',
     loadComponent: () =>
-      import('./shared/feature-placeholder/feature-placeholder').then(
-        (module) => module.FeaturePlaceholder,
+      import('./features/blockchain/blockchain-page/blockchain-page').then(
+        (module) => module.BlockchainPage,
       ),
+    canActivate: producerGuards,
+    data: {
+      roles: [
+        ROLE_IDS.ADMINISTRADOR,
+        ROLE_IDS.LOGISTICA,
+        ROLE_IDS.SUPERVISOR_AGRICOLA,
+        ROLE_IDS.GERENTE_PRODUCTOR,
+        ROLE_IDS.CALIDAD,
+      ],
+    },
   },
   {
     path: 'consulta',

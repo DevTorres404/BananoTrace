@@ -1,0 +1,29 @@
+.integrity-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+.integrity-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+.integrity-banner.integra {
+  color: #106342;
+  background: #def5e9;
+}
+.integrity-banner.alterada {
+  color: #9f2d2d;
+  background: #fff0ef;
+}
+.chain-errors {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #9f2d2d;
+  font-size: 0.86rem;
+}
+.chain-errors li {
+  margin-bottom: 0.3rem;
+}

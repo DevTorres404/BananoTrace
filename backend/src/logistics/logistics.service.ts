@@ -15,6 +15,7 @@ import {
 } from '@prisma/client';
 import type { AuthenticatedUser } from '../auth/domain/authenticated-user';
 import { ROLE_IDS } from '../auth/domain/role.constants';
+import { BlockchainService } from '../blockchain/blockchain.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AssignEmpaquesDto } from './dto/assign-empaques.dto';
 import type { AdvanceLogisticsDto } from './dto/advance-logistics.dto';
@@ -43,7 +44,10 @@ type EnvioWithCatalogs = Prisma.EnvioGetPayload<{
 
 @Injectable()
 export class LogisticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly blockchainService: BlockchainService,
+  ) {}
 
   async options(actor: AuthenticatedUser) {
     const lotWhere: Prisma.LoteProduccionWhereInput = {
@@ -714,7 +718,7 @@ export class LogisticsService {
       where: { idEjecucion: current.idEjecucion },
       data: { estado: EstadoFlujo.COMPLETADO, fechaFin: now },
     });
-    await tx.transicionEjecucion.create({
+    const transicionActual = await tx.transicionEjecucion.create({
       data: {
         idEjecucion: current.idEjecucion,
         idUsuario,
@@ -722,6 +726,10 @@ export class LogisticsService {
         estadoNuevo: EstadoFlujo.COMPLETADO,
         comentario: comment?.trim() || null,
       },
+    });
+    await this.blockchainService.crearBloque(tx, {
+      idInstancia: link.idInstancia,
+      transicion: transicionActual,
     });
 
     const next = nextTransition.faseDestino;
@@ -747,7 +755,7 @@ export class LogisticsService {
         fechaFin: isTerminal ? now : null,
       },
     });
-    await tx.transicionEjecucion.create({
+    const transicionSiguiente = await tx.transicionEjecucion.create({
       data: {
         idEjecucion: nextExecution.idEjecucion,
         idUsuario,
@@ -755,6 +763,10 @@ export class LogisticsService {
         estadoNuevo: nextStatus,
         comentario: `Transición desde ${current.fase.nombre}`,
       },
+    });
+    await this.blockchainService.crearBloque(tx, {
+      idInstancia: link.idInstancia,
+      transicion: transicionSiguiente,
     });
     if (isTerminal) {
       await tx.flujoInstancia.update({

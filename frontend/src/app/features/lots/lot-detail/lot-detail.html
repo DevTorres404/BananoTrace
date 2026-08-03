@@ -96,6 +96,14 @@
               {{ currentLot.flujo.definicion.nombre }} · v{{ currentLot.flujo.definicion.version }}
             </p>
           </div>
+          <a
+            *ngIf="currentLot.flujo"
+            class="btn-secondary"
+            [routerLink]="['/blockchain']"
+            [queryParams]="{ instancia: currentLot.flujo.idInstancia }"
+          >
+            Ver cadena
+          </a>
         </div>
         <div *ngIf="currentLot.flujo as flow; else noFlow">
           <div class="current-phase" *ngIf="flow.faseActual as phase">

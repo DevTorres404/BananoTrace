@@ -6,12 +6,14 @@ import {
   ResultadoControl,
 } from '@prisma/client';
 import { ROLE_IDS } from '../auth/domain/role.constants';
+import { BlockchainService } from '../blockchain/blockchain.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { LotsService } from './lots.service';
 
 describe('LotsService', () => {
   let service: LotsService;
   let prisma: any;
+  let blockchainService: { crearBloque: jest.Mock };
 
   const lotRow = {
     idLote: 8n,
@@ -68,7 +70,11 @@ describe('LotsService', () => {
           : (input as (tx: typeof prisma) => Promise<unknown>)(prisma),
       ),
     };
-    service = new LotsService(prisma as PrismaService);
+    blockchainService = { crearBloque: jest.fn().mockResolvedValue(undefined) };
+    service = new LotsService(
+      prisma as PrismaService,
+      blockchainService as unknown as BlockchainService,
+    );
   });
 
   it('returns active varieties from the catalog as lot options', async () => {
@@ -244,6 +250,11 @@ describe('LotsService', () => {
       where: { idLote: 8n },
       data: { estado: EstadoLote.COSECHADO },
     });
+    expect(blockchainService.crearBloque).toHaveBeenCalledTimes(2);
+    expect(blockchainService.crearBloque).toHaveBeenCalledWith(
+      prisma,
+      expect.objectContaining({ idInstancia: 12n }),
+    );
   });
 
   it('blocks the transition to packaging when the latest control was rejected', async () => {
