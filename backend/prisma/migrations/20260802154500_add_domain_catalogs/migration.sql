@@ -1,4 +1,4 @@
-CREATE TABLE "categorias_calidad" (
+CREATE TABLE IF NOT EXISTS "categorias_calidad" (
     "id_categoria_calidad" SMALLSERIAL NOT NULL,
     "codigo" VARCHAR(30) NOT NULL,
     "nombre" VARCHAR(60) NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE "categorias_calidad" (
     CONSTRAINT "categorias_calidad_pkey" PRIMARY KEY ("id_categoria_calidad")
 );
 
-CREATE TABLE "tipos_certificacion" (
+CREATE TABLE IF NOT EXISTS "tipos_certificacion" (
     "id_tipo_certificacion" SMALLSERIAL NOT NULL,
     "codigo" VARCHAR(40) NOT NULL,
     "nombre" VARCHAR(100) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE "tipos_certificacion" (
     CONSTRAINT "tipos_certificacion_pkey" PRIMARY KEY ("id_tipo_certificacion")
 );
 
-CREATE TABLE "entidades_certificadoras" (
+CREATE TABLE IF NOT EXISTS "entidades_certificadoras" (
     "id_entidad_certificadora" SMALLSERIAL NOT NULL,
     "codigo" VARCHAR(50) NOT NULL,
     "nombre" VARCHAR(150) NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE "entidades_certificadoras" (
     CONSTRAINT "entidades_certificadoras_pkey" PRIMARY KEY ("id_entidad_certificadora")
 );
 
-CREATE TABLE "tipos_documento" (
+CREATE TABLE IF NOT EXISTS "tipos_documento" (
     "id_tipo_documento" SMALLSERIAL NOT NULL,
     "codigo" VARCHAR(40) NOT NULL,
     "nombre" VARCHAR(100) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE "tipos_documento" (
     CONSTRAINT "tipos_documento_pkey" PRIMARY KEY ("id_tipo_documento")
 );
 
-CREATE TABLE "navieras" (
+CREATE TABLE IF NOT EXISTS "navieras" (
     "id_naviera" SMALLSERIAL NOT NULL,
     "codigo" VARCHAR(30) NOT NULL,
     "nombre" VARCHAR(120) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE "navieras" (
     CONSTRAINT "navieras_pkey" PRIMARY KEY ("id_naviera")
 );
 
-CREATE TABLE "puertos" (
+CREATE TABLE IF NOT EXISTS "puertos" (
     "id_puerto" SMALLSERIAL NOT NULL,
     "codigo" VARCHAR(20) NOT NULL,
     "nombre" VARCHAR(120) NOT NULL,
@@ -52,12 +52,12 @@ CREATE TABLE "puertos" (
     CONSTRAINT "puertos_pkey" PRIMARY KEY ("id_puerto")
 );
 
-CREATE UNIQUE INDEX "categorias_calidad_codigo_key" ON "categorias_calidad"("codigo");
-CREATE UNIQUE INDEX "tipos_certificacion_codigo_key" ON "tipos_certificacion"("codigo");
-CREATE UNIQUE INDEX "entidades_certificadoras_codigo_key" ON "entidades_certificadoras"("codigo");
-CREATE UNIQUE INDEX "tipos_documento_codigo_key" ON "tipos_documento"("codigo");
-CREATE UNIQUE INDEX "navieras_codigo_key" ON "navieras"("codigo");
-CREATE UNIQUE INDEX "puertos_codigo_key" ON "puertos"("codigo");
+CREATE UNIQUE INDEX IF NOT EXISTS "categorias_calidad_codigo_key" ON "categorias_calidad"("codigo");
+CREATE UNIQUE INDEX IF NOT EXISTS "tipos_certificacion_codigo_key" ON "tipos_certificacion"("codigo");
+CREATE UNIQUE INDEX IF NOT EXISTS "entidades_certificadoras_codigo_key" ON "entidades_certificadoras"("codigo");
+CREATE UNIQUE INDEX IF NOT EXISTS "tipos_documento_codigo_key" ON "tipos_documento"("codigo");
+CREATE UNIQUE INDEX IF NOT EXISTS "navieras_codigo_key" ON "navieras"("codigo");
+CREATE UNIQUE INDEX IF NOT EXISTS "puertos_codigo_key" ON "puertos"("codigo");
 CREATE INDEX "puertos_pais_codigo_idx" ON "puertos"("pais_codigo");
 
 INSERT INTO "categorias_calidad" ("codigo", "nombre", "descripcion") VALUES

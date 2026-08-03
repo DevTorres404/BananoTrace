@@ -162,20 +162,35 @@ export async function seedFincas(prisma: PrismaClient, idProductor: bigint) {
         comentario: 'Inicio automático del flujo de demostración',
       },
     });
-    const sowingType = await prisma.tipoEvento.findUnique({
-      where: { nombre: 'SIEMBRA' },
-    });
-    if (sowingType) {
-      await prisma.eventoTrazabilidad.create({
-        data: {
-          idUnidad: lot.idUnidad,
-          idEjecucion: execution.idEjecucion,
-          idTipoEvento: sowingType.idTipoEvento,
-          idUsuario: user.idUsuario,
-          fechaEvento: new Date('2026-01-15T00:00:00.000Z'),
-          descripcion: 'Registro inicial de siembra del lote de demostración',
-        },
-      });
+    const eventTypes = await prisma.tipoEvento.findMany();
+    const typeMap = Object.fromEntries(eventTypes.map(t => [t.nombre, t.idTipoEvento]));
+    
+    const eventsToCreate = [
+      { type: 'SIEMBRA', offsetDays: 0, desc: 'Registro inicial de siembra del lote de demostración' },
+      { type: 'FERTILIZACION', offsetDays: 30, desc: 'Aplicación de fertilizante orgánico rico en potasio' },
+      { type: 'INSPECCION_CAMPO', offsetDays: 60, desc: 'Control de malezas y estado foliar' },
+      { type: 'COSECHA', offsetDays: 270, desc: 'Corte de racimos con cinta azul' },
+      { type: 'RECEPCION', offsetDays: 271, desc: 'Ingreso a patio de la empacadora' },
+      { type: 'CONTROL_CALIDAD', offsetDays: 271, desc: 'Inspección de grado, largo y daños mecánicos' }
+    ];
+
+    const baseDate = new Date('2026-01-15T00:00:00.000Z');
+    
+    for (const evt of eventsToCreate) {
+      if (typeMap[evt.type]) {
+        const evtDate = new Date(baseDate);
+        evtDate.setDate(evtDate.getDate() + evt.offsetDays);
+        await prisma.eventoTrazabilidad.create({
+          data: {
+            idUnidad: lot.idUnidad,
+            idEjecucion: execution.idEjecucion,
+            idTipoEvento: typeMap[evt.type],
+            idUsuario: user.idUsuario,
+            fechaEvento: evtDate,
+            descripcion: evt.desc,
+          }
+        });
+      }
     }
   }
 

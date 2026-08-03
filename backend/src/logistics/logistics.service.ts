@@ -251,7 +251,9 @@ export class LogisticsService {
       where.estado = query.estado as EstadoEmpaque;
     }
 
-    const [data, total] = await this.prisma.$transaction([
+    const baseWhere = query.idLote ? { idLote: this.parseSafeId(query.idLote) ?? undefined } : {};
+
+    const [data, total, disponibles, asignadas, enTransito, entregadas] = await this.prisma.$transaction([
       this.prisma.empaque.findMany({
         where,
         orderBy: { fechaEmpaque: 'desc' },
@@ -260,10 +262,21 @@ export class LogisticsService {
         include: empaqueInclude,
       }),
       this.prisma.empaque.count({ where }),
+      this.prisma.empaque.count({ where: { ...baseWhere, estado: EstadoEmpaque.DISPONIBLE } }),
+      this.prisma.empaque.count({ where: { ...baseWhere, estado: EstadoEmpaque.ASIGNADO } }),
+      this.prisma.empaque.count({ where: { ...baseWhere, estado: EstadoEmpaque.EN_TRANSITO } }),
+      this.prisma.empaque.count({ where: { ...baseWhere, estado: EstadoEmpaque.ENTREGADO } }),
     ]);
 
     return {
       data: data.map((empaque) => this.serializeEmpaque(empaque)),
+      summary: {
+        total: total, // Unfiltered total would be disponibles + asignadas + enTransito + entregadas + rechazados
+        disponibles,
+        asignadas,
+        enTransito,
+        entregadas,
+      },
       pagination: {
         page,
         pageSize,

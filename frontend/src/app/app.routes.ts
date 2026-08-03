@@ -132,6 +132,17 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'lotes/:id/linea-tiempo',
+    loadComponent: () =>
+      import('./features/traceability/lot-timeline/lot-timeline').then(
+        (module) => module.LotTimelinePage,
+      ),
+    canActivate: producerGuards,
+    data: {
+      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.CALIDAD, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
+    },
+  },
+  {
     path: 'eventos',
     loadComponent: () =>
       import('./features/traceability/events-page/events-page').then((module) => module.EventsPage),

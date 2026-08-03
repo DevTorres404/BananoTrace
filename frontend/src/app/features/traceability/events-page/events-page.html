@@ -71,60 +71,86 @@
     <div class="section-heading">
       <div>
         <h2>Línea de tiempo</h2>
-        <p>{{ pagination.total }} evento(s) encontrado(s)</p>
+        <p>
+          {{
+            activeLotContext
+              ? 'Seguimiento del lote ' + activeLotContext
+              : 'Historial cronológico de actividades registradas'
+          }}
+        </p>
+      </div>
+      <div class="timeline-summary" *ngIf="!isLoading">
+        <span class="timeline-summary-pill">{{ pagination.total }} evento(s)</span>
+        <span class="timeline-summary-pill muted" *ngIf="activeLotContext">
+          Lote {{ activeLotContext }}
+        </span>
       </div>
     </div>
 
     <div *ngIf="isLoading" class="state">Cargando eventos...</div>
-    <div *ngIf="!isLoading && events.length" class="timeline-list">
-      <article *ngFor="let event of events" class="event-row">
-        <div class="event-marker" aria-hidden="true">{{ iconFor(event.tipoEvento.nombre) }}</div>
-        <div class="event-content">
-          <div class="event-heading">
-            <div>
-              <span class="event-type">{{ event.tipoEvento.nombre | titlecase }}</span>
-              <h3>{{ event.unidad.referencia }}</h3>
-            </div>
-            <time>{{ event.fechaEvento | date: 'dd/MM/yyyy HH:mm' }}</time>
+    <div *ngIf="!isLoading && events.length" class="timeline-list" role="list">
+      <section *ngFor="let group of groupedEvents" class="lot-group" role="listitem">
+        <div class="lot-group-header">
+          <div>
+            <h3>{{ group.lotLabel }}</h3>
+            <p>{{ group.events.length }} evento(s) en este lote</p>
           </div>
-          <p>{{ event.descripcion || 'Sin descripción registrada.' }}</p>
-          <div class="event-meta">
-            <span>{{ event.unidad.tipo | titlecase }}</span>
-            <span>{{ event.fase.nombre }}</span>
-            <span>{{ event.usuario }}</span>
-            <span *ngIf="event.ubicacion">{{ event.ubicacion }}</span>
-            <span *ngIf="event.unidad.finca">{{ event.unidad.finca }}</span>
-          </div>
-
-          <dl *ngIf="(event.datosAdicionales | keyvalue).length" class="dynamic-data">
-            <div *ngFor="let item of event.datosAdicionales | keyvalue">
-              <dt>{{ item.key }}</dt>
-              <dd>{{ item.value }}</dd>
-            </div>
-          </dl>
-
-          <div class="documents" *ngIf="event.documentos.length">
-            <a
-              *ngFor="let document of event.documentos"
-              [href]="document.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              >{{ document.tipo }} · {{ document.nombre }}</a
-            >
-          </div>
-          <div class="event-actions">
-            <a *ngIf="event.unidad.idLote" [routerLink]="['/lotes', event.unidad.idLote]"
-              >Ver lote</a
-            >
-            <button *ngIf="canAttach(event)" type="button" (click)="openDocumentModal(event)">
-              Vincular documento
-            </button>
-          </div>
+          <span class="lot-group-badge">{{ group.events[0]?.unidad.tipo | titlecase }}</span>
         </div>
-      </article>
+
+        <div class="lot-group-events">
+          <article *ngFor="let event of group.events" class="event-card">
+            <div class="event-marker" aria-hidden="true">{{ iconFor(event.tipoEvento.nombre) }}</div>
+            <div class="event-content">
+              <div class="event-heading">
+                <div>
+                  <div class="event-pill-row">
+                    <span class="event-type">{{ event.tipoEvento.nombre | titlecase }}</span>
+                    <span class="event-phase">{{ event.fase.nombre }}</span>
+                  </div>
+                  <h4>{{ event.unidad.referencia }}</h4>
+                </div>
+                <time>{{ event.fechaEvento | date: 'dd/MM/yyyy HH:mm' }}</time>
+              </div>
+              <p>{{ event.descripcion || 'Sin descripción registrada.' }}</p>
+              <div class="event-meta">
+                <span>{{ event.unidad.tipo | titlecase }}</span>
+                <span>{{ event.usuario }}</span>
+                <span *ngIf="event.ubicacion">{{ event.ubicacion }}</span>
+                <span *ngIf="event.unidad.finca">{{ event.unidad.finca }}</span>
+              </div>
+
+              <dl *ngIf="(event.datosAdicionales | keyvalue).length" class="dynamic-data">
+                <div *ngFor="let item of event.datosAdicionales | keyvalue">
+                  <dt>{{ item.key }}</dt>
+                  <dd>{{ item.value }}</dd>
+                </div>
+              </dl>
+
+              <div class="documents" *ngIf="event.documentos.length">
+                <a
+                  *ngFor="let document of event.documentos"
+                  [href]="document.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ document.tipo }} · {{ document.nombre }}</a
+                >
+              </div>
+              <div class="event-actions">
+                <a *ngIf="event.unidad.idLote" [routerLink]="['/lotes', event.unidad.idLote]"
+                  >Ver lote</a
+                >
+                <button *ngIf="canAttach(event)" type="button" (click)="openDocumentModal(event)">
+                  Vincular documento
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
     </div>
 
-    <div *ngIf="!isLoading && !events.length && !errorMessage" class="state">
+    <div *ngIf="!isLoading && !events.length && !errorMessage" class="timeline-empty">
       No hay eventos que coincidan con los filtros.
     </div>
 

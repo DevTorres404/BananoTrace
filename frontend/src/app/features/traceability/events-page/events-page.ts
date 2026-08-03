@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../../../core/services/auth';
@@ -28,8 +28,10 @@ export class EventsPage implements OnInit {
   private readonly service = inject(TraceabilityService);
   private readonly auth = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly route = inject(ActivatedRoute);
 
   events: TraceabilityEvent[] = [];
+  groupedEvents: Array<{ lotKey: string; lotLabel: string; events: TraceabilityEvent[] }> = [];
   eventTypes: EventType[] = [];
   documentTypes: DocumentType[] = [];
   users: Array<{ idUsuario: string; nombre: string }> = [];
@@ -38,6 +40,7 @@ export class EventsPage implements OnInit {
   pagination = { page: 1, pageSize: 15, total: 0, totalPages: 1 };
   isLoading = true;
   errorMessage = '';
+  activeLotContext = '';
 
   selectedEvent: TraceabilityEvent | null = null;
   documentModel: CreateDocumentPayload = { nombre: '', tipo: '', url: '' };
@@ -45,6 +48,11 @@ export class EventsPage implements OnInit {
   documentError = '';
 
   ngOnInit(): void {
+    this.activeLotContext = this.resolveLotContext();
+    if (this.activeLotContext) {
+      this.filters.search = this.activeLotContext;
+    }
+
     forkJoin({ options: this.service.getOptions(), page: this.service.getEvents(this.filters) })
       .pipe(finalize(() => this.finishLoading()))
       .subscribe({
@@ -76,6 +84,7 @@ export class EventsPage implements OnInit {
   }
 
   clearFilters(): void {
+    this.activeLotContext = '';
     this.filters = { page: 1, pageSize: 15 };
     this.load(false);
   }
@@ -139,12 +148,39 @@ export class EventsPage implements OnInit {
 
   private applyPage(page: TraceabilityPage): void {
     this.events = page.data;
+    this.groupedEvents = this.groupByLot(this.events);
     this.summary = page.summary;
     this.pagination = page.pagination;
+  }
+
+  private groupByLot(events: TraceabilityEvent[]): Array<{ lotKey: string; lotLabel: string; events: TraceabilityEvent[] }> {
+    const groups = new Map<string, TraceabilityEvent[]>();
+
+    for (const event of events) {
+      const lotKey = event.unidad.idLote ?? event.unidad.referencia;
+      const existing = groups.get(lotKey) ?? [];
+      existing.push(event);
+      groups.set(lotKey, existing);
+    }
+
+    return Array.from(groups.entries())
+      .map(([lotKey, groupedEvents]) => ({
+        lotKey,
+        lotLabel: groupedEvents[0]?.unidad.referencia ?? 'Sin lote',
+        events: groupedEvents.sort((left, right) =>
+          new Date(right.fechaEvento).getTime() - new Date(left.fechaEvento).getTime(),
+        ),
+      }))
+      .sort((left, right) => left.lotLabel.localeCompare(right.lotLabel));
   }
 
   private finishLoading(): void {
     this.isLoading = false;
     this.cdr.detectChanges();
+  }
+
+  private resolveLotContext(): string {
+    const raw = this.route.snapshot.queryParamMap.get('lote') ?? this.route.snapshot.queryParamMap.get('lot');
+    return raw?.trim() ?? '';
   }
 }

@@ -1,0 +1,50 @@
+<main class="farms-page timeline-page">
+  <header class="page-header timeline-hero">
+    <div>
+      <p class="eyebrow">Trazabilidad de lote</p>
+      <h1>Línea de tiempo · {{ lotCode || 'Lote' }}</h1>
+      <p>Seguimiento completo de eventos registrados sobre este lote.</p>
+    </div>
+    <div class="timeline-hero-actions">
+      <div class="timeline-pill">
+        <span>{{ events.length }}</span>
+        <small>Eventos</small>
+      </div>
+      <a class="btn-secondary" [routerLink]="['/lotes', lotId]">Volver al lote</a>
+    </div>
+  </header>
+
+  <p *ngIf="errorMessage" class="error-banner">{{ errorMessage }}</p>
+
+  <section class="panel timeline-panel" aria-live="polite">
+    <div class="section-heading">
+      <div>
+        <h2>Historial del lote</h2>
+        <p>{{ events.length }} evento(s) registrado(s)</p>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="state">Cargando línea de tiempo...</div>
+
+    <ol *ngIf="!isLoading && events.length" class="timeline-compact">
+      <li *ngFor="let event of events" class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-card">
+          <div class="timeline-card-head">
+            <div>
+              <strong>{{ event.tipoEvento.nombre | titlecase }}</strong>
+              <time>{{ event.fechaEvento | date: 'dd/MM/yyyy HH:mm' }}</time>
+            </div>
+            <span class="timeline-chip">{{ event.fase.nombre }}</span>
+          </div>
+          <p>{{ event.descripcion || 'Sin descripción registrada.' }}</p>
+          <small>{{ event.usuario }}<ng-container *ngIf="event.ubicacion"> · {{ event.ubicacion }}</ng-container></small>
+        </div>
+      </li>
+    </ol>
+
+    <div *ngIf="!isLoading && !events.length && !errorMessage" class="state">
+      No hay eventos registrados para este lote.
+    </div>
+  </section>
+</main>
