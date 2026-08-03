@@ -54,9 +54,7 @@ export async function seedUsuarios(
     },
   ];
 
-  const correosCanonicos = usuarios.map((usuario) => usuario.correo);
-
-  const usuariosEliminados = await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     for (const user of usuarios) {
       await tx.usuario.upsert({
         where: { correo: user.correo },
@@ -75,24 +73,9 @@ export async function seedUsuarios(
         },
       });
     }
-
-    const { count } = await tx.usuario.deleteMany({
-      where: { correo: { notIn: correosCanonicos } },
-    });
-
-    const totalUsuarios = await tx.usuario.count();
-    if (totalUsuarios !== usuarios.length) {
-      throw new Error(
-        `El seed esperaba ${usuarios.length} usuarios canónicos y encontró ${totalUsuarios}.`,
-      );
-    }
-
-    return count;
   });
 
-  console.log(
-    `✅ Un usuario canónico por rol; ${usuariosEliminados} cuentas adicionales eliminadas.`,
-  );
+  console.log('✅ Un usuario canónico por rol creado o actualizado.');
   console.log('--- Credenciales de prueba (contraseña: admin123) ---');
   usuarios.forEach((user) =>
     console.log(`   ${user.correo} → Rol ID ${user.idRol}`),
