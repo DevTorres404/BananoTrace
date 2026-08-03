@@ -6,21 +6,28 @@ import { UsersList } from './users-list';
 describe('UsersList', () => {
   let fixture: ComponentFixture<UsersList>;
   let component: UsersList;
+  let usersService: { getUsers: ReturnType<typeof vi.fn>; getRoles: ReturnType<typeof vi.fn> };
+
+  const emptyPage = { data: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 1 } };
 
   beforeEach(async () => {
+    usersService = {
+      getUsers: vi.fn().mockReturnValue(of(emptyPage)),
+      getRoles: vi.fn().mockReturnValue(of([])),
+    };
     await TestBed.configureTestingModule({
       imports: [UsersList],
-      providers: [
-        {
-          provide: UsersService,
-          useValue: { getUsers: vi.fn().mockReturnValue(of([])), setStatus: vi.fn() },
-        },
-      ],
+      providers: [{ provide: UsersService, useValue: usersService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(UsersList);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('loads the first page of users and the role catalog on init', () => {
+    expect(usersService.getUsers).toHaveBeenCalledWith(component.filters);
+    expect(usersService.getRoles).toHaveBeenCalledTimes(1);
   });
 
   it('opens creation inside the modal without changing route', () => {
@@ -37,7 +44,30 @@ describe('UsersList', () => {
     expect(component.modalUserId).toBe('42');
   });
 
-  it('filters users by text, role and status', () => {
+  it('resets to page 1 and re-requests the server when filters change', () => {
+    component.filters.page = 3;
+    component.filters.search = 'ana';
+
+    component.applyFilters();
+
+    expect(component.filters.page).toBe(1);
+    expect(usersService.getUsers).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: 'ana', page: 1 }),
+    );
+  });
+
+  it('does not reset the page when navigating with changePage', () => {
+    component.pagination = { page: 1, pageSize: 10, total: 30, totalPages: 3 };
+
+    component.changePage(2);
+
+    expect(component.filters.page).toBe(2);
+    expect(usersService.getUsers).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2 }),
+    );
+  });
+
+  it('computes active and linked counters from the currently loaded page', () => {
     component.users = [
       {
         idUsuario: '1',
@@ -65,11 +95,6 @@ describe('UsersList', () => {
       },
     ];
 
-    component.searchTerm = 'ana';
-    component.roleFilter = 'SUPERVISOR_AGRICOLA';
-    component.statusFilter = 'active';
-
-    expect(component.visibleUsers.map((user) => user.idUsuario)).toEqual(['1']);
     expect(component.activeUsers).toBe(1);
     expect(component.linkedUsers).toBe(1);
   });

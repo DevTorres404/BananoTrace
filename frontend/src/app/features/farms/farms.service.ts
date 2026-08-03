@@ -47,6 +47,13 @@ export interface FarmFilters {
   localidad?: string;
   idProductor?: string;
   estado?: '' | 'true' | 'false';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface FarmPage {
+  data: Farm[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
 export interface FarmDashboard {
@@ -106,12 +113,12 @@ export class FarmsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/farms';
 
-  getFarms(filters: FarmFilters = {}): Observable<Farm[]> {
+  getFarms(filters: FarmFilters = {}): Observable<FarmPage> {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(filters)) {
-      if (value !== undefined && value !== '') params = params.set(key, value);
+      if (value !== undefined && value !== '') params = params.set(key, String(value));
     }
-    return this.http.get<Farm[]>(this.apiUrl, { params });
+    return this.http.get<FarmPage>(this.apiUrl, { params });
   }
 
   getFarm(id: string): Observable<Farm> {

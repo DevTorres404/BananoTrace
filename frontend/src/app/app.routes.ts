@@ -15,17 +15,15 @@ export const routes: Routes = [
     canActivate: [guestGuard],
   },
   {
+    // Angular no permite combinar `redirectTo` con `canActivate` (los redirects ocurren
+    // antes que los guards). La ruta destino `usuarios` ya aplica el mismo guard de rol.
     path: 'usuarios/crear',
     redirectTo: 'usuarios',
     pathMatch: 'full',
-    canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'usuarios/:id/editar',
     redirectTo: 'usuarios',
-    canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR] },
   },
   {
     path: 'usuarios',

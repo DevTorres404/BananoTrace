@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -36,13 +36,29 @@ export interface ProducerPayload {
   idUsuarios?: string[];
 }
 
+export interface ProducerFilters {
+  search?: string;
+  vinculado?: '' | 'true' | 'false';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ProducerPage {
+  data: Producer[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProducersService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/producers';
 
-  getProducers(): Observable<Producer[]> {
-    return this.http.get<Producer[]>(this.apiUrl);
+  getProducers(filters: ProducerFilters = {}): Observable<ProducerPage> {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== '') params = params.set(key, String(value));
+    }
+    return this.http.get<ProducerPage>(this.apiUrl, { params });
   }
 
   getProducer(id: string): Observable<Producer> {

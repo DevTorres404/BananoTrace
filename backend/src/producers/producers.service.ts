@@ -111,15 +111,50 @@ export class ProducersService {
     }));
   }
 
-  async findAll(actor: ProducerActor) {
-    const where = this.buildScope(actor);
-    const producers = await this.prisma.productor.findMany({
-      where,
-      select: producerSelect,
-      orderBy: { nombreRazonSocial: 'asc' },
-    });
+  async findAll(query: Record<string, string | undefined>, actor: ProducerActor) {
+    const page = Math.max(1, Number.parseInt(query.page ?? '1', 10) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
+    );
+    const filters: Prisma.ProductorWhereInput[] = [this.buildScope(actor)];
+    const search = query.search?.trim();
+    if (search) {
+      filters.push({
+        OR: [
+          { nombreRazonSocial: { contains: search, mode: 'insensitive' } },
+          { identificacion: { contains: search, mode: 'insensitive' } },
+          { correo: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+    if (query.vinculado === 'true') {
+      filters.push({ usuarios: { some: {} } });
+    } else if (query.vinculado === 'false') {
+      filters.push({ usuarios: { none: {} } });
+    }
+    const where: Prisma.ProductorWhereInput = { AND: filters };
 
-    return producers.map((producer) => this.serialize(producer));
+    const [producers, total] = await this.prisma.$transaction([
+      this.prisma.productor.findMany({
+        where,
+        select: producerSelect,
+        orderBy: { nombreRazonSocial: 'asc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.productor.count({ where }),
+    ]);
+
+    return {
+      data: producers.map((producer) => this.serialize(producer)),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      },
+    };
   }
 
   async findOne(id: string, actor: ProducerActor) {

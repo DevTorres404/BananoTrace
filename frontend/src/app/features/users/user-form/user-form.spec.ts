@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { ProducersService } from '../../producers/producers.service';
 import { UserAccount, UsersService } from '../users.service';
 import { UserForm } from './user-form';
 
@@ -40,7 +41,17 @@ describe('UserForm modal', () => {
 
     await TestBed.configureTestingModule({
       imports: [UserForm],
-      providers: [{ provide: UsersService, useValue: usersService }],
+      providers: [
+        { provide: UsersService, useValue: usersService },
+        {
+          provide: ProducersService,
+          useValue: {
+            getProducers: vi.fn().mockReturnValue(
+              of({ data: [], pagination: { page: 1, pageSize: 100, total: 0, totalPages: 1 } }),
+            ),
+          },
+        },
+      ],
     }).compileComponents();
   });
 

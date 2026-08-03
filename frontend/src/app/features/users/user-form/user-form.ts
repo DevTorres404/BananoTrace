@@ -14,9 +14,11 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 import { UserAccount, UserPayload, UserRole, UsersService } from '../users.service';
 import { ProducersService, Producer } from '../../producers/producers.service';
+
+const PRODUCER_PICKER_PAGE_SIZE = 100;
 
 @Component({
   selector: 'app-user-form',
@@ -119,7 +121,9 @@ export class UserForm implements OnInit, OnDestroy {
 
     forkJoin({
       roles: this.usersService.getRoles(),
-      producers: this.producersService.getProducers(),
+      producers: this.producersService
+        .getProducers({ pageSize: PRODUCER_PICKER_PAGE_SIZE })
+        .pipe(map((page) => page.data)),
       user: userRequest,
     })
       .pipe(
