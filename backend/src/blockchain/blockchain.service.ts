@@ -160,4 +160,29 @@ export class BlockchainService {
       estadoConfirmacion: bloque.estadoConfirmacion,
     };
   }
+
+  async listarInstanciasRecientes(limit = 20) {
+    const instancias = await this.prisma.flujoInstancia.findMany({
+      where: {
+        registrosBlockchain: {
+          some: {},
+        },
+      },
+      include: {
+        flujo: {
+          select: { nombre: true },
+        },
+      },
+      orderBy: { fechaRegistro: 'desc' },
+      take: limit,
+    });
+    return instancias.map((i) => ({
+      idInstancia: i.idInstancia.toString(),
+      codigo: i.codigo,
+      estado: i.estado,
+      flujo: i.flujo.nombre,
+      fechaInicio: i.fechaInicio,
+      fechaRegistro: i.fechaRegistro,
+    }));
+  }
 }

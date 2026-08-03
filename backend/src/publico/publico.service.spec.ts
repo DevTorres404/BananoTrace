@@ -44,7 +44,27 @@ describe('PublicoService', () => {
           estado: 'COSECHADO',
           fechaSiembra: new Date('2026-01-15T00:00:00.000Z'),
           fechaCosecha: new Date('2026-03-01T00:00:00.000Z'),
-          finca: { nombre: 'Finca Global', pais: 'Ecuador', region: 'El Oro' },
+          variedadCat: { nombre: 'Cavendish', descripcion: 'Banano de exportación' },
+          empaques: [],
+          finca: {
+            nombre: 'Finca Global',
+            pais: 'Ecuador',
+            region: 'El Oro',
+            localidad: 'Machala',
+            areaHectareas: 125.5,
+            productor: {
+              nombreRazonSocial: 'AgroGlobal S.A.',
+              identificacion: '0991234567001',
+            },
+            certificaciones: [
+              {
+                numeroCertificado: 'GAP-2025-001',
+                fechaVencimiento: new Date('2027-01-01T00:00:00.000Z'),
+                tipoCertificacion: { nombre: 'GlobalG.A.P.' },
+                entidadCertificadora: { nombre: 'Certificadora del Sur' },
+              },
+            ],
+          },
         },
         empaque: null,
         envio: null,
@@ -73,9 +93,37 @@ describe('PublicoService', () => {
         tipo: 'LOTE',
         codigo: 'BAN-2026-001',
         estado: 'COSECHADO',
-        finca: { nombre: 'Finca Global', pais: 'Ecuador', region: 'El Oro' },
+        finca: {
+          nombre: 'Finca Global',
+          pais: 'Ecuador',
+          region: 'El Oro',
+          localidad: 'Machala',
+          areaHectareas: '125.5',
+        },
+        producto: { variedad: 'Cavendish', descripcion: 'Banano de exportación' },
+        productor: {
+          nombreRazonSocial: 'AgroGlobal S.A.',
+          identificacion: '0991234567001',
+        },
+        pesoNetoKg: null,
         fechaSiembra: new Date('2026-01-15T00:00:00.000Z'),
         fechaCosecha: new Date('2026-03-01T00:00:00.000Z'),
+        fechas: {
+          siembra: new Date('2026-01-15T00:00:00.000Z'),
+          cosecha: new Date('2026-03-01T00:00:00.000Z'),
+          empaque: null,
+          salida: null,
+          llegadaEstimada: null,
+        },
+        certificaciones: [
+          {
+            tipo: 'GlobalG.A.P.',
+            entidad: 'Certificadora del Sur',
+            numero: 'GAP-2025-001',
+            fechaVencimiento: new Date('2027-01-01T00:00:00.000Z'),
+          },
+        ],
+        envio: null,
         timeline: [
           { fase: 'Producción', fecha: new Date('2026-01-15T00:00:00.000Z'), estado: 'COMPLETADO' },
           { fase: 'Control de calidad', fecha: new Date('2026-03-01T00:00:00.000Z'), estado: 'EN_PROCESO' },
@@ -91,7 +139,12 @@ describe('PublicoService', () => {
         tipo: 'EMPAQUE',
         codigo: 'QR-CAJA-001',
         lote: null,
-        empaque: { estado: 'DISPONIBLE', fechaEmpaque: new Date() },
+        empaque: {
+          estado: 'DISPONIBLE',
+          fechaEmpaque: new Date(),
+          pesoNetoKg: 22.5,
+          enviosEmpaque: [],
+        },
         envio: null,
         instancias: [],
       });
@@ -104,6 +157,64 @@ describe('PublicoService', () => {
         bloques: 0,
       });
       expect(blockchainService.verificarCadenaLigera).not.toHaveBeenCalled();
+      expect(result.producto).toEqual({ variedad: null, descripcion: null });
+      expect(result.pesoNetoKg).toBe('22.5');
+      expect(result.fechas).toEqual({
+        siembra: null,
+        cosecha: null,
+        empaque: result.fechas.empaque,
+        salida: null,
+        llegadaEstimada: null,
+      });
+      expect(result.certificaciones).toEqual([]);
+      expect(result.envio).toBeNull();
+    });
+
+    it('resolves shipment and cold-chain data for a box linked to an envio', async () => {
+      prisma.unidadTrazable.findFirst.mockResolvedValue({
+        tipo: 'EMPAQUE',
+        codigo: 'CAJA-XYZ',
+        lote: null,
+        empaque: {
+          estado: 'EN_TRANSITO',
+          fechaEmpaque: new Date('2026-03-05T00:00:00.000Z'),
+          pesoNetoKg: 22.5,
+          enviosEmpaque: [
+            {
+              envio: {
+                estado: 'EN_TRANSITO',
+                fechaSalida: new Date('2026-03-08T00:00:00.000Z'),
+                fechaEstimadaLlegada: new Date('2026-03-20T00:00:00.000Z'),
+                temperaturaSalida: 13.5,
+                naviera: { nombre: 'Maersk' },
+                puertoOrigen: { nombre: 'Puerto de Guayaquil' },
+                puertoDestino: { nombre: 'Puerto de Rotterdam' },
+              },
+            },
+          ],
+        },
+        envio: null,
+        instancias: [],
+      });
+
+      const result = await service.consultarPorCodigo('CAJA-XYZ');
+
+      expect(result.fechas).toEqual({
+        siembra: null,
+        cosecha: null,
+        empaque: new Date('2026-03-05T00:00:00.000Z'),
+        salida: new Date('2026-03-08T00:00:00.000Z'),
+        llegadaEstimada: new Date('2026-03-20T00:00:00.000Z'),
+      });
+      expect(result.producto).toEqual({ variedad: null, descripcion: null });
+      expect(result.pesoNetoKg).toBe('22.5');
+      expect(result.envio).toEqual({
+        temperaturaSalida: '13.5',
+        estado: 'EN_TRANSITO',
+        naviera: 'Maersk',
+        puertoOrigen: 'Puerto de Guayaquil',
+        puertoDestino: 'Puerto de Rotterdam',
+      });
     });
   });
 

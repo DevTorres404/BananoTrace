@@ -30,6 +30,10 @@
       </div>
     </div>
     <form class="lot-filters" (ngSubmit)="applyFilters()">
+      <label class="search-label" style="flex: 1 1 100%;">
+        <span style="display:none">Buscar</span>
+        <input name="q" [(ngModel)]="filters.q" type="search" placeholder="Buscar por código de lote o finca..." class="search-input" />
+      </label>
       <label
         ><span>Finca</span
         ><select name="finca" [(ngModel)]="filters.idFinca">
@@ -63,7 +67,7 @@
     {{ errorMessage }} <button type="button" (click)="loadInitial()">Reintentar</button>
   </p>
 
-  <section class="panel">
+  <section class="panel" style="position: relative; min-height: 200px;">
     <div class="section-heading">
       <div>
         <h2>Listado de lotes</h2>
@@ -73,8 +77,11 @@
         Nuevo lote
       </button>
     </div>
-    <div *ngIf="isLoading" class="state">Cargando lotes...</div>
-    <div *ngIf="!isLoading" class="table-scroll">
+    <div *ngIf="isLoading" class="loading-state" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--color-glass); z-index: 10;">
+      <div class="spinner"></div>
+      <p>Cargando lotes...</p>
+    </div>
+    <div class="table-scroll">
       <table>
         <thead>
           <tr>

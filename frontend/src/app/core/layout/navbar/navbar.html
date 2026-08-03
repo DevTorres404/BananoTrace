@@ -48,36 +48,40 @@
   </div>
 
   <nav class="sidebar-navigation" aria-label="Navegación principal">
-    <span *ngIf="isLoading" class="nav-loading">Cargando navegación...</span>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+    </div>
 
     <ng-container
       *ngTemplateOutlet="navigationTree; context: { $implicit: items, depth: 0 }"
     ></ng-container>
   </nav>
 
-  <div class="sidebar-footer">
-    <button type="button" class="theme-button" (click)="toggleTheme()">
-      <span class="theme-icon" aria-hidden="true">{{ theme.theme() === 'dark' ? '☀' : '☾' }}</span>
-      <span>
-        <strong>{{ theme.theme() === 'dark' ? 'Modo claro' : 'Modo oscuro' }}</strong>
-        <small>Cambiar apariencia</small>
-      </span>
-    </button>
+  </aside>
 
-    <div class="session">
-      <span class="avatar" aria-hidden="true">{{
-        auth.currentUser()?.email?.charAt(0)?.toUpperCase()
-      }}</span>
-      <div class="user-copy">
-        <strong>{{ auth.currentUser()?.email }}</strong>
-        <span>{{ auth.currentUser()?.rol?.replaceAll('_', ' ') }}</span>
-      </div>
-      <button type="button" class="logout-button" aria-label="Cerrar sesión" (click)="logout()">
-        Salir
-      </button>
+<header class="desktop-topbar">
+  <button
+    type="button"
+    class="icon-button topbar-theme"
+    [attr.aria-label]="theme.theme() === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'"
+    (click)="toggleTheme()"
+  >
+    {{ theme.theme() === 'dark' ? '☀' : '☾' }}
+  </button>
+
+  <div class="topbar-session">
+    <span class="avatar-small" aria-hidden="true">{{
+      auth.currentUser()?.email?.charAt(0)?.toUpperCase()
+    }}</span>
+    <div class="user-copy">
+      <strong>{{ auth.currentUser()?.email }}</strong>
     </div>
+    <button type="button" class="logout-button" aria-label="Cerrar sesión" (click)="logout()">
+      Salir
+    </button>
   </div>
-</aside>
+</header>
+
 
 <ng-template #navigationTree let-nodes let-depth="depth">
   <ul class="nav-list" [class.nested]="depth > 0">

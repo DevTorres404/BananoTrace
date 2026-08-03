@@ -41,7 +41,7 @@ export interface FarmPayload {
 }
 
 export interface FarmFilters {
-  search?: string;
+  q?: string;
   pais?: string;
   region?: string;
   localidad?: string;
@@ -94,6 +94,12 @@ export interface CatalogOption {
   nombre: string;
 }
 
+export interface CertificationPage {
+  data: Certification[];
+  summary: { total: number; validCount: number; expiredCount: number };
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
 export interface CertificationOptions {
   types: Array<CatalogOption & { idTipoCertificacion: number }>;
   issuers: Array<CatalogOption & { idEntidadCertificadora: number; alcance: string | null }>;
@@ -141,9 +147,16 @@ export class FarmsService {
     return this.http.delete<Farm>(`${this.apiUrl}/${id}`);
   }
 
-  getCertifications(farmId?: string): Observable<Certification[]> {
-    const params = farmId ? new HttpParams().set('farmId', farmId) : undefined;
-    return this.http.get<Certification[]>(`${this.apiUrl}/certifications`, { params });
+  getCertifications(
+    filters: { farmId?: string; page?: number; pageSize?: number; status?: string; q?: string } = {},
+  ): Observable<CertificationPage> {
+    let params = new HttpParams();
+    if (filters.farmId) params = params.set('farmId', filters.farmId);
+    if (filters.page) params = params.set('page', String(filters.page));
+    if (filters.pageSize) params = params.set('pageSize', String(filters.pageSize));
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.q) params = params.set('q', filters.q);
+    return this.http.get<CertificationPage>(`${this.apiUrl}/certifications`, { params });
   }
 
   getCertificationOptions(): Observable<CertificationOptions> {

@@ -94,7 +94,7 @@ export interface EmpaquePage extends Paginated<Empaque> {
 }
 
 export interface EnvioFilters {
-  search?: string;
+  q?: string;
   estado?: EstadoEnvio | '';
   page?: number;
   pageSize?: number;
@@ -144,9 +144,9 @@ export class LogisticsService {
 
   getEnvios(filters: EnvioFilters = {}): Observable<EnvioPage> {
     let params = new HttpParams();
-    if (filters.search?.trim()) params = params.set('search', filters.search.trim());
+    if (filters.q?.trim()) params = params.set('q', filters.q.trim());
     if (filters.estado) params = params.set('estado', filters.estado);
-    if (filters.page) params = params.set('page', filters.page);
+    if (filters.page) params = params.set('page', filters.page.toString());
     if (filters.pageSize) params = params.set('pageSize', filters.pageSize);
     return this.http.get<EnvioPage>('/api/logistics/envios', { params });
   }

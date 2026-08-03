@@ -19,7 +19,7 @@ export class UsersList implements OnInit {
   users: UserAccount[] = [];
   roles: UserRole[] = [];
   pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
-  filters: UserFilters = { search: '', idRol: '', estado: '', page: 1, pageSize: 10 };
+  filters: UserFilters = { q: '', idRol: '', estado: '', page: 1, pageSize: 10 };
   isLoading = true;
   updatingUserId: string | null = null;
   modalUserId: string | null = null;
@@ -137,8 +137,8 @@ export class UsersList implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters = { search: '', idRol: '', estado: '', page: 1, pageSize: 10 };
-    this.applyFilters(false);
+    this.filters = { q: '', idRol: '', estado: '', page: 1, pageSize: 10 };
+    this.applyFilters(true);
   }
 
   getRoleClass(roleName: string): string {

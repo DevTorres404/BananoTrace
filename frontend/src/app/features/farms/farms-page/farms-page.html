@@ -32,10 +32,10 @@
       </div>
     </div>
     <form class="filters" (ngSubmit)="applyFilters()">
-      <label class="wide"
-        ><span>Búsqueda</span
-        ><input name="search" [(ngModel)]="filters.search" placeholder="Código, finca o productor"
-      /></label>
+      <label class="search-label" style="flex: 1 1 200px;">
+        <span>Búsqueda</span>
+        <input name="q" [(ngModel)]="filters.q" type="search" class="search-input" placeholder="Código, finca o productor" />
+      </label>
       <label><span>País</span><input name="pais" [(ngModel)]="filters.pais" /></label>
       <label
         ><span>Región / provincia / estado</span><input name="region" [(ngModel)]="filters.region"
@@ -80,7 +80,10 @@
       </div>
       <button type="button" class="btn-primary" (click)="openFarmModal()">Nueva finca</button>
     </div>
-    <div *ngIf="isLoading" class="state">Cargando fincas...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando fincas...</p>
+    </div>
     <div *ngIf="!isLoading" class="table-scroll">
       <table>
         <thead>

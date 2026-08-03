@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -15,14 +15,15 @@ import { finalize } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="page-container">
-      <header class="page-header">
-        <button class="btn-back" (click)="goBack()">Volver</button>
-        <h1 class="page-title">Planificar Nuevo Envío</h1>
-      </header>
+    <div class="modal-overlay" (click)="onCancel()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Planificar Nuevo Envío</h2>
+          <button class="btn-close" (click)="onCancel()" aria-label="Cerrar">×</button>
+        </header>
 
-      <div class="form-card">
-        <form (ngSubmit)="onSubmit()" #form="ngForm">
+        <div class="modal-body">
+          <form (ngSubmit)="onSubmit()" #form="ngForm">
           <div class="form-grid">
             <div class="form-group">
               <label>Puerto Origen *</label>
@@ -100,48 +101,58 @@ import { finalize } from 'rxjs/operators';
           <div class="error-msg" *ngIf="errorMessage">{{ errorMessage }}</div>
 
           <div class="form-actions">
-            <button type="button" class="btn btn-secondary" (click)="goBack()">Cancelar</button>
+            <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancelar</button>
             <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">
               {{ saving ? 'Guardando...' : 'Crear Envío' }}
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   `,
   styles: [
     `
-      .page-container {
-        padding: 24px;
-        max-width: 800px;
-        margin: 0 auto;
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 20px;
       }
-      .page-header {
-        margin-bottom: 24px;
+      .modal-container {
+        background: var(--color-surface);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
-      .btn-back {
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--color-text-primary);
+      }
+      .btn-close {
         background: none;
         border: none;
-        color: var(--color-primary);
+        font-size: 1.5rem;
         cursor: pointer;
-        padding: 0;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
+        color: var(--color-text-secondary);
       }
-      .page-title {
-        margin: 0;
-        font-size: 1.8rem;
-        color: var(--color-text-primary);
-        font-weight: 700;
-      }
-
-      .form-card {
-        background: var(--color-surface);
-        color: var(--color-text-primary);
-        border: 1px solid var(--color-border);
+      .modal-body {
         padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px var(--color-shadow);
       }
       .form-grid {
         display: grid;
@@ -208,6 +219,8 @@ export class EnvioForm implements OnInit {
   private router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
+  @Output() cancel = new EventEmitter<void>();
+
   model: Partial<CreateEnvioPayload> = { puertoOrigen: '', puertoDestino: '' };
   saving = false;
   errorMessage = '';
@@ -237,8 +250,8 @@ export class EnvioForm implements OnInit {
       });
   }
 
-  goBack() {
-    this.router.navigate(['/envios']);
+  onCancel() {
+    this.cancel.emit();
   }
 
   onSubmit() {

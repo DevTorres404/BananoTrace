@@ -46,13 +46,13 @@ describe('UsersList', () => {
 
   it('resets to page 1 and re-requests the server when filters change', () => {
     component.filters.page = 3;
-    component.filters.search = 'ana';
+    component.filters.q = 'ana';
 
     component.applyFilters();
 
     expect(component.filters.page).toBe(1);
     expect(usersService.getUsers).toHaveBeenLastCalledWith(
-      expect.objectContaining({ search: 'ana', page: 1 }),
+      expect.objectContaining({ q: 'ana', page: 1 }),
     );
   });
 

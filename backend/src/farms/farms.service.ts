@@ -103,7 +103,7 @@ export class FarmsService {
       Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
     );
     const where = await this.buildFilters(query, actor);
-    const [farms, total] = await this.prisma.$transaction([
+    const [farms, total] = await Promise.all([
       this.prisma.finca.findMany({
         where,
         select: farmSelect,
@@ -130,29 +130,49 @@ export class FarmsService {
   }
 
   async dashboard(actor: FarmActor) {
-    const farms = await this.prisma.finca.findMany({
-      where: { AND: [this.buildScope(actor), { estado: true }] },
-      select: farmSelect,
-      orderBy: [{ pais: 'asc' }, { region: 'asc' }, { nombre: 'asc' }],
-    });
-    const serialized = farms.map((farm) => this.serializeFarm(farm));
+    const scope = { AND: [this.buildScope(actor), { estado: true }] } as Prisma.FincaWhereInput;
+
+    const [totalFincasActivas, totalLotesActivos, totalCertificaciones, topFarms] =
+      await Promise.all([
+        this.prisma.finca.count({ where: scope }),
+        this.prisma.loteProduccion.count({
+          where: {
+            estado: { not: EstadoLote.CERRADO },
+            finca: scope,
+          },
+        }),
+        this.prisma.certificacion.count({ where: { finca: scope } }),
+        this.prisma.finca.findMany({
+          where: scope,
+          select: {
+            idFinca: true,
+            codigoFinca: true,
+            nombre: true,
+            productor: {
+              select: { idProductor: true, nombreRazonSocial: true },
+            },
+            _count: {
+              select: { lotes: { where: { estado: { not: EstadoLote.CERRADO } } } },
+            },
+          },
+          orderBy: [{ pais: 'asc' }, { region: 'asc' }, { nombre: 'asc' }],
+          take: 50,
+        }),
+      ]);
 
     return {
-      totalFincasActivas: serialized.length,
-      totalLotesActivos: serialized.reduce(
-        (total, farm) => total + farm.lotesActivos,
-        0,
-      ),
-      totalCertificaciones: serialized.reduce(
-        (total, farm) => total + farm.totalCertificaciones,
-        0,
-      ),
-      fincas: serialized.map((farm) => ({
-        idFinca: farm.idFinca,
+      totalFincasActivas,
+      totalLotesActivos,
+      totalCertificaciones,
+      fincas: topFarms.map((farm) => ({
+        idFinca: farm.idFinca.toString(),
         codigoFinca: farm.codigoFinca,
         nombre: farm.nombre,
-        productor: farm.productor,
-        lotesActivos: farm.lotesActivos,
+        productor: {
+          ...farm.productor,
+          idProductor: farm.productor.idProductor.toString(),
+        },
+        lotesActivos: farm._count.lotes,
       })),
     };
   }
@@ -228,19 +248,81 @@ export class FarmsService {
     return this.serializeFarm(farm);
   }
 
-  async findCertifications(actor: FarmActor, farmId?: string) {
+  async findCertifications(actor: FarmActor, farmId?: string, pageStr?: string, pageSizeStr?: string, status?: string, q?: string) {
     const idFinca = farmId ? this.parseId(farmId, 'finca') : null;
     if (idFinca) await this.findAccessibleFarm(idFinca, actor);
 
-    const certifications = await this.prisma.certificacion.findMany({
-      where: {
-        ...(idFinca ? { idFinca } : {}),
-        finca: this.buildScope(actor),
+    const page = Math.max(1, parseInt(pageStr || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(pageSizeStr || '20', 10)));
+    const skip = (page - 1) * pageSize;
+
+    const today = new Date();
+    let statusCondition: any = {};
+    if (status === 'VIGENTE') {
+      statusCondition = {
+        OR: [{ fechaVencimiento: null }, { fechaVencimiento: { gte: today } }],
+      };
+    } else if (status === 'VENCIDA') {
+      statusCondition = { fechaVencimiento: { lt: today } };
+    } else if (status === 'SIN_VENCIMIENTO') {
+      statusCondition = { fechaVencimiento: null };
+    }
+
+    const where: any = {
+      ...(idFinca ? { idFinca } : {}),
+      ...statusCondition,
+      finca: this.buildScope(actor),
+    };
+
+    const search = q?.trim();
+    if (search) {
+      where.OR = [
+        { tipoCertificacion: { nombre: { contains: search, mode: 'insensitive' } } },
+        { entidadCertificadora: { nombre: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const summaryScope: any = {
+      ...(idFinca ? { idFinca } : {}),
+      finca: this.buildScope(actor),
+    };
+
+    const [total, certifications, totalCertifications, validCertifications, expiredCertifications] = await Promise.all([
+      this.prisma.certificacion.count({ where }),
+      this.prisma.certificacion.findMany({
+        where,
+        select: certificationSelect,
+        orderBy: [{ fechaVencimiento: 'asc' }, { fechaEmision: 'desc' }],
+        skip,
+        take: pageSize,
+      }),
+      this.prisma.certificacion.count({ where: summaryScope }),
+      this.prisma.certificacion.count({
+        where: {
+          AND: [summaryScope, { OR: [{ fechaVencimiento: null }, { fechaVencimiento: { gte: today } }] }]
+        }
+      }),
+      this.prisma.certificacion.count({
+        where: {
+          AND: [summaryScope, { fechaVencimiento: { lt: today } }]
+        }
+      })
+    ]);
+
+    return {
+      data: certifications.map((row) => this.serializeCertification(row)),
+      summary: {
+        total: totalCertifications,
+        validCount: validCertifications,
+        expiredCount: expiredCertifications,
       },
-      select: certificationSelect,
-      orderBy: [{ fechaVencimiento: 'asc' }, { fechaEmision: 'desc' }],
-    });
-    return certifications.map((row) => this.serializeCertification(row));
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize) || 1,
+      },
+    };
   }
 
   async certificationOptions() {
@@ -435,7 +517,7 @@ export class FarmsService {
     actor: FarmActor,
   ): Promise<Prisma.FincaWhereInput> {
     const filters: Prisma.FincaWhereInput[] = [this.buildScope(actor)];
-    const search = query.search?.trim();
+    const search = query.q?.trim() || query.search?.trim();
     if (search) {
       filters.push({
         OR: [

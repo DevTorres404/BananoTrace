@@ -9,7 +9,7 @@
 
   <section class="metrics" aria-label="Resumen de certificaciones">
     <article class="metric-card teal">
-      <span>Total registradas</span><strong>{{ certifications.length }}</strong
+      <span>Total registradas</span><strong>{{ summary.total }}</strong
       ><small>Documentos de todas las fincas</small>
     </article>
     <article class="metric-card green">
@@ -29,10 +29,14 @@
         <p>Consulta de documentos por finca o vigencia.</p>
       </div>
     </div>
-    <div class="certification-filters">
+    <div class="certification-filters" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+      <label class="search-label" style="flex: 1 1 200px;">
+        <span style="display:none">Buscar</span>
+        <input name="searchQuery" [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" type="search" class="search-input" placeholder="Buscar certificación o entidad..." style="width: 100%" />
+      </label>
       <label
         ><span>Finca</span
-        ><select [(ngModel)]="selectedFarmId">
+        ><select [(ngModel)]="selectedFarmId" (ngModelChange)="onFilterChange()">
           <option value="">Todas las fincas</option>
           <option *ngFor="let farm of farms" [value]="farm.idFinca">
             {{ farm.codigoFinca }} · {{ farm.nombre }}
@@ -41,7 +45,7 @@
       >
       <label
         ><span>Estado</span
-        ><select [(ngModel)]="statusFilter">
+        ><select [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
           <option value="">Todos</option>
           <option value="VIGENTE">Vigente</option>
           <option value="VENCIDA">Vencida</option>
@@ -71,7 +75,10 @@
         Nueva certificación
       </button>
     </div>
-    <div *ngIf="isLoading" class="state">Cargando certificaciones...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando certificaciones...</p>
+    </div>
     <div *ngIf="!isLoading" class="table-scroll">
       <table>
         <thead>
@@ -144,6 +151,14 @@
           </tr>
         </tbody>
       </table>
+    </div>
+    
+    <div class="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+      <span>Página {{ page }} de {{ totalPages }} ({{ total }} resultados)</span>
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="button" class="btn-secondary" (click)="previousPage()" [disabled]="page === 1">Anterior</button>
+        <button type="button" class="btn-secondary" (click)="nextPage()" [disabled]="page >= totalPages">Siguiente</button>
+      </div>
     </div>
   </section>
 

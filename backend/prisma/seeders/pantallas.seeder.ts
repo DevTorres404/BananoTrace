@@ -6,7 +6,7 @@ export async function seedPantallas(prisma: PrismaClient) {
     { idPantalla: 2, nombre: 'Productores', ruta: '/productores', icono: 'people', descripcion: 'Gestión de productores' },
     { idPantalla: 3, nombre: 'Fincas', ruta: '/fincas', icono: 'terrain', descripcion: 'Gestión de fincas y ubicaciones' },
     { idPantalla: 4, nombre: 'Lotes', ruta: '/lotes', icono: 'inventory_2', descripcion: 'Gestión de lotes de producción' },
-    { idPantalla: 5, nombre: 'Eventos de Trazabilidad', ruta: '/eventos', icono: 'timeline', descripcion: 'Registro y consulta de eventos' },
+    { idPantalla: 5, nombre: 'Buscador de Trazabilidad', ruta: '/buscar-trazabilidad', icono: 'search', descripcion: 'Búsqueda rápida de unidades trazables' },
     { idPantalla: 6, nombre: 'Control de Calidad', ruta: '/calidad', icono: 'verified', descripcion: 'Inspecciones y controles de calidad' },
     { idPantalla: 7, nombre: 'Empaque', ruta: '/empaque', icono: 'package_2', descripcion: 'Gestión de cajas y empaques' },
     { idPantalla: 8, nombre: 'Envíos', ruta: '/envios', icono: 'local_shipping', descripcion: 'Gestión de envíos y contenedores' },
@@ -18,7 +18,7 @@ export async function seedPantallas(prisma: PrismaClient) {
 
   for (const p of pantallas) {
     await prisma.pantalla.upsert({
-      where: { ruta: p.ruta },
+      where: { idPantalla: p.idPantalla },
       update: {
         nombre: p.nombre,
         ruta: p.ruta,

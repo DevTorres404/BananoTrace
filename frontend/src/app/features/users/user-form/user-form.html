@@ -29,7 +29,10 @@
       </button>
     </header>
 
-    <div *ngIf="isLoadingData" class="loading-state">Cargando formulario...</div>
+    <div *ngIf="isLoadingData" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando formulario...</p>
+    </div>
 
     <form *ngIf="!isLoadingData" (ngSubmit)="onSubmit()" #userForm="ngForm">
       <div class="form-grid">

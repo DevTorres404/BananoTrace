@@ -87,7 +87,10 @@
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando eventos...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando eventos...</p>
+    </div>
     <div *ngIf="!isLoading && events.length" class="timeline-list" role="list">
       <section *ngFor="let group of groupedEvents" class="lot-group" role="listitem">
         <div class="lot-group-header">

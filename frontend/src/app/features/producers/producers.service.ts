@@ -37,7 +37,7 @@ export interface ProducerPayload {
 }
 
 export interface ProducerFilters {
-  search?: string;
+  q?: string;
   vinculado?: '' | 'true' | 'false';
   page?: number;
   pageSize?: number;

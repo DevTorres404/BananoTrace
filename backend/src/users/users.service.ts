@@ -188,7 +188,7 @@ export class UsersService {
       Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
     );
     const filters: Prisma.UsuarioWhereInput[] = [];
-    const search = query.search?.trim();
+    const search = query.q?.trim() || query.search?.trim();
     if (search) {
       filters.push({
         OR: [
@@ -206,7 +206,7 @@ export class UsersService {
     }
     const where: Prisma.UsuarioWhereInput = filters.length > 0 ? { AND: filters } : {};
 
-    const [users, total] = await this.prisma.$transaction([
+    const [users, total] = await Promise.all([
       this.prisma.usuario.findMany({
         where,
         select: publicUserSelect,

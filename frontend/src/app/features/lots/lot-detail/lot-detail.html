@@ -1,6 +1,9 @@
 <main class="farms-page lot-detail-page">
   <a routerLink="/lotes" class="back-link">← Volver a lotes</a>
-  <div *ngIf="isLoading" class="state">Cargando lote...</div>
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando lote...</p>
+  </div>
   <p *ngIf="errorMessage" class="error-banner">
     {{ errorMessage }} <button type="button" (click)="loadDetail()">Reintentar</button>
   </p>
@@ -139,14 +142,6 @@
               {{ currentLot.flujo.definicion.nombre }} · v{{ currentLot.flujo.definicion.version }}
             </p>
           </div>
-          <a
-            *ngIf="currentLot.flujo"
-            class="btn-secondary"
-            [routerLink]="['/blockchain']"
-            [queryParams]="{ instancia: currentLot.flujo.idInstancia }"
-          >
-            Ver cadena
-          </a>
         </div>
         <div *ngIf="currentLot.flujo as flow; else noFlow">
           <div class="current-phase" *ngIf="flow.faseActual as phase">
@@ -187,6 +182,13 @@
             <!-- 5.4 — Block indicator when lot is rejected -->
             <div class="quality-block-notice" *ngIf="isAdvanceBlocked">
               ⛔ {{ qualityStatus?.blockReason }}
+            </div>
+            <!-- Indicator when lot is approved or observed -->
+            <div *ngIf="qualityStatus?.hasControls && !isAdvanceBlocked"
+                 [ngClass]="{'quality-success-notice': qualityStatus?.lastResult === 'APROBADO', 'quality-observed-notice': qualityStatus?.lastResult === 'OBSERVADO'}">
+              <span *ngIf="qualityStatus?.lastResult === 'APROBADO'">✅</span>
+              <span *ngIf="qualityStatus?.lastResult === 'OBSERVADO'">⚠️</span>
+              Inspección registrada: <strong>{{ qualityStatus?.lastResult }}</strong>
             </div>
             <div class="advance-actions">
               <button

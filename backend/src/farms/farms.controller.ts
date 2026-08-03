@@ -40,9 +40,13 @@ export class FarmsController {
   @Get('certifications')
   findCertifications(
     @Query('farmId') farmId: string | undefined,
+    @Query('page') page: string | undefined,
+    @Query('pageSize') pageSize: string | undefined,
+    @Query('status') status: string | undefined,
+    @Query('q') q: string | undefined,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.farmsService.findCertifications(request.user, farmId);
+    return this.farmsService.findCertifications(request.user, farmId, page, pageSize, status, q);
   }
 
   @Get('certification-options')

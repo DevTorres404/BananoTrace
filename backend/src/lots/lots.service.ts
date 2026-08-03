@@ -210,7 +210,7 @@ export class LotsService {
     const where = this.buildFilters(query, actor);
     const summaryScope = this.buildScope(actor);
     const [data, total, totalLots, activeLots, plants] =
-      await this.prisma.$transaction([
+      await Promise.all([
         this.prisma.loteProduccion.findMany({
           where,
           select: lotSelect,
@@ -252,11 +252,13 @@ export class LotsService {
         where: { AND: [this.buildFarmScope(actor), { estado: true }] },
         select: { idFinca: true, codigoFinca: true, nombre: true },
         orderBy: { nombre: 'asc' },
+        take: 200,
       }),
       this.prisma.variedad.findMany({
         where: { activo: true },
         select: { idVariedad: true, codigo: true, nombre: true },
         orderBy: { nombre: 'asc' },
+        take: 100,
       }),
     ]);
     return {
@@ -613,6 +615,15 @@ export class LotsService {
     actor: LotActor,
   ): Prisma.LoteProduccionWhereInput {
     const filters: Prisma.LoteProduccionWhereInput[] = [this.buildScope(actor)];
+    if (query.q) {
+      const q = query.q.trim();
+      filters.push({
+        OR: [
+          { codigoLote: { contains: q, mode: 'insensitive' } },
+          { finca: { nombre: { contains: q, mode: 'insensitive' } } },
+        ],
+      });
+    }
     if (query.idFinca)
       filters.push({ idFinca: this.parseId(query.idFinca, 'finca') });
     if (query.estado) {

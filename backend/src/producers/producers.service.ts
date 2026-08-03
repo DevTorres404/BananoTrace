@@ -118,7 +118,7 @@ export class ProducersService {
       Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
     );
     const filters: Prisma.ProductorWhereInput[] = [this.buildScope(actor)];
-    const search = query.search?.trim();
+    const search = query.q?.trim() || query.search?.trim();
     if (search) {
       filters.push({
         OR: [
@@ -135,7 +135,7 @@ export class ProducersService {
     }
     const where: Prisma.ProductorWhereInput = { AND: filters };
 
-    const [producers, total] = await this.prisma.$transaction([
+    const [producers, total] = await Promise.all([
       this.prisma.productor.findMany({
         where,
         select: producerSelect,

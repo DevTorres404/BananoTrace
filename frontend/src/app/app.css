@@ -18,6 +18,10 @@
   background: var(--color-bg-main);
 }
 
+.app-shell.authenticated .app-content {
+  padding-top: 64px;
+}
+
 @media (max-width: 900px) {
   .app-shell.authenticated {
     display: block;
@@ -25,5 +29,6 @@
 
   .app-shell.authenticated .app-content {
     min-height: calc(100vh - 64px);
+    padding-top: 0;
   }
 }

@@ -71,7 +71,7 @@ export class QualityService {
     }
     const where: Prisma.ControlCalidadWhereInput = { AND: filters };
 
-    const [data, total, summaryRows] = await this.prisma.$transaction([
+    const [data, total, summaryRows] = await Promise.all([
       this.prisma.controlCalidad.findMany({
         where,
         orderBy: { fechaControl: 'desc' },

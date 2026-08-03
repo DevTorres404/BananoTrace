@@ -35,7 +35,7 @@ export interface UserPayload {
 }
 
 export interface UserFilters {
-  search?: string;
+  q?: string;
   idRol?: number | string;
   estado?: '' | 'true' | 'false';
   page?: number;

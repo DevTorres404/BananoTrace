@@ -29,8 +29,12 @@
         <p>Filtre las cajas por su estado operativo.</p>
       </div>
     </div>
-    <form class="filters" (ngSubmit)="load()">
-      <label>
+    <form class="filters" (ngSubmit)="load()" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+      <label class="search-label" style="flex: 1 1 200px;">
+        <span style="display:none">Buscar</span>
+        <input name="searchQuery" [(ngModel)]="searchQuery" type="search" placeholder="Buscar por código de empaque o lote..." class="search-input" style="width: 100%" />
+      </label>
+      <label style="flex: 1 1 200px;">
         <span>Estado</span>
         <select name="statusFilter" [(ngModel)]="statusFilter">
           <option value="">Todos los estados</option>
@@ -63,7 +67,10 @@
       </button>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando empaques...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando empaques...</p>
+    </div>
     <div *ngIf="!isLoading" class="table-scroll">
       <table>
         <thead>

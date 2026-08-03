@@ -107,6 +107,7 @@ export interface LotPayload {
 }
 
 export interface LotFilters {
+  q?: string;
   idFinca?: string;
   estado?: string;
   desde?: string;

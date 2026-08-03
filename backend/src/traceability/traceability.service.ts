@@ -90,6 +90,38 @@ export class TraceabilityService {
     };
   }
 
+  async searchUnitByCode(codigoRaw: string, actor: Actor) {
+    const codigo = codigoRaw?.trim();
+    if (!codigo) throw new BadRequestException('Debe indicar un código');
+
+    const unit = await this.prisma.unidadTrazable.findFirst({
+      where: { codigo },
+      select: {
+        idUnidad: true,
+        tipo: true,
+        codigo: true,
+        ...this.unitScopeSelect(),
+      },
+      orderBy: { tipo: 'asc' as const },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Código no encontrado o sin permisos');
+    }
+
+    try {
+      this.assertUnitAccess(unit as any, actor);
+    } catch {
+      throw new NotFoundException('Código no encontrado o sin permisos');
+    }
+
+    return {
+      idUnidad: unit.idUnidad.toString(),
+      tipo: unit.tipo,
+      codigo: unit.codigo,
+    };
+  }
+
   async findAll(query: Record<string, string | undefined>, actor: Actor) {
     const page = Math.max(1, Number.parseInt(query.page ?? '1', 10) || 1);
     const pageSize = Math.min(
@@ -98,7 +130,7 @@ export class TraceabilityService {
     );
     const where = this.buildEventFilters(null, query, actor);
 
-    const [data, total, units, documents] = await this.prisma.$transaction([
+    const [data, total, units, documents] = await Promise.all([
       this.prisma.eventoTrazabilidad.findMany({
         where,
         orderBy: { fechaEvento: 'desc' },
@@ -369,7 +401,7 @@ export class TraceabilityService {
       fechaEvento: event.fechaEvento,
       ubicacion: event.ubicacion,
       descripcion: event.descripcion,
-      datosAdicionales: event.datosAdicionales,
+      datosAdicionales: event.datosAdicionales as unknown as Record<string, unknown>,
       fechaRegistro: event.fechaRegistro,
       usuario: `${event.usuario.nombres} ${event.usuario.apellidos}`.trim(),
       unidad: {

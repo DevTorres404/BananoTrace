@@ -30,11 +30,13 @@
       </div>
     </div>
     <form class="filters" (ngSubmit)="load(true)">
-      <label class="wide">
+      <label class="search-label" style="flex: 1 1 200px;">
         <span>Búsqueda</span>
         <input
-          name="search"
-          [(ngModel)]="filters.search"
+          name="q"
+          [(ngModel)]="filters.q"
+          type="search"
+          class="search-input"
           placeholder="Código, contenedor, destino o naviera"
         />
       </label>
@@ -71,7 +73,10 @@
       </button>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando envíos...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando envíos...</p>
+    </div>
     <div *ngIf="!isLoading" class="table-scroll">
       <table>
         <thead>
@@ -139,3 +144,5 @@
     </nav>
   </section>
 </main>
+
+<app-envio-form *ngIf="showModal" (cancel)="showModal = false"></app-envio-form>

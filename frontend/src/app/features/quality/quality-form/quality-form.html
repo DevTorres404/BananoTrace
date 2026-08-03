@@ -12,22 +12,23 @@
     </div>
 
     <form class="modal-body" (ngSubmit)="onSubmit()" #form="ngForm">
-      <!-- Resultado -->
       <div class="form-row">
-        <div class="field-group">
-          <label class="field-label" for="resultado">Resultado</label>
-          <select
-            id="resultado"
-            class="field-input"
-            name="resultado"
-            [(ngModel)]="model.resultado"
-            required
-          >
-            <option [ngValue]="undefined" disabled>Seleccione un resultado</option>
-            <option *ngFor="let r of results" [value]="r.value">
+        <div class="field-group" style="grid-column: 1 / -1;">
+          <label class="field-label">Resultado</label>
+          <div class="result-selector">
+            <button
+              type="button"
+              *ngFor="let r of results"
+              class="result-option"
+              [class.selected]="model.resultado === r.value"
+              [class.approved]="r.value === 'APROBADO'"
+              [class.observed]="r.value === 'OBSERVADO'"
+              [class.rejected]="r.value === 'RECHAZADO'"
+              (click)="model.resultado = r.value"
+            >
               {{ r.label }}
-            </option>
-          </select>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -17,6 +17,11 @@ import { BlockchainService } from './blockchain.service';
 export class BlockchainController {
   constructor(private readonly blockchainService: BlockchainService) {}
 
+  @Get('instancias')
+  listarInstanciasRecientes() {
+    return this.blockchainService.listarInstanciasRecientes();
+  }
+
   @Get('instancias/:idInstancia')
   listarCadena(@Param('idInstancia') idInstanciaRaw: string) {
     return this.blockchainService.listarCadena(this.parseId(idInstanciaRaw));

@@ -33,7 +33,7 @@ export class FarmsPage implements OnInit {
     fincas: [],
   };
   filters: FarmFilters = {
-    search: '',
+    q: '',
     pais: '',
     region: '',
     localidad: '',
@@ -123,7 +123,7 @@ export class FarmsPage implements OnInit {
 
   clearFilters(): void {
     this.filters = {
-      search: '',
+      q: '',
       pais: '',
       region: '',
       localidad: '',
@@ -132,7 +132,7 @@ export class FarmsPage implements OnInit {
       page: 1,
       pageSize: 10,
     };
-    this.applyFilters(false);
+    this.applyFilters(true);
   }
 
   openFarmModal(farm: Farm | null = null): void {

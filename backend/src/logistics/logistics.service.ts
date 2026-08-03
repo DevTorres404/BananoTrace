@@ -239,6 +239,14 @@ export class LogisticsService {
       Math.max(1, Number.parseInt(query.pageSize ?? '20', 10) || 20),
     );
     const where: Prisma.EmpaqueWhereInput = {};
+    const search = query.q?.trim();
+    if (search) {
+      where.OR = [
+        { codigoCaja: { contains: search, mode: 'insensitive' } },
+        { lote: { codigoLote: { contains: search, mode: 'insensitive' } } },
+        { categoriaCalidadCat: { nombre: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
 
     if (query.idLote) {
       const idLote = this.parseSafeId(query.idLote);
@@ -253,7 +261,7 @@ export class LogisticsService {
 
     const baseWhere = query.idLote ? { idLote: this.parseSafeId(query.idLote) ?? undefined } : {};
 
-    const [data, total, disponibles, asignadas, enTransito, entregadas] = await this.prisma.$transaction([
+    const [data, total, disponibles, asignadas, enTransito, entregadas] = await Promise.all([
       this.prisma.empaque.findMany({
         where,
         orderBy: { fechaEmpaque: 'desc' },
@@ -414,7 +422,7 @@ export class LogisticsService {
     );
 
     const where: Prisma.EnvioWhereInput = {};
-    const search = query.search?.trim();
+    const search = query.q?.trim() || query.search?.trim();
     if (search) {
       where.OR = [
         { codigoEnvio: { contains: search, mode: 'insensitive' } },
@@ -439,7 +447,7 @@ export class LogisticsService {
     }
 
     const [data, total, totalEnvios, planned, loaded, inTransit, delivered] =
-      await this.prisma.$transaction([
+      await Promise.all([
         this.prisma.envio.findMany({
           where,
           orderBy: { fechaSalida: 'desc' },

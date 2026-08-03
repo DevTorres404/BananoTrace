@@ -21,7 +21,7 @@ export class ProducersList implements OnInit {
 
   producers: Producer[] = [];
   pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
-  filters: ProducerFilters = { search: '', vinculado: '', page: 1, pageSize: 10 };
+  filters: ProducerFilters = { q: '', vinculado: '', page: 1, pageSize: 10 };
   isLoading = true;
   deletingId: string | null = null;
   modalProducerId: string | null = null;
@@ -98,8 +98,8 @@ export class ProducersList implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters = { search: '', vinculado: '', page: 1, pageSize: 10 };
-    this.applyFilters(false);
+    this.filters = { q: '', vinculado: '', page: 1, pageSize: 10 };
+    this.applyFilters(true);
   }
 
   deleteProducer(producer: Producer): void {

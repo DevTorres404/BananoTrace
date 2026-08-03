@@ -45,6 +45,14 @@ export class TraceabilityController {
     return this.traceabilityService.getOptions(request.user);
   }
 
+  @Get('search-unit')
+  searchUnit(
+    @Query('codigo') codigo: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.traceabilityService.searchUnitByCode(codigo, request.user);
+  }
+
   @Get('events')
   findAllEvents(
     @Query() query: Record<string, string | undefined>,

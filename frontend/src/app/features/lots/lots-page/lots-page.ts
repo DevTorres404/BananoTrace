@@ -32,7 +32,7 @@ export class LotsPage implements OnInit {
   farms: LotFarmOption[] = [];
   states: LotState[] = [];
   varieties: LotVarietyOption[] = [];
-  filters: LotFilters = { idFinca: '', estado: '', desde: '', hasta: '', page: 1, pageSize: 10 };
+  filters: LotFilters = { q: '', idFinca: '', estado: '', desde: '', hasta: '', page: 1, pageSize: 10 };
   pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
   summary = { totalLots: 0, activeLots: 0, totalPlants: 0 };
   selectedLot: Lot | null = null;
@@ -102,7 +102,7 @@ export class LotsPage implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters = { idFinca: '', estado: '', desde: '', hasta: '', page: 1, pageSize: 10 };
+    this.filters = { q: '', idFinca: '', estado: '', desde: '', hasta: '', page: 1, pageSize: 10 };
     this.applyFilters(false);
   }
 

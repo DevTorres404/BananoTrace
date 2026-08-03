@@ -24,7 +24,10 @@
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando línea de tiempo...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando línea de tiempo...</p>
+    </div>
 
     <ol *ngIf="!isLoading && events.length" class="timeline-compact">
       <li *ngFor="let event of events" class="timeline-item">

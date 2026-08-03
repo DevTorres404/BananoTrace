@@ -30,15 +30,17 @@
       </div>
     </div>
     <form class="producer-filters" (ngSubmit)="applyFilters()">
-      <label
-        ><span>Búsqueda</span
-        ><input
+      <label class="search-label" style="flex: 1 1 200px;">
+        <span>Búsqueda</span>
+        <input
           type="search"
-          name="search"
-          [(ngModel)]="filters.search"
+          name="q"
+          [(ngModel)]="filters.q"
           placeholder="Nombre, identificación o correo"
           aria-label="Buscar productores"
-      /></label>
+          class="search-input"
+        />
+      </label>
       <label
         ><span>Cuenta vinculada</span
         ><select
@@ -74,7 +76,10 @@
       </button>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando productores...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando productores...</p>
+    </div>
 
     <div class="table-scroll" *ngIf="!isLoading && !errorMessage">
       <table>

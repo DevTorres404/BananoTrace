@@ -69,7 +69,10 @@
       </div>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando inspecciones...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando inspecciones...</p>
+    </div>
     <div *ngIf="!isLoading && controls.length > 0" class="table-scroll">
       <table>
         <thead>

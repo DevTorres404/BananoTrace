@@ -146,15 +146,6 @@ export const routes: Routes = [
     },
   },
   {
-    path: 'envios/nuevo',
-    loadComponent: () =>
-      import('./features/logistics/envio-form/envio-form').then((module) => module.EnvioForm),
-    canActivate: producerGuards,
-    data: {
-      roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
-    },
-  },
-  {
     path: 'envios/:id',
     loadComponent: () =>
       import('./features/logistics/envio-detail/envio-detail').then((module) => module.EnvioDetail),
@@ -177,38 +168,6 @@ export const routes: Routes = [
         ROLE_IDS.CALIDAD,
         ROLE_IDS.LOGISTICA,
         ROLE_IDS.GERENTE_PRODUCTOR,
-      ],
-    },
-  },
-  {
-    path: 'eventos',
-    loadComponent: () =>
-      import('./features/traceability/events-page/events-page').then((module) => module.EventsPage),
-    canActivate: producerGuards,
-    data: {
-      roles: [
-        ROLE_IDS.ADMINISTRADOR,
-        ROLE_IDS.SUPERVISOR_AGRICOLA,
-        ROLE_IDS.CALIDAD,
-        ROLE_IDS.LOGISTICA,
-        ROLE_IDS.GERENTE_PRODUCTOR,
-      ],
-    },
-  },
-  {
-    path: 'blockchain',
-    loadComponent: () =>
-      import('./features/blockchain/blockchain-page/blockchain-page').then(
-        (module) => module.BlockchainPage,
-      ),
-    canActivate: producerGuards,
-    data: {
-      roles: [
-        ROLE_IDS.ADMINISTRADOR,
-        ROLE_IDS.LOGISTICA,
-        ROLE_IDS.SUPERVISOR_AGRICOLA,
-        ROLE_IDS.GERENTE_PRODUCTOR,
-        ROLE_IDS.CALIDAD,
       ],
     },
   },

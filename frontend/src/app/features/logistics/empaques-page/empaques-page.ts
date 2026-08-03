@@ -22,6 +22,7 @@ export class EmpaquesPage implements OnInit {
   empaques: Empaque[] = [];
   isLoading = false;
   statusFilter: EstadoEmpaque | '' = '';
+  searchQuery = '';
   errorMessage = '';
 
   showCreateModal = false;
@@ -42,6 +43,7 @@ export class EmpaquesPage implements OnInit {
     this.errorMessage = '';
     const filter: any = { page: this.pagination.page, pageSize: this.pagination.pageSize };
     if (this.statusFilter) filter.estado = this.statusFilter;
+    if (this.searchQuery) filter.q = this.searchQuery.trim();
 
     this.logisticsService
       .getEmpaques(filter)
@@ -65,6 +67,7 @@ export class EmpaquesPage implements OnInit {
 
   clearFilters() {
     this.statusFilter = '';
+    this.searchQuery = '';
     this.load();
   }
 

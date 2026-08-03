@@ -30,15 +30,17 @@
       </div>
     </div>
     <form class="user-filters" (ngSubmit)="applyFilters()">
-      <label
-        ><span>Búsqueda</span
-        ><input
+      <label class="search-label" style="flex: 1 1 200px;">
+        <span>Búsqueda</span>
+        <input
           type="search"
-          name="search"
-          [(ngModel)]="filters.search"
+          name="q"
+          [(ngModel)]="filters.q"
           placeholder="Nombre o correo"
           aria-label="Buscar usuarios"
-      /></label>
+          class="search-input"
+        />
+      </label>
       <label
         ><span>Rol</span
         ><select
@@ -86,7 +88,10 @@
       <button type="button" class="btn-primary" (click)="openCreateModal()">Nuevo usuario</button>
     </div>
 
-    <div *ngIf="isLoading" class="state">Cargando usuarios...</div>
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando usuarios...</p>
+    </div>
 
     <div class="table-scroll" *ngIf="!isLoading && !errorMessage">
       <table>

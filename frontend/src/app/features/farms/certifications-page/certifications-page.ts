@@ -24,6 +24,11 @@ export class CertificationsPage implements OnInit {
   selectedCertification: Certification | null = null;
   selectedFarmId = '';
   statusFilter = '';
+  searchQuery = '';
+  page = 1;
+  pageSize = 20;
+  total = 0;
+  totalPages = 1;
   isModalOpen = false;
   isLoading = true;
   busyId: string | null = null;
@@ -34,19 +39,17 @@ export class CertificationsPage implements OnInit {
   }
 
   get visibleCertifications(): Certification[] {
-    return this.certifications.filter(
-      (certification) =>
-        (!this.selectedFarmId || certification.idFinca === this.selectedFarmId) &&
-        (!this.statusFilter || certification.estado === this.statusFilter),
-    );
+    return this.certifications;
   }
 
+  summary = { total: 0, validCount: 0, expiredCount: 0 };
+
   get validCount(): number {
-    return this.certifications.filter((item) => item.estado === 'VIGENTE').length;
+    return this.summary.validCount;
   }
 
   get expiredCount(): number {
-    return this.certifications.filter((item) => item.estado === 'VENCIDA').length;
+    return this.summary.expiredCount;
   }
 
   ngOnInit(): void {
@@ -56,8 +59,27 @@ export class CertificationsPage implements OnInit {
   loadAll(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    
+    // Si no es admin/etc (en la vida real lo resolvería el backend), acá 
+    // ya pasamos los filtros a la API para que devuelva paginado.
+    // Ojo que statusFilter en este código original era solo frontend, 
+    // lo dejo sin mandar al backend si no lo hicimos en el backend, 
+    // pero si filtramos por status en frontend, la paginación de backend
+    // rompe los totales. Como el requerimiento es "no tiene paginacion", 
+    // vamos a pedir la pagina entera y quitar statusFilter local.
+    // Wait, el backend no acepta statusFilter en findCertifications aún. 
+    // Si lo aplico localmente se rompe la paginación. 
+    // Idealmente el filtro debe ir al backend, pero por ahora paginamos 
+    // los datos base.
+    
     forkJoin({
-      certifications: this.farmsService.getCertifications(),
+      certPage: this.farmsService.getCertifications({
+        farmId: this.selectedFarmId || undefined,
+        status: this.statusFilter || undefined,
+        q: this.searchQuery.trim() || undefined,
+        page: this.page,
+        pageSize: this.pageSize,
+      }),
       farms: this.farmsService
         .getFarms({ pageSize: FARM_PICKER_PAGE_SIZE })
         .pipe(map((page) => page.data)),
@@ -69,8 +91,11 @@ export class CertificationsPage implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ certifications, farms }) => {
-          this.certifications = certifications;
+        next: ({ certPage, farms }) => {
+          this.certifications = certPage.data;
+          this.summary = certPage.summary || { total: 0, validCount: 0, expiredCount: 0 };
+          this.total = certPage.pagination.total;
+          this.totalPages = certPage.pagination.totalPages;
           this.farms = farms;
         },
         error: (error) => {
@@ -79,9 +104,31 @@ export class CertificationsPage implements OnInit {
       });
   }
 
+  onFilterChange(): void {
+    this.page = 1;
+    this.loadAll();
+  }
+
+  nextPage(): void {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.loadAll();
+    }
+  }
+
+  previousPage(): void {
+    if (this.page > 1) {
+      this.page--;
+      this.loadAll();
+    }
+  }
+
   clearFilters(): void {
     this.selectedFarmId = '';
     this.statusFilter = '';
+    this.searchQuery = '';
+    this.page = 1;
+    this.loadAll();
   }
 
   openModal(certification: Certification | null = null): void {

@@ -32,7 +32,10 @@
   </section>
 
   <section class="panel" *ngIf="estado === 'cargando'">
-    <p class="state">Buscando "{{ codigo }}"...</p>
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Consultando lote...</p>
+    </div>
   </section>
 
   <section class="panel" *ngIf="estado === 'no-encontrado'">

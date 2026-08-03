@@ -6,11 +6,12 @@ import { finalize } from 'rxjs';
 import { Envio, EnvioFilters, EstadoEnvio, LogisticsService } from '../logistics.service';
 import { ROLE_IDS } from '../../../core/auth/role.constants';
 import { AuthService } from '../../../core/services/auth';
+import { EnvioForm } from '../envio-form/envio-form';
 
 @Component({
   selector: 'app-envios-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EnvioForm],
   templateUrl: './envios-page.html',
   styleUrls: ['../../farms/farms-page/farms-page.css', './envios-page.css'],
 })
@@ -23,7 +24,8 @@ export class EnviosPage implements OnInit {
   envios: Envio[] = [];
   isLoading = false;
   errorMessage = '';
-  filters: EnvioFilters = { search: '', estado: '', page: 1, pageSize: 15 };
+  showModal = false;
+  filters: EnvioFilters = { q: '', estado: '', page: 1, pageSize: 15 };
   pagination = { page: 1, pageSize: 15, total: 0, totalPages: 1 };
   summary = { total: 0, planned: 0, loaded: 0, inTransit: 0, delivered: 0 };
 
@@ -61,7 +63,7 @@ export class EnviosPage implements OnInit {
   }
 
   clearFilters() {
-    this.filters = { search: '', estado: '', page: 1, pageSize: 15 };
+    this.filters = { q: '', estado: '', page: 1, pageSize: 15 };
     this.load();
   }
 
@@ -72,7 +74,7 @@ export class EnviosPage implements OnInit {
   }
 
   onCreateEnvio() {
-    this.router.navigate(['/envios/nuevo']);
+    this.showModal = true;
   }
 
   onViewDetail(id: string) {

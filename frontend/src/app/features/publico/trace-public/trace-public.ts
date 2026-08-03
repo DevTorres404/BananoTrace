@@ -4,13 +4,31 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ConsultaResultado, PublicoService } from '../publico.service';
 
-type TraceEstado = 'cargando' | 'encontrado' | 'no-encontrado' | 'sin-codigo';
+type TraceEstado =
+  | 'cargando'
+  | 'encontrado'
+  | 'no-encontrado'
+  | 'no-disponible'
+  | 'sin-codigo';
+
+type EstadoVerificacion = 'verificado' | 'alerta' | 'sin-verificacion';
 
 const TIPO_LABELS: Record<ConsultaResultado['tipo'], string> = {
   LOTE: 'Lote de producción',
   EMPAQUE: 'Caja de empaque',
   ENVIO: 'Envío',
 };
+
+const VERIFICACION_LABELS: Record<EstadoVerificacion, string> = {
+  verificado: 'Producto verificado',
+  alerta: 'Alerta de integridad',
+  'sin-verificacion': 'Sin verificación',
+};
+
+interface PasoFechas {
+  label: string;
+  fecha: string;
+}
 
 @Component({
   selector: 'app-trace-public',
@@ -28,11 +46,49 @@ export class TracePublicPage implements OnInit {
   resultado: ConsultaResultado | null = null;
   codigo = '';
   readonly tipoLabels = TIPO_LABELS;
+  readonly verificacionLabels = VERIFICACION_LABELS;
 
   isDarkMode = true;
 
   get currentYear(): number {
     return new Date().getFullYear();
+  }
+
+  get estadoVerificacion(): EstadoVerificacion | null {
+    const integridad = this.resultado?.integridadBlockchain;
+    if (!integridad) return null;
+    if (integridad.verificable && integridad.integra === true) return 'verificado';
+    if (integridad.verificable && integridad.integra === false) return 'alerta';
+    return 'sin-verificacion';
+  }
+
+  get pasosFechas(): PasoFechas[] {
+    const fechas = this.resultado?.fechas;
+    if (!fechas) return [];
+    const candidatos: Array<{ label: string; fecha: string | null }> = [
+      { label: 'Siembra', fecha: fechas.siembra },
+      { label: 'Cosecha', fecha: fechas.cosecha },
+      { label: 'Empaque', fecha: fechas.empaque },
+      { label: 'Salida', fecha: fechas.salida },
+      { label: 'Llegada estimada', fecha: fechas.llegadaEstimada },
+    ];
+    return candidatos
+      .filter((c) => c.fecha !== null && c.fecha !== '')
+      .map((c) => ({ label: c.label, fecha: c.fecha as string }));
+  }
+
+  get temperaturaLabel(): string | null {
+    const temp = this.resultado?.envio?.temperaturaSalida;
+    if (temp === null || temp === undefined || temp === '') return null;
+    return temp.replace('.', ',');
+  }
+
+  get temperaturaEnRangoOptimo(): boolean | null {
+    const temp = this.resultado?.envio?.temperaturaSalida;
+    if (temp === null || temp === undefined || temp === '') return null;
+    const valor = Number.parseFloat(temp.replace(',', '.'));
+    if (Number.isNaN(valor)) return null;
+    return valor >= 12 && valor <= 14;
   }
 
   toggleTheme(): void {
@@ -59,9 +115,9 @@ export class TracePublicPage implements OnInit {
           this.resultado = resultado;
           this.estado = 'encontrado';
         },
-        error: () => {
+        error: (err) => {
           this.resultado = null;
-          this.estado = 'no-encontrado';
+          this.estado = err?.status === 404 ? 'no-encontrado' : 'no-disponible';
         },
       });
   }
