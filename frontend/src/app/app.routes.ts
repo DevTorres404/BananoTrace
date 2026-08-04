@@ -30,7 +30,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/users/users-list/users-list').then((module) => module.UsersList),
     canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.GERENTE_PRODUCTOR], reuse: true },
   },
   {
     path: 'productores',
@@ -39,7 +39,7 @@ export const routes: Routes = [
         (module) => module.ProducersList,
       ),
     canActivate: producerGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA], reuse: true },
   },
   {
     path: 'fincas',
@@ -48,6 +48,7 @@ export const routes: Routes = [
     canActivate: producerGuards,
     data: {
       roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR],
+      reuse: true,
     },
   },
   {
@@ -59,6 +60,7 @@ export const routes: Routes = [
     canActivate: producerGuards,
     data: {
       roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.SUPERVISOR_AGRICOLA, ROLE_IDS.GERENTE_PRODUCTOR],
+      reuse: true,
     },
   },
   {
@@ -89,6 +91,7 @@ export const routes: Routes = [
         ROLE_IDS.LOGISTICA,
         ROLE_IDS.GERENTE_PRODUCTOR,
       ],
+      reuse: true,
     },
   },
   {
@@ -103,6 +106,7 @@ export const routes: Routes = [
         ROLE_IDS.SUPERVISOR_AGRICOLA,
         ROLE_IDS.GERENTE_PRODUCTOR,
       ],
+      reuse: true,
     },
   },
   {
@@ -143,6 +147,7 @@ export const routes: Routes = [
         ROLE_IDS.SUPERVISOR_AGRICOLA,
         ROLE_IDS.GERENTE_PRODUCTOR,
       ],
+      reuse: true,
     },
   },
   {
@@ -152,6 +157,7 @@ export const routes: Routes = [
     canActivate: producerGuards,
     data: {
       roles: [ROLE_IDS.ADMINISTRADOR, ROLE_IDS.LOGISTICA, ROLE_IDS.GERENTE_PRODUCTOR],
+      reuse: true,
     },
   },
   {
