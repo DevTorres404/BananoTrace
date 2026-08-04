@@ -32,7 +32,7 @@
     <div class="certification-filters" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
       <label class="search-label" style="flex: 1 1 200px;">
         <span style="display:none">Buscar</span>
-        <input name="searchQuery" [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" type="search" class="search-input" placeholder="Buscar certificación o entidad..." style="width: 100%" />
+        <input name="searchQuery" [(ngModel)]="searchQuery" (ngModelChange)="searchInput$.next($event)" type="search" class="search-input" placeholder="Buscar certificación o entidad..." style="width: 100%" />
       </label>
       <label
         ><span>Finca</span

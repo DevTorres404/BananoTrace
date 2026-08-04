@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
+import { forkJoin, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, map } from 'rxjs/operators';
 import { CertificationForm } from '../certification-form/certification-form';
 import { Certification, Farm, FarmsService } from '../farms.service';
 
@@ -33,6 +33,7 @@ export class CertificationsPage implements OnInit {
   isLoading = true;
   busyId: string | null = null;
   errorMessage = '';
+  readonly searchInput$ = new Subject<string>();
 
   get activeFarms(): Farm[] {
     return this.farms.filter((farm) => farm.estado);
@@ -54,24 +55,14 @@ export class CertificationsPage implements OnInit {
 
   ngOnInit(): void {
     this.loadAll();
+    this.searchInput$.pipe(debounceTime(350), distinctUntilChanged()).subscribe(() => {
+      this.onFilterChange();
+    });
   }
 
   loadAll(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    
-    // Si no es admin/etc (en la vida real lo resolvería el backend), acá 
-    // ya pasamos los filtros a la API para que devuelva paginado.
-    // Ojo que statusFilter en este código original era solo frontend, 
-    // lo dejo sin mandar al backend si no lo hicimos en el backend, 
-    // pero si filtramos por status en frontend, la paginación de backend
-    // rompe los totales. Como el requerimiento es "no tiene paginacion", 
-    // vamos a pedir la pagina entera y quitar statusFilter local.
-    // Wait, el backend no acepta statusFilter en findCertifications aún. 
-    // Si lo aplico localmente se rompe la paginación. 
-    // Idealmente el filtro debe ir al backend, pero por ahora paginamos 
-    // los datos base.
-    
     forkJoin({
       certPage: this.farmsService.getCertifications({
         farmId: this.selectedFarmId || undefined,
