@@ -106,13 +106,22 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'analytics',
+    loadComponent: () =>
+      import('./features/analytics/analytics-page/analytics-page').then(
+        (module) => module.AnalyticsPage,
+      ),
+    canActivate: adminGuards,
+    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
+  },
+  {
     path: 'dashboard',
     loadComponent: () =>
-      import('./shared/feature-placeholder/feature-placeholder').then(
-        (module) => module.FeaturePlaceholder,
+      import('./features/analytics/analytics-page/analytics-page').then(
+        (module) => module.AnalyticsPage,
       ),
-    canActivate: [authGuard],
-    data: { title: 'Panel principal' },
+    canActivate: adminGuards,
+    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
   },
   {
     path: 'empaques',

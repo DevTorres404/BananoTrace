@@ -1,0 +1,412 @@
+<main class="farms-page analytics-page">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Business Intelligence</p>
+      <h1>Analytics</h1>
+      <p>Producción, calidad y logística en tiempo real.</p>
+    </div>
+    <div class="header-actions">
+      <button
+        *ngIf="isAdmin"
+        type="button"
+        class="btn-etl"
+        [disabled]="isRefreshingEtl"
+        (click)="refreshEtl()"
+        title="Refresca las vistas materializadas del Data Warehouse"
+      >
+        <span *ngIf="!isRefreshingEtl">⟳ Refresh ETL</span>
+        <span *ngIf="isRefreshingEtl">Refrescando…</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ETL feedback -->
+  <div *ngIf="etlResult" class="etl-banner success">
+    ✓ ETL completado en {{ etlResult.durationMs }}ms ·
+    <span *ngFor="let v of etlResult.views; let last = last">
+      {{ v.name }}: {{ v.rowCount | number }} filas<span *ngIf="!last"> · </span>
+    </span>
+    <button type="button" (click)="etlResult = null">✕</button>
+  </div>
+  <div *ngIf="etlError" class="etl-banner error">
+    {{ etlError }} <button type="button" (click)="etlError = ''">✕</button>
+  </div>
+
+  <!-- Date range controls -->
+  <section class="date-controls">
+    <div class="preset-buttons">
+      <button type="button" [class.active]="preset === '30'"  (click)="applyPreset('30')">30 días</button>
+      <button type="button" [class.active]="preset === '90'"  (click)="applyPreset('90')">90 días</button>
+      <button type="button" [class.active]="preset === '365'" (click)="applyPreset('365')">1 año</button>
+    </div>
+    <div class="custom-range">
+      <label>
+        <span>Desde</span>
+        <input type="date" [(ngModel)]="filters.desde" />
+      </label>
+      <label>
+        <span>Hasta</span>
+        <input type="date" [(ngModel)]="filters.hasta" />
+      </label>
+      <button type="button" class="btn-primary" (click)="applyCustomRange()">Aplicar</button>
+    </div>
+  </section>
+
+  <!-- Tab bar -->
+  <nav class="tab-bar" role="tablist">
+    <button role="tab" [class.active]="activeTab === 'resumen'"    (click)="switchTab('resumen')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Resumen
+    </button>
+    <button role="tab" [class.active]="activeTab === 'produccion'" (click)="switchTab('produccion')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      Producción
+    </button>
+    <button role="tab" [class.active]="activeTab === 'calidad'"    (click)="switchTab('calidad')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Calidad
+    </button>
+    <button role="tab" [class.active]="activeTab === 'logistica'"  (click)="switchTab('logistica')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Logística
+    </button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════ TAB: RESUMEN -->
+  <div *ngIf="activeTab === 'resumen'" class="tab-content">
+
+    <div *ngIf="isLoadingResumen" class="tab-loading">
+      <div class="spinner"></div><p>Cargando resumen…</p>
+    </div>
+    <p *ngIf="errorResumen" class="error-banner">{{ errorResumen }}
+      <button type="button" (click)="loadResumen()">Reintentar</button>
+    </p>
+
+    <ng-container *ngIf="resumen && !isLoadingResumen">
+
+      <!-- KPIs -->
+      <section class="metrics metrics-5">
+        <article class="metric-card teal">
+          <span>Lotes totales</span>
+          <strong>{{ resumen.produccion.totalLotes | number }}</strong>
+          <small>{{ resumen.produccion.lotesActivos }} activos</small>
+        </article>
+        <article class="metric-card green">
+          <span>Toneladas cosechadas</span>
+          <strong>{{ formatKg(resumen.produccion.totalKg) }}</strong>
+          <small>En el período</small>
+        </article>
+        <article class="metric-card yellow">
+          <span>Tasa aprobación</span>
+          <strong>
+            {{ resumen.calidad.aprobados + resumen.calidad.rechazados > 0
+              ? ((resumen.calidad.aprobados / (resumen.calidad.aprobados + resumen.calidad.rechazados)) * 100 | number: '1.0-0')
+              : '—' }}%
+          </strong>
+          <small>% rechazo prom: {{ resumen.calidad.pctRechazo }}%</small>
+        </article>
+        <article class="metric-card teal">
+          <span>Envíos totales</span>
+          <strong>{{ resumen.logistica.totalEnvios | number }}</strong>
+          <small>{{ resumen.logistica.entregados }} entregados</small>
+        </article>
+        <article class="metric-card green">
+          <span>Kg exportados</span>
+          <strong>{{ formatKg(resumen.logistica.totalKg) }}</strong>
+          <small>Peso neto en cajas</small>
+        </article>
+      </section>
+
+      <!-- Chart actividad -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Actividad reciente</h2><p>Últimos 6 meses — cosecha y envíos</p></div></div>
+        <div class="chart-container">
+          <canvas #chartActividad></canvas>
+        </div>
+      </section>
+
+    </ng-container>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ TAB: PRODUCCION -->
+  <div *ngIf="activeTab === 'produccion'" class="tab-content">
+
+    <div *ngIf="isLoadingProduccion" class="tab-loading">
+      <div class="spinner"></div><p>Cargando producción…</p>
+    </div>
+    <p *ngIf="errorProduccion" class="error-banner">{{ errorProduccion }}
+      <button type="button" (click)="loadProduccion()">Reintentar</button>
+    </p>
+
+    <ng-container *ngIf="produccion && !isLoadingProduccion">
+
+      <!-- KPIs -->
+      <section class="metrics">
+        <article class="metric-card teal">
+          <span>Lotes registrados</span>
+          <strong>{{ produccion.kpis.totalLotes | number }}</strong>
+          <small>En el período</small>
+        </article>
+        <article class="metric-card green">
+          <span>Total cosechado</span>
+          <strong>{{ formatKg(produccion.kpis.totalKg) }}</strong>
+          <small>Peso bruto acumulado</small>
+        </article>
+        <article class="metric-card yellow">
+          <span>Plantas registradas</span>
+          <strong>{{ produccion.kpis.totalPlantas | number }}</strong>
+          <small>Días ciclo prom: {{ produccion.kpis.diasCicloProm }}</small>
+        </article>
+      </section>
+
+      <!-- Charts row -->
+      <div class="charts-row">
+        <section class="panel chart-panel">
+          <div class="section-heading"><div><h2>Tendencia mensual</h2><p>Kg cosechados por mes</p></div></div>
+          <div class="chart-container">
+            <canvas #chartTendenciaKg></canvas>
+          </div>
+        </section>
+        <section class="panel chart-panel">
+          <div class="section-heading"><div><h2>Lotes por estado</h2><p>Distribución actual</p></div></div>
+          <div class="chart-container chart-container--sm">
+            <canvas #chartEstados></canvas>
+          </div>
+        </section>
+      </div>
+
+      <!-- Top fincas -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Top fincas por volumen</h2><p>Kg cosechados en el período</p></div></div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Finca</th><th>País</th><th>Lotes</th><th>Kg cosechados</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of produccion.topFincas; let i = index">
+                <td data-label="#">{{ i + 1 }}</td>
+                <td data-label="Finca"><strong>{{ row.finca }}</strong></td>
+                <td data-label="País">{{ row.pais }}</td>
+                <td data-label="Lotes">{{ row.lotes | number }}</td>
+                <td data-label="Kg">{{ formatKg(row.kg) }}</td>
+              </tr>
+              <tr *ngIf="produccion.topFincas.length === 0">
+                <td colspan="5" class="state">Sin datos para el período.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Por variedad -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Por variedad</h2><p>Lotes y peso por tipo</p></div></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Variedad</th><th>Lotes</th><th>Kg totales</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of produccion.porVariedad">
+                <td data-label="Variedad"><strong>{{ row.variedad }}</strong></td>
+                <td data-label="Lotes">{{ row.cantidad | number }}</td>
+                <td data-label="Kg">{{ formatKg(row.pesoKg) }}</td>
+              </tr>
+              <tr *ngIf="produccion.porVariedad.length === 0">
+                <td colspan="3" class="state">Sin datos.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </ng-container>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ TAB: CALIDAD -->
+  <div *ngIf="activeTab === 'calidad'" class="tab-content">
+
+    <div *ngIf="isLoadingCalidad" class="tab-loading">
+      <div class="spinner"></div><p>Cargando calidad…</p>
+    </div>
+    <p *ngIf="errorCalidad" class="error-banner">{{ errorCalidad }}
+      <button type="button" (click)="loadCalidad()">Reintentar</button>
+    </p>
+
+    <ng-container *ngIf="calidad && !isLoadingCalidad">
+
+      <!-- KPIs -->
+      <section class="metrics metrics-4">
+        <article class="metric-card green">
+          <span>Aprobados</span>
+          <strong>{{ calidad.kpis.aprobados | number }}</strong>
+          <small>Tasa: {{ calidad.kpis.tasaAprobacion }}%</small>
+        </article>
+        <article class="metric-card yellow">
+          <span>Observados</span>
+          <strong>{{ calidad.kpis.observados | number }}</strong>
+          <small>Requieren revisión</small>
+        </article>
+        <article class="metric-card" style="color: #9f2d2d">
+          <span>Rechazados</span>
+          <strong>{{ calidad.kpis.rechazados | number }}</strong>
+          <small>% rechazo prom: {{ calidad.kpis.pctRechazoProm }}%</small>
+        </article>
+        <article class="metric-card teal">
+          <span>Calibre promedio</span>
+          <strong>{{ calidad.kpis.calibreProm }} mm</strong>
+          <small>{{ calidad.kpis.totalControles | number }} controles</small>
+        </article>
+      </section>
+
+      <!-- Chart rechazo -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Evolución del rechazo</h2><p>% de rechazo promedio por mes</p></div></div>
+        <div class="chart-container">
+          <canvas #chartRechazo></canvas>
+        </div>
+      </section>
+
+      <!-- Top fincas rechazadas -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Fincas con mayor tasa de rechazo</h2><p>Mínimo 3 controles en el período</p></div></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>#</th><th>Finca</th><th>País</th><th>% Rechazo</th><th>Rechazados</th><th>Total</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of calidad.topRechazadas; let i = index">
+                <td data-label="#">{{ i + 1 }}</td>
+                <td data-label="Finca"><strong>{{ row.finca }}</strong></td>
+                <td data-label="País">{{ row.pais }}</td>
+                <td data-label="% Rechazo"><span class="badge-red">{{ row.pctRechazo }}%</span></td>
+                <td data-label="Rechazados">{{ row.rechazados | number }}</td>
+                <td data-label="Total">{{ row.total | number }}</td>
+              </tr>
+              <tr *ngIf="calidad.topRechazadas.length === 0">
+                <td colspan="6" class="state">Sin datos (se requieren ≥ 3 controles por finca).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Calibre por variedad -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Calibre por variedad</h2><p>Promedio en mm</p></div></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Variedad</th><th>Calibre prom (mm)</th><th>Controles</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of calidad.porVariedad">
+                <td data-label="Variedad"><strong>{{ row.variedad }}</strong></td>
+                <td data-label="Calibre">{{ row.calibreProm }} mm</td>
+                <td data-label="Controles">{{ row.cantidad | number }}</td>
+              </tr>
+              <tr *ngIf="calidad.porVariedad.length === 0">
+                <td colspan="3" class="state">Sin datos.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </ng-container>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ TAB: LOGÍSTICA -->
+  <div *ngIf="activeTab === 'logistica'" class="tab-content">
+
+    <div *ngIf="isLoadingLogistica" class="tab-loading">
+      <div class="spinner"></div><p>Cargando logística…</p>
+    </div>
+    <p *ngIf="errorLogistica" class="error-banner">{{ errorLogistica }}
+      <button type="button" (click)="loadLogistica()">Reintentar</button>
+    </p>
+
+    <ng-container *ngIf="logistica && !isLoadingLogistica">
+
+      <!-- KPIs -->
+      <section class="metrics metrics-4">
+        <article class="metric-card teal">
+          <span>Total envíos</span>
+          <strong>{{ logistica.kpis.totalEnvios | number }}</strong>
+          <small>Contenedores despachados</small>
+        </article>
+        <article class="metric-card green">
+          <span>Cajas enviadas</span>
+          <strong>{{ logistica.kpis.totalCajas | number }}</strong>
+          <small>Total acumulado</small>
+        </article>
+        <article class="metric-card yellow">
+          <span>Volumen</span>
+          <strong>{{ formatKg(logistica.kpis.totalKg) }}</strong>
+          <small>Peso neto exportado</small>
+        </article>
+        <article class="metric-card teal">
+          <span>Días tránsito prom.</span>
+          <strong>{{ logistica.kpis.diasTransitoProm }}</strong>
+          <small>Temp. salida prom: {{ logistica.kpis.tempProm }}°C</small>
+        </article>
+      </section>
+
+      <!-- Charts row -->
+      <div class="charts-row">
+        <section class="panel chart-panel">
+          <div class="section-heading"><div><h2>Tendencia de envíos</h2><p>Envíos y kg por mes</p></div></div>
+          <div class="chart-container">
+            <canvas #chartEnviosTendencia></canvas>
+          </div>
+        </section>
+        <section class="panel chart-panel">
+          <div class="section-heading"><div><h2>Navieras por volumen</h2><p>Kg enviados por operador</p></div></div>
+          <div class="chart-container">
+            <canvas #chartNavieras></canvas>
+          </div>
+        </section>
+      </div>
+
+      <!-- Top rutas -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Top rutas</h2><p>Origen → Destino por volumen</p></div></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>#</th><th>Origen</th><th>Destino</th><th>Envíos</th><th>Kg</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of logistica.rutas; let i = index">
+                <td data-label="#">{{ i + 1 }}</td>
+                <td data-label="Origen"><strong>{{ row.origen }}</strong></td>
+                <td data-label="Destino">{{ row.destino }}</td>
+                <td data-label="Envíos">{{ row.envios | number }}</td>
+                <td data-label="Kg">{{ formatKg(row.kg) }}</td>
+              </tr>
+              <tr *ngIf="logistica.rutas.length === 0">
+                <td colspan="5" class="state">Sin datos para el período.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Por estado -->
+      <section class="panel">
+        <div class="section-heading"><div><h2>Envíos por estado</h2></div></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Estado</th><th>Cantidad</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of logistica.porEstado">
+                <td data-label="Estado"><span class="status">{{ row.estado }}</span></td>
+                <td data-label="Cantidad">{{ row.cantidad | number }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </ng-container>
+  </div>
+
+</main>

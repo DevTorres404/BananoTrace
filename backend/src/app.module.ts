@@ -12,9 +12,10 @@ import { LotsModule } from './lots/lots.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { QrModule } from './qr/qr.module';
 import { PublicoModule } from './publico/publico.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductionModule, QualityModule, LogisticsModule, TraceabilityModule, AuthModule, ProducersModule, FarmsModule, LotsModule, BlockchainModule, QrModule, PublicoModule],
+  imports: [PrismaModule, UsersModule, ProductionModule, QualityModule, LogisticsModule, TraceabilityModule, AuthModule, ProducersModule, FarmsModule, LotsModule, BlockchainModule, QrModule, PublicoModule, AnalyticsModule],
   controllers: [],
   providers: [],
 })

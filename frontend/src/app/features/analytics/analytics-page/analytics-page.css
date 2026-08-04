@@ -1,0 +1,243 @@
+/* ── Analytics-specific overrides & additions ─────────────────────────────── */
+
+/* Loading state inside a tab */
+.tab-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 2rem;
+  color: var(--color-text-secondary, #64756f);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-border, #d7e5de);
+  border-top-color: var(--color-primary, #16825d);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Date controls ──────────────────────────────────────────────────────────── */
+.date-controls {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--color-border, #d7e5de);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.preset-buttons button {
+  border: 1px solid var(--color-border, #cddfd6);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-secondary, #5c7168);
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.preset-buttons button.active,
+.preset-buttons button:hover {
+  border-color: var(--color-primary, #16825d);
+  color: var(--color-primary, #16825d);
+  background: rgba(22, 130, 93, 0.07);
+}
+
+.custom-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.custom-range label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.custom-range label span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-text-secondary, #60736b);
+}
+
+.custom-range input {
+  width: 160px;
+  min-height: 2.4rem;
+}
+
+/* ── Tab bar ────────────────────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--color-border, #d7e5de);
+  overflow-x: auto;
+}
+
+.tab-bar button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.7rem 1.1rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-text-secondary, #5c7168);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-bar button:hover {
+  color: var(--color-primary, #16825d);
+}
+
+.tab-bar button.active {
+  color: var(--color-primary, #16825d);
+  border-bottom-color: var(--color-primary, #16825d);
+}
+
+/* ── Tab content ────────────────────────────────────────────────────────────── */
+.tab-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── KPI grid variants ──────────────────────────────────────────────────────── */
+.metrics-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metrics-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* ── Charts ─────────────────────────────────────────────────────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chart-panel {
+  margin-bottom: 0;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.chart-container--sm {
+  height: 240px;
+}
+
+/* ── ETL banner ─────────────────────────────────────────────────────────────── */
+.etl-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.etl-banner.success {
+  color: #116843;
+  background: #e1f5eb;
+  border: 1px solid #a7ddc0;
+}
+
+.etl-banner.error {
+  color: #9f2d2d;
+  background: #fff0ef;
+  border: 1px solid #efc3be;
+}
+
+.etl-banner button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+/* ── ETL button ─────────────────────────────────────────────────────────────── */
+.btn-etl {
+  border: 1px solid var(--color-border, #cddfd6);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-primary, #16825d);
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-etl:hover:not(:disabled) {
+  background: rgba(22, 130, 93, 0.07);
+}
+
+.btn-etl:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Badges ─────────────────────────────────────────────────────────────────── */
+.badge-red {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  color: #a13831;
+  background: #fde6e3;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .metrics-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .metrics-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .charts-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .metrics-5,
+  .metrics-4 { grid-template-columns: 1fr; }
+  .date-controls { flex-direction: column; align-items: stretch; }
+  .preset-buttons { flex-wrap: wrap; }
+  .custom-range { flex-direction: column; }
+  .custom-range input { width: 100%; }
+  .tab-bar button { padding: 0.6rem 0.75rem; font-size: 0.8rem; }
+}

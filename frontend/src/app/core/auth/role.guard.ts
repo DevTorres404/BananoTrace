@@ -20,5 +20,22 @@ export const roleGuard: CanActivateFn = (route) => {
         : payload.rol.toUpperCase() === role.toUpperCase(),
     );
 
-  return authorized ? true : router.createUrlTree(['/dashboard']);
+  if (authorized) {
+    return true;
+  }
+
+  // Redirect to a role-appropriate safe route to avoid infinite loops
+  switch (payload.idRol) {
+    case 1: // ADMINISTRADOR
+      return router.createUrlTree(['/dashboard']);
+    case 2: // SUPERVISOR_AGRICOLA
+    case 6: // GERENTE_PRODUCTOR
+      return router.createUrlTree(['/lotes']);
+    case 3: // CALIDAD
+      return router.createUrlTree(['/calidad']);
+    case 4: // LOGISTICA
+      return router.createUrlTree(['/envios']);
+    default:
+      return router.createUrlTree(['/login']); // Fallback
+  }
 };

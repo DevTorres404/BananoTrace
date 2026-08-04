@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ConsultaResultado, PublicoService } from '../publico.service';
 import { Html5Qrcode } from 'html5-qrcode';
+import { AuthService } from '../../../core/services/auth';
 
 type ConsultaEstado = 'cargando' | 'encontrado' | 'no-encontrado' | 'sin-codigo';
 
@@ -16,7 +17,7 @@ const TIPO_LABELS: Record<ConsultaResultado['tipo'], string> = {
 @Component({
   selector: 'app-consulta-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './consulta-page.html',
   styleUrls: ['../../farms/farms-page/farms-page.css', './consulta-page.css'],
 })
@@ -24,6 +25,7 @@ export class ConsultaPage implements OnInit, OnDestroy {
   private readonly publicoService = inject(PublicoService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  readonly auth = inject(AuthService);
 
   estado: ConsultaEstado = 'sin-codigo';
   resultado: ConsultaResultado | null = null;

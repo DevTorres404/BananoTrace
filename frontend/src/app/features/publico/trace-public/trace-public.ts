@@ -3,6 +3,8 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ConsultaResultado, PublicoService } from '../publico.service';
+import { AuthService } from '../../../core/services/auth';
+import { ThemeService } from '../../../core/services/theme';
 
 type TraceEstado =
   | 'cargando'
@@ -41,6 +43,8 @@ export class TracePublicPage implements OnInit {
   private readonly publicoService = inject(PublicoService);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  readonly auth = inject(AuthService);
+  readonly theme = inject(ThemeService);
 
   estado: TraceEstado = 'cargando';
   resultado: ConsultaResultado | null = null;
@@ -48,7 +52,9 @@ export class TracePublicPage implements OnInit {
   readonly tipoLabels = TIPO_LABELS;
   readonly verificacionLabels = VERIFICACION_LABELS;
 
-  isDarkMode = true;
+  get isDarkMode(): boolean {
+    return this.theme.theme() === 'dark';
+  }
 
   get currentYear(): number {
     return new Date().getFullYear();
@@ -92,7 +98,7 @@ export class TracePublicPage implements OnInit {
   }
 
   toggleTheme(): void {
-    this.isDarkMode = !this.isDarkMode;
+    this.theme.toggle();
   }
 
   ngOnInit(): void {

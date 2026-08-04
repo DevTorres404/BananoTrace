@@ -34,7 +34,7 @@
   <section class="panel" *ngIf="estado === 'cargando'">
     <div class="loading-state">
       <div class="spinner"></div>
-      <p>Consultando lote...</p>
+      <p>Consultando trazabilidad...</p>
     </div>
   </section>
 
@@ -42,69 +42,206 @@
     <p class="state">No se encontró información para el código "{{ codigo }}".</p>
   </section>
 
-  <ng-container *ngIf="estado === 'encontrado' && resultado as r">
-    <section class="panel">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">{{ tipoLabels[r.tipo] }}</p>
-          <h2>{{ r.codigo }}</h2>
-        </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <span class="status" *ngIf="r.estado">{{ r.estado }}</span>
-          <button type="button" class="btn-secondary" (click)="startScanner()">Escanear otro QR</button>
-        </div>
-      </div>
-      <dl class="data-grid" *ngIf="r.finca">
-        <div>
-          <dt>Finca de origen</dt>
-          <dd>{{ r.finca.nombre }}</dd>
-        </div>
-        <div>
-          <dt>Ubicación</dt>
-          <dd>{{ r.finca.region }}, {{ r.finca.pais }}</dd>
-        </div>
-        <div *ngIf="r.fechaSiembra">
-          <dt>Fecha de siembra</dt>
-          <dd>{{ r.fechaSiembra | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
-        </div>
-        <div *ngIf="r.fechaCosecha">
-          <dt>Fecha de cosecha</dt>
-          <dd>{{ r.fechaCosecha | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
-        </div>
-      </dl>
-    </section>
-
-    <section class="panel" *ngIf="r.timeline.length > 0">
-      <div class="section-heading">
-        <div>
-          <h2>Línea de tiempo</h2>
-          <p>Fases del proceso de trazabilidad</p>
-        </div>
-      </div>
-      <ol class="timeline">
-        <li *ngFor="let item of r.timeline">
-          <span class="timeline-dot"></span>
-          <div>
-            <time *ngIf="item.fecha">{{ item.fecha | date: 'dd/MM/yyyy' : 'UTC' }}</time>
-            <strong>{{ item.fase }}</strong>
-            <small>{{ item.estado }}</small>
+  <ng-container *ngIf="estado === 'encontrado' && resultado">
+    <ng-container *ngIf="resultado as r">
+      <!-- Internal User Banner -->
+      <section class="panel internal-banner" *ngIf="auth.isAuthenticated()">
+        <div class="banner-content">
+          <span class="material-symbols-outlined icon">admin_panel_settings</span>
+          <div class="text">
+            <h3>Modo Empleado Activo</h3>
+            <p>Estás viendo información adicional de trazabilidad que no es visible al público general.</p>
           </div>
-        </li>
-      </ol>
-    </section>
+          <button type="button" class="btn-secondary" routerLink="/dashboard">Ir al panel</button>
+        </div>
+      </section>
 
-    <section class="panel">
-      <div class="integrity-banner" [class.integra]="r.integridadBlockchain.integra === true" [class.alterada]="r.integridadBlockchain.integra === false">
-        <ng-container [ngSwitch]="r.integridadBlockchain.verificable">
-          <strong *ngSwitchCase="true">
-            {{ r.integridadBlockchain.integra ? '✅ Evidencia blockchain íntegra' : '❌ Evidencia blockchain alterada' }}
-          </strong>
-          <strong *ngSwitchCase="false">— Sin evidencia blockchain verificable</strong>
-        </ng-container>
-        <span *ngIf="r.integridadBlockchain.verificable">
-          {{ r.integridadBlockchain.bloques }} bloque(s) registrados
-        </span>
-      </div>
-    </section>
+      <!-- Main Header -->
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" [class.premium-eyebrow]="r.tipo === 'EMPAQUE' || r.tipo === 'ENVIO'">{{ tipoLabels[r.tipo] }}</p>
+            <h2 style="font-size: 2rem; color: var(--color-primary-dark);">{{ r.codigo }}</h2>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="status status-{{r.estado?.toLowerCase()}}" *ngIf="r.estado">{{ r.estado }}</span>
+            <button type="button" class="btn-ghost" (click)="startScanner()" title="Escanear otro código">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detailed info for internal users -->
+      <ng-container *ngIf="auth.isAuthenticated()">
+        <div class="grid-2">
+          <!-- Origin Details -->
+          <section class="panel" *ngIf="r.finca || r.productor">
+            <div class="section-heading">
+              <div>
+                <h3>Origen y Productor</h3>
+                <p>Datos confidenciales de origen</p>
+              </div>
+            </div>
+            <dl class="data-grid compact">
+              <div *ngIf="r.finca">
+                <dt>Finca</dt>
+                <dd>{{ r.finca.nombre }}</dd>
+              </div>
+              <div *ngIf="r.finca">
+                <dt>Ubicación</dt>
+                <dd>{{ r.finca.region }}, {{ r.finca.pais }}</dd>
+              </div>
+              <div *ngIf="r.productor">
+                <dt>Productor</dt>
+                <dd>{{ r.productor.nombreRazonSocial }}</dd>
+              </div>
+              <div *ngIf="r.productor?.identificacion">
+                <dt>RUC/ID</dt>
+                <dd>{{ r.productor.identificacion }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- Product Details -->
+          <section class="panel">
+            <div class="section-heading">
+              <div>
+                <h3>Especificaciones Técnicas</h3>
+                <p>Detalles del producto</p>
+              </div>
+            </div>
+            <dl class="data-grid compact">
+              <div *ngIf="r.producto?.variedad">
+                <dt>Variedad</dt>
+                <dd>{{ r.producto.variedad }}</dd>
+              </div>
+              <div *ngIf="r.pesoNetoKg">
+                <dt>Peso Registrado</dt>
+                <dd>{{ r.pesoNetoKg }} kg</dd>
+              </div>
+              <div *ngIf="r.fechas?.siembra">
+                <dt>Fecha Siembra</dt>
+                <dd>{{ r.fechas.siembra | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+              </div>
+              <div *ngIf="r.fechas?.cosecha">
+                <dt>Fecha Cosecha</dt>
+                <dd>{{ r.fechas.cosecha | date: 'dd/MM/yyyy' : 'UTC' }}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+
+        <!-- Certifications -->
+        <section class="panel" *ngIf="r.certificaciones && r.certificaciones.length > 0">
+          <div class="section-heading">
+            <div>
+              <h3>Certificaciones</h3>
+              <p>Acreditaciones vigentes al momento del empaque</p>
+            </div>
+          </div>
+          <div class="cert-grid">
+            <div class="cert-card" *ngFor="let cert of r.certificaciones">
+              <strong>{{ cert.tipo }}</strong>
+              <span>{{ cert.entidad }}</span>
+              <small>Válido hasta: {{ cert.fechaVencimiento | date: 'dd/MM/yyyy' : 'UTC' }}</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- Logistics Details -->
+        <section class="panel" *ngIf="r.envio">
+          <div class="section-heading">
+            <div>
+              <h3>Logística Internacional</h3>
+              <p>Datos del viaje</p>
+            </div>
+          </div>
+          <dl class="data-grid compact">
+            <div *ngIf="r.envio.puertoOrigen">
+              <dt>Puerto Origen</dt>
+              <dd>{{ r.envio.puertoOrigen }}</dd>
+            </div>
+            <div *ngIf="r.envio.puertoDestino">
+              <dt>Puerto Destino</dt>
+              <dd>{{ r.envio.puertoDestino }}</dd>
+            </div>
+            <div *ngIf="r.envio.naviera">
+              <dt>Naviera</dt>
+              <dd>{{ r.envio.naviera }}</dd>
+            </div>
+            <div *ngIf="r.envio.temperaturaSalida">
+              <dt>Temp. Salida</dt>
+              <dd>{{ r.envio.temperaturaSalida }}°C</dd>
+            </div>
+          </dl>
+        </section>
+      </ng-container>
+
+      <!-- Public basic info (shown to public users) -->
+      <ng-container *ngIf="!auth.isAuthenticated()">
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <h3>Información General</h3>
+              <p>Datos públicos del origen</p>
+            </div>
+          </div>
+          <dl class="data-grid">
+            <div *ngIf="r.finca">
+              <dt>País de Origen</dt>
+              <dd>{{ r.finca.pais }}</dd>
+            </div>
+            <div *ngIf="r.finca">
+              <dt>Región</dt>
+              <dd>{{ r.finca.region }}</dd>
+            </div>
+            <div *ngIf="r.producto?.variedad">
+              <dt>Variedad</dt>
+              <dd>{{ r.producto.variedad }}</dd>
+            </div>
+            <div *ngIf="r.certificaciones && r.certificaciones.length > 0">
+              <dt>Certificaciones</dt>
+              <dd>{{ r.certificaciones.length }} acreditaciones</dd>
+            </div>
+          </dl>
+        </section>
+      </ng-container>
+
+      <!-- Shared: Timeline -->
+      <section class="panel" *ngIf="r.timeline.length > 0">
+        <div class="section-heading">
+          <div>
+            <h2>Línea de tiempo</h2>
+            <p>Fases del proceso de trazabilidad</p>
+          </div>
+        </div>
+        <ol class="timeline">
+          <li *ngFor="let item of r.timeline">
+            <span class="timeline-dot"></span>
+            <div>
+              <time *ngIf="item.fecha">{{ item.fecha | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}</time>
+              <strong>{{ item.fase }}</strong>
+              <small>{{ item.estado }}</small>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <!-- Shared: Blockchain -->
+      <section class="panel">
+        <div class="integrity-banner" [class.integra]="r.integridadBlockchain.integra === true" [class.alterada]="r.integridadBlockchain.integra === false">
+          <ng-container [ngSwitch]="r.integridadBlockchain.verificable">
+            <strong *ngSwitchCase="true">
+              {{ r.integridadBlockchain.integra ? '✅ Trazabilidad criptográfica íntegra' : '❌ Alerta de alteración de datos' }}
+            </strong>
+            <strong *ngSwitchCase="false">— Sin evidencia blockchain verificable</strong>
+          </ng-container>
+          <span *ngIf="r.integridadBlockchain.verificable">
+            {{ r.integridadBlockchain.bloques }} bloque(s) registrados y verificados en la red
+          </span>
+        </div>
+      </section>
+    </ng-container>
   </ng-container>
 </main>
