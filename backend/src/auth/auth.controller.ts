@@ -23,6 +23,12 @@ export class AuthController {
     return this.authService.login(signInDto.email, signInDto.password);
   }
 
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  refresh(@Body() refreshDto: { refresh_token: string }) {
+    return this.authService.refresh(refreshDto.refresh_token);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(ROLE_IDS.ADMINISTRADOR)
   @Post('register')

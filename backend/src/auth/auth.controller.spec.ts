@@ -6,15 +6,14 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
+  let authService: { login: jest.Mock; register: jest.Mock; refresh: jest.Mock };
 
   beforeEach(async () => {
+    authService = { login: jest.fn(), register: jest.fn(), refresh: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        {
-          provide: AuthService,
-          useValue: { login: jest.fn(), register: jest.fn() },
-        },
+        { provide: AuthService, useValue: authService },
         {
           provide: JwtService,
           useValue: { verifyAsync: jest.fn() },
@@ -31,5 +30,11 @@ describe('AuthController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('delegates token refresh to the service with the provided refresh token', () => {
+    controller.refresh({ refresh_token: 'a.refresh.token' });
+
+    expect(authService.refresh).toHaveBeenCalledWith('a.refresh.token');
   });
 });

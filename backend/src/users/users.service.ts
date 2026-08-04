@@ -75,6 +75,14 @@ export class UsersService {
     });
   }
 
+  /** Búsqueda interna (con claveHash y relación de rol) para auth, distinta de `findOne` que sirve el perfil público. */
+  async findById(idUsuario: bigint) {
+    return this.prisma.usuario.findUnique({
+      where: { idUsuario },
+      include: { rol: true },
+    });
+  }
+
   async create(data: CreateUserInput) {
     const nombres = this.requireText(data.nombres, 'nombres');
     const apellidos = this.requireText(data.apellidos, 'apellidos');
