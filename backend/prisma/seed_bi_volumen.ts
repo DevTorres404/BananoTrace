@@ -1891,7 +1891,10 @@ async function sembrarProductoresFincas(prisma: PrismaClient, existentes: number
   for (let i = 0; i < pendientes; i++) {
     const rng = crearPRNG(91_000 + (existentes + i) * 977);
     const identificacion = `${PREFIJO_PRODUCTOR}${String(existentes + i).padStart(8, '0')}`;
-    const razonSocial = nombreRazonSocial(rng);
+    // nombreRazonSocial() solo tiene 336 combinaciones posibles; con 200 productores
+    // objetivo las colisiones son casi seguras (paradoja del cumpleaños), así que se
+    // agrega un índice global único en vez de confiar en el sorteo.
+    const razonSocial = `${nombreRazonSocial(rng)} ${existentes + i + 1}`;
     const provincia = elegir(rng, [...PROVINCIAS]);
     const localidad = elegir(rng, [...provincia.localidades]);
     productores.push({
@@ -1941,7 +1944,11 @@ async function sembrarProductoresFincas(prisma: PrismaClient, existentes: number
         const longitud = redondear(prov.lonMin + rngFinca() * (prov.lonMax - prov.lonMin), 6);
         fincas.push({
           idProductor: productor.idProductor,
-          nombre: `Finca ${nombreRazonSocial(rngFinca)} ${f + 1}`,
+          // `f + 1` solo es único dentro de las fincas de UN productor; con 500 fincas
+          // objetivo y 336 combinaciones de nombreRazonSocial(), distintos productores
+          // terminan generando el mismo nombre. `creadas` es el contador global de
+          // fincas de esta corrida, así que sí garantiza un nombre único por finca.
+          nombre: `Finca ${nombreRazonSocial(rngFinca)} ${creadas + 1}`,
           pais: 'Ecuador',
           region: prov.region,
           localidad: loc,
