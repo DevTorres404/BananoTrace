@@ -1097,7 +1097,10 @@ async function sembrarProductoresFincas(
     const provincia = elegir(rng, REGIONES);
     productores.push({
       identificacion,
-      nombreRazonSocial: nombreRazonSocial(rng),
+      // nombreRazonSocial() solo tiene 336 combinaciones posibles; con 5000 productores
+      // objetivo, cada nombre se repetiría en promedio ~15 veces, así que se agrega un
+      // índice global único en vez de confiar en el sorteo.
+      nombreRazonSocial: `${nombreRazonSocial(rng)} ${existentes + i + 1}`,
       telefono: rng() < 0.6 ? `09${String(9_0000000 + (existentes + i) * 13).padStart(8, '0')}` : null,
       correo: `productor.fin.${existentes + i}@bananotrace.test`,
       direccion: rng() < 0.6 ? `Vía a ${elegir(rng, provincia.localidades)}, provincia de ${provincia.region}` : null,
@@ -1128,7 +1131,11 @@ async function sembrarProductoresFincas(
       const codigoFinca = correlativos.FINCA.siguiente('FIN', anioFinca);
       fincas.push({
         idProductor: productor.idProductor,
-        nombre: `Finca ${apellido} ${f + 1}`,
+        // `apellido` sale de una lista de 20 y `f + 1` solo es único dentro de las
+        // fincas de UN productor: con 5000 productores compartiendo esos 20 apellidos,
+        // el mismo nombre "Finca X N" se repite ~250 veces en promedio. `creadas` es
+        // el contador global de fincas de esta corrida, así que sí es único por finca.
+        nombre: `Finca ${apellido} ${creadas + 1}`,
         pais: 'Ecuador',
         region: prov.region,
         localidad: loc,
