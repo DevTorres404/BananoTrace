@@ -84,7 +84,10 @@ export class AnalyticsService {
           LIMIT 10
         `,
 
-        // Tendencia mensual de cosecha (kg por mes)
+        // Tendencia mensual de cosecha (kg por mes). Filtra por fecha_registro, igual que
+        // los KPIs y topFincas más abajo — antes filtraba por fecha_cosecha, así que para
+        // el mismo rango seleccionado el total de este gráfico podía no tener relación
+        // alguna con "Total cosechado" del KPI (mismo período, sumas completamente distintas).
         this.prisma.$queryRaw<{ anio: number; mes: number; lotes: bigint; kg: number }[]>`
           SELECT
             EXTRACT(YEAR FROM l.fecha_cosecha)::int AS anio,
@@ -94,7 +97,7 @@ export class AnalyticsService {
           FROM lotes_produccion l
           JOIN fincas f ON f.id_finca = l.id_finca
           WHERE l.fecha_cosecha IS NOT NULL
-            AND l.fecha_cosecha BETWEEN ${d} AND ${h}
+            AND l.fecha_registro BETWEEN ${d} AND ${h}
             ${scope}
           GROUP BY anio, mes
           ORDER BY anio, mes
@@ -425,7 +428,11 @@ export class AnalyticsService {
           LEFT JOIN empaques emp ON emp.id_empaque = ee.id_empaque
           WHERE e.fecha_salida BETWEEN ${d} AND ${h}
         `,
-        // Actividad reciente (últimos 6 meses, 1 punto por mes)
+        // Actividad reciente, un punto por mes dentro del rango seleccionado. Antes el
+        // rango de meses estaba fijo a "últimos 6 meses" sin importar el filtro de fecha
+        // elegido arriba — los KPIs de esta misma pestaña sí respetaban el filtro, así que
+        // este gráfico terminaba mostrando una ventana de tiempo distinta a la del resto
+        // de la pantalla.
         this.prisma.$queryRaw<{ anio: number; mes: number; lotes: bigint; kg_cosechado: number; envios: bigint }[]>`
           SELECT
             EXTRACT(YEAR FROM m.mes)::int AS anio,
@@ -434,8 +441,8 @@ export class AnalyticsService {
             COALESCE(SUM(l.peso_cosechado_kg), 0)::float AS kg_cosechado,
             COUNT(DISTINCT e.id_envio)::bigint AS envios
           FROM generate_series(
-            date_trunc('month', NOW() - INTERVAL '5 months'),
-            date_trunc('month', NOW()),
+            date_trunc('month', ${d}::timestamp),
+            date_trunc('month', ${h}::timestamp),
             INTERVAL '1 month'
           ) AS m(mes)
           LEFT JOIN lotes_produccion l ON date_trunc('month', l.fecha_cosecha) = m.mes
