@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
+import type { StringValue } from 'ms';
 
 @Module({
   imports: [
@@ -10,7 +11,9 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'super_secret_jwt_key_here',
-      signOptions: { expiresIn: '24h' },
+      signOptions: {
+        expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN as StringValue) || '15m',
+      },
     }),
   ],
   controllers: [AuthController],
