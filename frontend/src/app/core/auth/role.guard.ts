@@ -1,16 +1,47 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { decodeJwtPayload } from './jwt-payload';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, UrlTree } from '@angular/router';
+import { catchError, map, Observable, of } from 'rxjs';
+import { AuthService } from '../services/auth';
+import { decodeJwtPayload, JwtPayload } from './jwt-payload';
 
+/**
+ * Igual que authGuard, si el access token expiró pero hay un refresh token, intenta
+ * renovarlo antes de decidir. Es necesario duplicar ese chequeo acá (no alcanza con que
+ * authGuard ya lo haga): Angular evalúa los guards de una ruta en paralelo, no en serie,
+ * así que roleGuard puede correr con el token todavía vencido mientras authGuard sigue
+ * esperando la respuesta de /auth/refresh. AuthService.refreshAccessToken() comparte la
+ * llamada en curso, así que esto no duplica la petición HTTP.
+ */
 export const roleGuard: CanActivateFn = (route) => {
   const router = inject(Router);
+  const authService = inject(AuthService);
   const token = typeof window === 'undefined' ? null : localStorage.getItem('token');
   const payload = decodeJwtPayload(token);
 
-  if (!payload) {
+  if (payload) {
+    return evaluateRole(payload, route, router);
+  }
+
+  if (typeof window === 'undefined' || !authService.getRefreshToken()) {
     return router.createUrlTree(['/login']);
   }
 
+  return authService.refreshAccessToken().pipe(
+    map((response) => {
+      const refreshedPayload = decodeJwtPayload(response.access_token);
+      return refreshedPayload
+        ? evaluateRole(refreshedPayload, route, router)
+        : router.createUrlTree(['/login']);
+    }),
+    catchError((): Observable<UrlTree> => of(router.createUrlTree(['/login']))),
+  );
+};
+
+function evaluateRole(
+  payload: JwtPayload,
+  route: ActivatedRouteSnapshot,
+  router: Router,
+): boolean | UrlTree {
   const expectedRoles = (route.data['roles'] ?? []) as Array<number | string>;
   const authorized =
     expectedRoles.length === 0 ||
@@ -38,4 +69,4 @@ export const roleGuard: CanActivateFn = (route) => {
     default:
       return router.createUrlTree(['/login']); // Fallback
   }
-};
+}
