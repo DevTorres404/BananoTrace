@@ -92,6 +92,8 @@ interface FlujoContext {
   tiposDocumento: TipoDocContext[];
   fincas: FincaVolumen[];
   usuarios: UsuariosVolumen;
+  /** Cantidades de plantas ya asignadas a otros lotes, para no repetir el valor exacto. */
+  plantasUsadas: Set<number>;
 }
 
 interface Cronograma {
@@ -631,6 +633,12 @@ async function crearLoteVolumen(
     cantidadPlantas = Math.round(800 + Math.pow(rng(), 2) * 2400);
   }
   if (cantidadPlantas < 1) cantidadPlantas = 800;
+  // Evita que dos lotes distintos terminen con exactamente la misma cantidad de plantas
+  // (el redondeo a entero hace colisionar valores cercanos con cierta frecuencia).
+  while (ctx.plantasUsadas.has(cantidadPlantas)) {
+    cantidadPlantas += 1 + Math.floor(rng() * 5);
+  }
+  ctx.plantasUsadas.add(cantidadPlantas);
 
   const esPlanificado = etapa === 'PLANIFICADO';
   const fechaRegistroLote = esPlanificado ? hoy() : cronograma.fechaSiembra;
@@ -1363,6 +1371,7 @@ export async function seedLotesVolumen(
     tiposDocumento,
     fincas: productores.flatMap((productor) => productor.fincas),
     usuarios,
+    plantasUsadas: new Set<number>(),
   };
 
   if (ctx.puertosOrigen.length === 0 || ctx.puertosDestino.length === 0) {

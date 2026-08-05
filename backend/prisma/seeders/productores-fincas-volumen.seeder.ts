@@ -112,11 +112,40 @@ function provinciaAleatoria(rng: () => number): Provincia {
   return PROVINCIAS[PROVINCIAS.length - 1];
 }
 
-function nombreRazonSocial(rng: () => number): string {
+/**
+ * Genera una razón social a partir de prefijo+sustantivo+tipo. Reintenta con nuevos
+ * sorteos (misma racha de `rng`) hasta obtener un nombre no usado por otro productor de
+ * volumen; con 10 prefijos × 24 sustantivos × 4 tipos (960 combinaciones) para 60
+ * productores, una colisión persistente tras 30 intentos es prácticamente imposible, pero
+ * se agrega un sufijo numérico como red de seguridad para garantizar unicidad siempre.
+ */
+function nombreRazonSocial(rng: () => number, usados: Set<string>): string {
+  for (let intento = 0; intento < 30; intento++) {
+    const prefijo = elegir(rng, PREFIJOS);
+    const sustantivo = elegir(rng, SUSTANTIVOS);
+    const tipo = elegir(rng, [...TIPOS_SOCIALES]);
+    const nombre = `${prefijo} ${sustantivo} ${tipo}`.replace(/\s+/g, ' ').trim();
+    if (!usados.has(nombre)) {
+      usados.add(nombre);
+      return nombre;
+    }
+  }
+  let sufijo = 2;
   const prefijo = elegir(rng, PREFIJOS);
   const sustantivo = elegir(rng, SUSTANTIVOS);
-  const tipo = elegir(rng, [...TIPOS_SOCIALES]);
-  return `${prefijo} ${sustantivo} ${tipo}`.replace(/\s+/g, ' ').trim();
+  let nombre = `${prefijo} ${sustantivo} ${sufijo}`;
+  while (usados.has(nombre)) {
+    sufijo += 1;
+    nombre = `${prefijo} ${sustantivo} ${sufijo}`;
+  }
+  usados.add(nombre);
+  return nombre;
+}
+
+/** Evita el prefijo doble "Finca Finca X" cuando la razón social ya empieza con "Finca". */
+function nombreFinca(razonSocial: string, indice: number): string {
+  const base = /^finca\b/i.test(razonSocial) ? razonSocial : `Finca ${razonSocial}`;
+  return indice === 0 ? base : `${base} ${indice + 1}`;
 }
 
 export interface FincaVolumen {
@@ -156,13 +185,20 @@ export async function seedProductoresFincasVolumen(
     }));
   }
 
+  const nombresUsados = new Set<string>();
+  const direccionesUsadas = new Set<string>();
   const result: ProductorVolumen[] = [];
   for (let i = 0; i < OBJETIVO_PRODUCTORES; i++) {
     const rng = crearPRNG(500 + i * 977);
     const identificacion = `09VOL${String(10000000 + i).padStart(8, '0')}`;
-    const razonSocial = nombreRazonSocial(rng);
+    const razonSocial = nombreRazonSocial(rng, nombresUsados);
     const provincia = provinciaAleatoria(rng);
     const localidad = elegir(rng, provincia.localidades);
+    let direccion = `Km ${enteroEntre(rng, 1, 40)} vía a ${localidad}, provincia de ${provincia.region}`;
+    while (direccionesUsadas.has(direccion)) {
+      direccion = `Km ${enteroEntre(rng, 1, 40)} vía a ${localidad}, provincia de ${provincia.region}`;
+    }
+    direccionesUsadas.add(direccion);
 
     const productor = await prisma.productor.upsert({
       where: { identificacion },
@@ -170,14 +206,14 @@ export async function seedProductoresFincasVolumen(
         nombreRazonSocial: razonSocial,
         telefono: `09${String(80000000 + i * 7).padStart(8, '0')}`,
         correo: `productor.vol.${i}@bananotrace.test`,
-        direccion: `Km ${enteroEntre(rng, 1, 40)} vía a ${localidad}, provincia de ${provincia.region}`,
+        direccion,
       },
       create: {
         identificacion,
         nombreRazonSocial: razonSocial,
         telefono: `09${String(80000000 + i * 7).padStart(8, '0')}`,
         correo: `productor.vol.${i}@bananotrace.test`,
-        direccion: `Km ${enteroEntre(rng, 1, 40)} vía a ${localidad}, provincia de ${provincia.region}`,
+        direccion,
       },
       select: { idProductor: true },
     });
@@ -208,10 +244,7 @@ export async function seedProductoresFincasVolumen(
         areaHectareas = redondear(randomEntre(rngFinca, 80, 150), 2);
       }
 
-      const nombre =
-        f === 0
-          ? `Finca ${razonSocial}`
-          : `Finca ${razonSocial} ${f + 1}`;
+      const nombre = nombreFinca(razonSocial, f);
 
       const finca = await prisma.finca.upsert({
         where: {
