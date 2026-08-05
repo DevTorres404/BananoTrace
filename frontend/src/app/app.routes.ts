@@ -116,7 +116,7 @@ export const routes: Routes = [
         (module) => module.AnalyticsPage,
       ),
     canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR], reuse: true },
   },
   {
     path: 'dashboard',
@@ -125,7 +125,7 @@ export const routes: Routes = [
         (module) => module.AnalyticsPage,
       ),
     canActivate: adminGuards,
-    data: { roles: [ROLE_IDS.ADMINISTRADOR] },
+    data: { roles: [ROLE_IDS.ADMINISTRADOR], reuse: true },
   },
   {
     path: 'empaques',
