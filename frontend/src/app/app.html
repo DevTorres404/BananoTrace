@@ -1,5 +1,5 @@
-<div class="app-shell" [class.authenticated]="auth.isAuthenticated()">
-  <app-navbar *ngIf="auth.isAuthenticated()" />
+<div class="app-shell" [class.authenticated]="auth.isAuthenticated() && !hideNavbar">
+  <app-navbar *ngIf="auth.isAuthenticated() && !hideNavbar" />
   <main class="app-content">
     <router-outlet />
   </main>

@@ -55,4 +55,15 @@ export class CachedRouteReuseStrategy implements RouteReuseStrategy {
     if (!path || route.routeConfig?.data?.['reuse'] !== true) return null;
     return path;
   }
+
+  clear(): void {
+    for (const handle of this.handles.values()) {
+      // Destruimos el componente para liberar memoria y DOM
+      const componentRef = (handle as any)?.componentRef;
+      if (componentRef) {
+        componentRef.destroy();
+      }
+    }
+    this.handles.clear();
+  }
 }

@@ -3,6 +3,8 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, finalize, Observable, share, tap, throwError } from 'rxjs';
 import { decodeJwtPayload, JwtPayload } from '../auth/jwt-payload';
+import { RouteReuseStrategy } from '@angular/router';
+import { CachedRouteReuseStrategy } from '../routing/cached-route-reuse-strategy';
 
 export interface AuthenticatedUser {
   id: string;
@@ -27,6 +29,7 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly routeReuseStrategy = inject(RouteReuseStrategy) as CachedRouteReuseStrategy;
   private readonly token = signal(this.readStored(TOKEN_KEY));
   private refreshInFlight: Observable<LoginResponse> | null = null;
 
@@ -77,6 +80,7 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     this.token.set(null);
+    this.routeReuseStrategy.clear();
     void this.router.navigate(['/login']);
   }
 

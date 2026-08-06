@@ -1,0 +1,93 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{parskip}
+
+\begin{document}
+
+\section*{Guion Detallado: Demostración de la PoC (5 a 7 minutos)}
+
+\subsection*{Instrucciones para quien comparte pantalla}
+\textit{La persona encargada de compartir pantalla (independientemente de quién esté hablando) debe realizar las siguientes acciones en sincronía con los expositores:}
+
+\begin{itemize}
+    \item \textbf{Durante la intervención de Jean:} Mostrar la diapositiva inicial y luego dejar la pantalla en el inicio de sesión o Dashboard principal.
+    \item \textbf{Durante la intervención de Melanie:} 
+    \begin{enumerate}
+        \item Iniciar sesión con un usuario \texttt{ADMINISTRADOR}.
+        \item Ir al listado de lotes y seleccionar un lote que ya esté completado o en fase avanzada (datos precargados por el seeder).
+        \item Mostrar la línea de tiempo de la instancia o el historial de fases ejecutadas (Producción, Calidad, Logística) para evidenciar qué rol hizo cada acción en el pasado.
+    \end{enumerate}
+    \item \textbf{Durante la intervención de Oscar:} 
+    \begin{enumerate}
+        \item Mantener la pantalla en el historial del lote (o mostrar rápidamente la base de datos donde se guardan los hashes, si lo prefieren).
+        \item Mostrar en pantalla el código QR asociado a ese lote histórico.
+    \end{enumerate}
+    \item \textbf{Durante la intervención de Damian:} 
+    \begin{enumerate}
+        \item Simular el escaneo del QR (abrir la URL) para mostrar el Portal Público de Trazabilidad con la historia completa.
+        \item Ir al menú de Business Intelligence y navegar por el Dashboard (mostrando cómo los datos masivos generados por el seeder alimentan las gráficas de Producción, Calidad y Logística).
+    \end{enumerate}
+\end{itemize}
+
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+\subsection*{Guion hablado}
+
+\textbf{Jean:}
+
+Un saludo cordial y muy afectuoso con todos los presentes, autoridades académicas, miembros del jurado, docentes y compañeros. Nosotros somos el equipo conformado por estudiantes de las universidades de Ecuador y Chile. Tras meses de intenso trabajo colaborativo internacional, el día de hoy tenemos el gran orgullo de presentar ante ustedes nuestra plataforma tecnológica, \textbf{BananoTrace}, un ecosistema de software diseñado específicamente para revolucionar la trazabilidad inteligente, transparente y segura de la cadena de valor del banano. 
+
+El problema central que nos motivó a desarrollar esta ambiciosa iniciativa es la enorme y preocupante fragmentación de la información que sufre actualmente la industria agroalimentaria, particularmente en el sensible sector exportador latinoamericano. En la actualidad, los datos críticos que se generan día a día en la finca durante la siembra y cosecha, los rigurosos controles de calidad en las empacadoras, y los manifiestos de exportación en la fase de logística, quedan totalmente aislados. Hablamos de miles de hojas de Excel desconectadas, documentos de papel que se pierden, correos electrónicos traspapelados o sistemas de software cerrados que no se comunican entre sí. 
+
+Esto no solo hace que sea una tarea titánica y casi imposible reconstruir el historial completo de un lote exportado cuando llega a un puerto en Europa o Asia, sino que también crea un ecosistema altamente vulnerable. En un entorno tan fragmentado, es sumamente difícil detectar si alguien altera un registro, ya sea por un simple error humano al tipear un número, o por un fraude deliberado para encubrir producto de baja calidad. En mercados internacionales cada vez más estrictos y exigentes en cuanto a normativas de origen y certificaciones, esta falta de transparencia se traduce directamente en pérdida de competitividad, multas millonarias y, lo más grave, la pérdida de confianza del consumidor final.
+
+Para dar una solución definitiva y de vanguardia a esta problemática sistémica, hemos construido una Prueba de Concepto robusta y escalable que integra tres grandes pilares tecnológicos: en primer lugar, el desarrollo web moderno para garantizar una gestión operativa fluida en campo; en segundo lugar, la tecnología Blockchain nativa para asegurar la integridad inmutable de los datos; y finalmente, el Business Intelligence para elevar la información operativa a un análisis estratégico de alto nivel. 
+
+Nuestra arquitectura está fundamentada en tecnologías líderes de la industria: utilizamos Angular en el frontend para garantizar una experiencia de usuario reactiva, rápida y escalable. Para el backend, decidimos implementar NestJS combinado con PostgreSQL, lo que nos permitió construir una API REST sumamente sólida con un modelado de datos relacional altamente estructurado y tipado estático estricto. En lugar de mostrarles hoy un ingreso manual tedioso de datos uno por uno —lo cual tomaría demasiado tiempo y no reflejaría el estrés del mundo real—, nosotros ya hemos poblado nuestra base de datos con información altamente realista. Hemos simulado el peso de semanas enteras de actividad operativa continua mediante scripts de seeding avanzados, inyectando miles de registros para demostrar la resiliencia del sistema. 
+
+A continuación, mi compañera Melanie les mostrará completamente en vivo cómo el sistema gestiona, centraliza y asegura toda esta avalancha de información en la práctica, dándole vida a esta cadena de suministro.
+
+\textbf{Melanie:}
+
+Muchas gracias, Jean, y muy buenos días con todos. El corazón operativo de nuestro sistema es lo que hemos denominado el "motor de flujos dinámico". Como pueden observar en la pantalla, hemos ingresado a la plataforma con un perfil de Administrador general, lo que nos permite tener una vista de halcón sobre toda la cadena de suministro. En esta vista de gestión de lotes, contamos con una serie de registros históricos que ya han transitado exitosamente por las distintas etapas de la agroindustria, gracias a la simulación intensiva de datos que mencionó mi compañero.
+
+Si seleccionamos un lote específico que ya se encuentra en estado de exportación y exploramos su historial detallado, podemos visualizar claramente la instancia de flujo estructurada. A diferencia de los sistemas de software tradicionales donde un registro es simplemente una fila en una base de datos que cualquiera puede editar, nuestra plataforma registra de forma inalterable qué actor y qué rol ejecutó cada fase exacta del proceso, con marcas de tiempo precisas. 
+
+Aquí observamos, en primer lugar, los datos registrados originalmente por el Productor al momento de la cosecha: la fecha exacta, la hacienda de origen y el peso inicial. Más adelante en la línea de tiempo, vemos la intervención crítica del inspector de Calidad, quien evalúa el producto y registra métricas vitales como los calibres, el peso neto empacado y, muy importante, el porcentaje de rechazo por defectos agronómicos. Finalmente, vemos la consolidación en la etapa de Logística, con los datos de transporte y puertos de embarque. 
+
+Es fundamental recalcar que, aunque ahora estamos navegando bajo la vista omnipotente de un Administrador para fines demostrativos, el sistema cuenta con una capa de seguridad web y control de acceso basado en roles (RBAC) sumamente estricta. En un entorno real, las pantallas están segregadas por responsabilidad: el productor jamás podrá editar la evaluación del inspector de calidad, y el transportista no podrá alterar la hacienda de origen. 
+
+Y para asegurar de forma definitiva que toda esta información histórica que estamos repasando sea absolutamente incorruptible a lo largo del tiempo, mi compañero Oscar les explicará los profundos detalles de nuestra innovadora arquitectura de seguridad.
+
+\textbf{Oscar:}
+
+Así es, Melanie. Muchas gracias. Es muy importante entender este punto: mostrar registros con una interfaz bonita en una pantalla es relativamente sencillo, pero en el mundo real de la cadena de suministro necesitamos garantizar matemáticamente que nadie ha manipulado ese historial. Ni un usuario malintencionado, ni un ataque externo, e incluso ni siquiera el propio administrador de la base de datos (DBA). 
+
+Para resolver este enorme desafío de confianza, hemos implementado una capa de Blockchain que corre nativamente dentro de nuestro propio backend. Quiero hacer hincapié en que no estamos dependiendo de una red pública pesada, costosa o lenta (como Ethereum o Bitcoin); hemos construido una cadena de evidencias criptográficas privada, ligera y altamente eficiente, optimizada para la trazabilidad agroindustrial de alta transaccionalidad.
+
+Aunque en la interfaz gráfica que acaban de ver se presenta como una simple y amigable línea de tiempo, por debajo, en el núcleo de nuestra base de datos, ocurre un proceso criptográfico muy riguroso. Cada vez que un usuario registró una de las fases operativas que mencionó Melanie, el sistema no solo guardó el dato en una tabla. Simultáneamente, tomó de forma silenciosa todos esos datos operativos (pesos, fechas, usuarios, estados) y calculó una huella digital única e irrepetible utilizando el algoritmo criptográfico estándar de la industria: SHA-256. 
+
+El punto más crítico y revolucionario de nuestra arquitectura es la vinculación de estos datos. El cálculo de cada huella digital incluye de manera obligatoria el hash del registro inmediatamente anterior en la historia de ese lote. De esta forma, generamos una cadena de evidencias entrelazada e inquebrantable. Si alguien intentara entrar directamente a la base de datos hoy mismo y alterar subrepticiamente el peso, cambiar una fecha de cosecha, o modificar la calidad de este lote pasado para encubrir un error o cometer un fraude, el hash de ese registro cambiaría inmediatamente. Al cambiar, ya no coincidiría con el eslabón siguiente, rompiendo la cadena y disparando una alerta inmediata sobre la manipulación. Es, en esencia, una auditoría matemática en tiempo real e infalible.
+
+Toda esta seguridad inmutable que opera de forma invisible nos permite generar un código QR único, rastreable y, sobre todo, confiable para cada lote empacado. Mi compañero Damián les mostrará ahora cómo el consumidor final interactúa con esta tecnología y, aún más interesante, cómo sacamos provecho analítico de este gigantesco océano de datos.
+
+\textbf{Damian:}
+
+Exacto, Oscar. Muchas gracias. El gran esfuerzo técnico de asegurar los datos culmina en el momento de la verdad: cuando el producto llega a su destino final. Al escanear el código QR que genera automáticamente el sistema y que acompaña físicamente a cada caja de banano, accedemos de forma inmediata al portal de trazabilidad público que están viendo ahora mismo en pantalla. 
+
+En este portal, diseñado para ser completamente responsivo y accesible desde cualquier smartphone, el cliente final en un supermercado europeo, un importador estratégico, o un exigente auditor de certificaciones internacionales, puede visualizar la línea de tiempo completa del producto. Pueden trazar el recorrido exacto desde la finca específica donde fue sembrado, pasando por los controles de calidad, hasta el puerto de embarque. Y lo hacen con la total confianza de que la integridad de los datos está matemáticamente respaldada por Blockchain. Nadie puede alterar la historia que están leyendo.
+
+Pero, señores, nuestra visión como equipo va un gran paso más allá del simple registro y la transparencia. Aprovechando el inmenso volumen de datos históricos y estructurados que ahora maneja con total seguridad nuestra plataforma, hemos implementado un proceso automatizado de ETL (Extracción, Transformación y Carga). Este proceso toma todos los datos operativos diarios, los limpia, los transforma en un modelo dimensional optimizado mediante un esquema de estrella, y alimenta de manera directa y desatendida nuestro potente Dashboard interactivo de Business Intelligence.
+
+Como pueden apreciar en pantalla, hemos consolidado toda la información gerencial estratégica en áreas clave. Ya no se trata de liderar basándose en la intuición, sino de tomar decisiones fundamentadas en datos precisos. Monitoreamos en tiempo real indicadores vitales: podemos analizar la curva del porcentaje de rechazo histórico de una finca en particular para detectar problemas agronómicos de forma temprana; evaluamos la tasa general de aprobación empacadora por empacadora; medimos los días promedios del ciclo productivo y analizamos el volumen total movilizado contrastado contra proyecciones estacionales. Esto permite a los gerentes de operaciones identificar cuellos de botella logísticos y optimizar los recursos financieros y humanos al máximo.
+
+Con este ambicioso proyecto, nuestro equipo demuestra firmemente que la integración sinérgica del desarrollo web moderno, la seguridad inmutable de una arquitectura Blockchain propia y el inmenso poder analítico del Business Intelligence, no solo es una realidad totalmente viable, sino necesaria. Estamos convencidos de que BananoTrace agrega una capa de transparencia incalculable y un valor de mercado inmenso a la agroindustria moderna, preparándola tecnológicamente para los desafíos globales del mañana. 
+
+Queremos agradecerles sinceramente a todos por su valioso tiempo y su atención durante esta presentación. Quedamos a su entera disposición para responder cualquier pregunta técnica, de arquitectura o de negocio que deseen plantear. Muchas gracias.
+
+\end{document}
